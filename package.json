@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "MOBA SHOP order page with cart and Telegram order forwarding",
+  "description": "MOBA SHOP order page with cart, Telegram admin buttons, and phone-only order status",
   "scripts": {
     "dev": "vercel dev",
     "start": "vercel dev"

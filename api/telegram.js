@@ -44,23 +44,27 @@ function readJson(req) {
   });
 }
 
-function adminIds() {
-  return String(process.env.ADMIN_IDS || '')
+function isAdmin(userId) {
+  const ids = String(process.env.ADMIN_IDS || '')
     .split(',')
     .map(x => x.trim())
     .filter(Boolean);
+  return ids.includes(String(userId));
 }
 
-function isAdmin(id) {
-  return adminIds().includes(String(id));
-}
-
-function supabaseReady() {
-  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+async function telegramApi(method, payload) {
+  const token = process.env.BOT_TOKEN;
+  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) throw new Error(data.description || `Telegram ${method} failed`);
+  return data;
 }
 
 async function supabaseRequest(path, options = {}) {
-  if (!supabaseReady()) throw new Error('Supabase Environment Variables missing');
   const url = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${path}`;
   const response = await fetch(url, {
     ...options,
@@ -75,32 +79,21 @@ async function supabaseRequest(path, options = {}) {
     const text = await response.text().catch(() => '');
     throw new Error(`Supabase error: ${text || response.status}`);
   }
-  if (response.status === 204) return null;
   return response.json().catch(() => null);
 }
 
 async function getOrder(orderId) {
-  const rows = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&select=*`);
-  return rows && rows[0] ? rows[0] : null;
+  const select = 'id,phone,customer_name,payment_method,total,status,handler,items,note,status_history,telegram_message_id';
+  const rows = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&select=${select}&limit=1`);
+  return rows?.[0] || null;
 }
 
-async function updateOrder(orderId, patch) {
-  await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`, {
+async function updateOrder(orderId, payload) {
+  return supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`, {
     method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() })
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ ...payload, updated_at: new Date().toISOString() })
   });
-}
-
-async function telegramApi(method, payload) {
-  const token = process.env.BOT_TOKEN;
-  if (!token) throw new Error('BOT_TOKEN missing');
-  const form = new FormData();
-  Object.entries(payload).forEach(([k, v]) => form.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v)));
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, { method: 'POST', body: form });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) throw new Error(data.description || `Telegram ${method} failed`);
-  return data;
 }
 
 function telegramKeyboard(orderId, status) {
@@ -148,7 +141,11 @@ function renderTelegramText(order, status, handlerName) {
 }
 
 async function answerCallback(callbackQueryId, text, showAlert = false) {
-  await telegramApi('answerCallbackQuery', { callback_query_id: callbackQueryId, text, show_alert: showAlert ? 'true' : 'false' });
+  await telegramApi('answerCallbackQuery', {
+    callback_query_id: callbackQueryId,
+    text,
+    show_alert: Boolean(showAlert)
+  });
 }
 
 export default async function handler(req, res) {
@@ -157,13 +154,15 @@ export default async function handler(req, res) {
     return json(res, 403, { ok: false });
   }
 
+  let cb = null;
   try {
     const update = await readJson(req);
-    const cb = update.callback_query;
+    cb = update.callback_query;
     if (!cb) return json(res, 200, { ok: true });
 
     const userId = cb.from?.id;
     const adminName = cb.from?.first_name || cb.from?.username || 'Admin';
+
     if (!isAdmin(userId)) {
       await answerCallback(cb.id, 'مش مصرح لك', true);
       return json(res, 200, { ok: true });
@@ -171,9 +170,11 @@ export default async function handler(req, res) {
 
     const data = String(cb.data || '');
     if (!data.startsWith('web_')) return json(res, 200, { ok: true });
+
     const [, action, ...rest] = data.split('_');
     const orderId = rest.join('_');
     const order = await getOrder(orderId);
+
     if (!order) {
       await answerCallback(cb.id, 'الطلب مش موجود', true);
       return json(res, 200, { ok: true });
@@ -199,6 +200,7 @@ export default async function handler(req, res) {
       fix: 'needs_fix',
       reject: 'rejected'
     };
+
     const newStatus = actionToStatus[action];
     if (!newStatus) {
       await answerCallback(cb.id, 'امر غير معروف', true);
@@ -206,11 +208,15 @@ export default async function handler(req, res) {
     }
 
     const history = Array.isArray(order.status_history) ? order.status_history : [];
-    history.push({ status: newStatus, label: STATUS_LABELS[newStatus], at: new Date().toISOString(), by: adminName, admin_id: userId });
+    history.push({ status: newStatus, label: STATUS_LABELS[newStatus], at: new Date().toISOString(), by: adminName, admin_id: String(userId) });
 
     await updateOrder(orderId, {
       status: newStatus,
+      status_text: STATUS_LABELS[newStatus],
       handler: adminName,
+      handler_id: String(userId),
+      admin_id: String(userId),
+      admin_name: adminName,
       last_status_at: new Date().toISOString(),
       last_status_by: adminName,
       status_history: history
@@ -235,10 +241,8 @@ export default async function handler(req, res) {
     return json(res, 200, { ok: true });
   } catch (error) {
     try {
-      const update = await readJson(req).catch(() => ({}));
-      const cb = update.callback_query;
-      if (cb?.id) await answerCallback(cb.id, `Error: ${error.message}`, true);
-    } catch (_) {}
-    return json(res, 200, { ok: false, error: error.message });
+      if (cb?.id) await answerCallback(cb.id, error.message || 'حصل خطأ', true);
+    } catch {}
+    return json(res, 200, { ok: false, error: error.message || 'Server error' });
   }
 }
