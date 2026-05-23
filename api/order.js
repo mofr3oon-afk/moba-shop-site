@@ -1,6 +1,9 @@
 export const config = { api: { bodyParser: false } };
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
 
+function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
+function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
+
 function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
 function parseMultipart(buffer,contentType){
   const m=/boundary=(?:(?:"([^"]+)")|([^;]+))/i.exec(contentType||''); if(!m) return {fields:{},files:{}};
@@ -52,7 +55,7 @@ export default async function handler(req,res){
     if(transferMode==='other' && !/^\d{3}$/.test(transferLast3)) return json(res,400,{ok:false,error:'اكتب آخر 3 أرقام من رقم التحويل عشان نقدر نراجع الدفع'});
 
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
-    for(const item of cart){ if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
+    for(const item of cart){ item.qty = itemQty(item); if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
     if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
 
     const openPhone=await findOpenOrderByPhone(customerPhone);

@@ -57,7 +57,7 @@ export function reportsKeyboard(){
 export function supportUrl(){return process.env.SUPPORT_URL || 'https://t.me/MOFR3OON';}
 export function buildTelegramText(order){
   const cart=Array.isArray(order.items)?order.items:[];
-  const itemLines=cart.map((item,i)=>`${i+1}) ${escapeHtml(item.product)}\n   ID: <code>${escapeHtml(item.pubgId)}</code>\n   Name: <b>${escapeHtml(item.pubgName || '-')}</b>\n   السعر: ${escapeHtml(item.price)} جنيه`).join('\n\n');
+  const itemLines=cart.map((item,i)=>`${i+1}) ${escapeHtml(item.product)}\n   ID: <code>${escapeHtml(item.pubgId)}</code>\n   Name: <b>${escapeHtml(item.pubgName || '-')}</b>\n   Qty: ${itemQty(item)}\n   UC Total: ${itemUcTotal(item)} UC\n   السعر: ${item.price} × ${itemQty(item)} = ${itemLineTotal(item)} جنيه`).join('\n\n');
   return `🚨 <b>طلب جديد من موقع MOBA SHOP</b>\n`+
   `━━━━━━━━━━━━━━\n`+
   `🧾 رقم الطلب: <code>${escapeHtml(order.order_code || order.id)}</code>\n`+
