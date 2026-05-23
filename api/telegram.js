@@ -1,10 +1,15 @@
+function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
+function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
+function extractUc(productName){ const m=String(productName||'').match(/(\d+)\s*UC/i); return m ? Number(m[1]) : 0; }
+function itemUcTotal(item){ return extractUc(item.product) * itemQty(item); }
+
 import { json, supabaseRequest, telegramJson, isAdmin, adminName, STATUS_LABELS, telegramKeyboard, buildTelegramText, reportsKeyboard, supportUrl } from './_utils.js';
 const ACTION_REPLY={claimed:'🙋 تم استلام الطلب',processing:'🔄 تم بدء التنفيذ',delivered:'✅ تم الشحن بنجاح',on_hold:'⏸ تم تعليق الطلب',needs_fix:'⚠️ الطلب محتاج مراجعة',rejected:'❌ تم رفض الطلب'};
 function readJson(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}'))}catch(e){reject(e)}});req.on('error',reject);});}
 async function answerCallback(id,text,showAlert=false){return telegramJson('answerCallbackQuery',{callback_query_id:id,text,show_alert:Boolean(showAlert)});}
 async function getOrder(orderId){const rows=await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&select=*&limit=1`);return rows?.[0]||null;}
 async function updateOrder(orderId,payload){return supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,updated_at:new Date().toISOString()})});}
-function itemSummary(items=[]){return (Array.isArray(items)?items:[]).map((x,i)=>`${i+1}) ${x.product}\nID: ${x.pubgId}\nName: ${x.pubgName || '-'}\nQty: ${itemQty(x)}\nUC Total: ${itemUcTotal(x)} UC\nTotal: ${itemLineTotal(x)} جنيه`).join('\n\n') || 'لا يوجد';}) ${x.product}\nID: ${x.pubgId}\nName: ${x.pubgName || '-'}\nPrice: ${x.price}`).join('\n\n') || 'لا يوجد';}
+function itemSummary(items=[]){return (Array.isArray(items)?items:[]).map((x,i)=>`${i+1}) ${x.product}\nID: ${x.pubgId}\nName: ${x.pubgName || '-'}\nQty: ${itemQty(x)}\nUC Total: ${itemUcTotal(x)} UC\nTotal: ${itemLineTotal(x)} جنيه`).join('\n\n') || 'لا يوجد';}) ${x.product}\nID: ${x.pubgId}\nName: ${x.pubgName || '-'}\nQty: ${itemQty(x)}\nUC Total: ${itemUcTotal(x)} UC\nTotal: ${itemLineTotal(x)} جنيه`).join('\n\n') || 'لا يوجد';}) ${x.product}\nID: ${x.pubgId}\nName: ${x.pubgName || '-'}\nPrice: ${x.price}`).join('\n\n') || 'لا يوجد';}
 async function customerHistoryText(phone){
   const rows=await supabaseRequest(`orders?phone=eq.${encodeURIComponent(phone)}&select=id,order_code,status,total,items,created_at,payment_method&order=created_at.desc&limit=10`).catch(()=>[]);
   const delivered=(rows||[]).filter(x=>x.status==='delivered').length;

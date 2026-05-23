@@ -1,3 +1,8 @@
+function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
+function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
+function extractUc(productName){ const m=String(productName||'').match(/(\d+)\s*UC/i); return m ? Number(m[1]) : 0; }
+function itemUcTotal(item){ return extractUc(item.product) * itemQty(item); }
+
 export const STATUS_LABELS = {
   pending: '⏳ تم استلام الطلب',
   claimed: '🙋 تم استلام الطلب من المسؤول',

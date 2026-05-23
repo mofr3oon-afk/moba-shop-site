@@ -65,17 +65,84 @@
   .btn{font-size:11px;padding:9px 8px}
 }
 
+
+/* V7 polish: product qty, floating actions, soft glow */
+html{scroll-behavior:smooth}
+.btn,.tab,.jump-nav a,.sticky-cart,.mobile-float-status,.mobile-float-support{transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, filter .16s ease}
+.btn:hover,.tab:hover,.jump-nav a:hover,.sticky-cart:hover,.mobile-float-status:hover,.mobile-float-support:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(39,216,255,.16);filter:saturate(1.08)}
+.add,.checkout{box-shadow:0 0 18px rgba(39,216,255,.18)}
+.product{transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease}
+.product:hover{transform:translateY(-2px);border-color:rgba(39,216,255,.28);box-shadow:0 12px 28px rgba(0,0,0,.25),0 0 20px rgba(39,216,255,.08)}
+.product-qty{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:14px;padding:7px 8px}
+.product-qty-label{font-size:12px;color:#dce7f8;font-weight:800}
+.product-qty .qty-box{padding:4px 6px}
+.qty-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.qty-box{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:6px 8px}
+.qty-btn{width:30px;height:30px;border:0;border-radius:10px;font-weight:900;cursor:pointer;background:rgba(255,255,255,.12);color:var(--text)}
+.qty-num{min-width:22px;text-align:center;font-weight:900}
+.uc-total,.product-uc-preview{font-size:12px;color:#bfefff;background:rgba(39,216,255,.08);border:1px solid rgba(39,216,255,.20);border-radius:12px;padding:7px 8px;line-height:1.45}
+.mobile-float-status{left:14px;right:auto;bottom:78px}
+.mobile-float-support{position:fixed;left:14px;bottom:126px;z-index:30;display:none;align-items:center;gap:6px;text-decoration:none;background:rgba(255,255,255,.09);color:#eaf8ff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;font-weight:900;font-size:12px;box-shadow:0 12px 34px rgba(0,0,0,.32)}
+.jump-nav a.support-link{background:rgba(56,224,139,.10);border-color:rgba(56,224,139,.28)}
+.sticky-cart{cursor:pointer;text-decoration:none;color:inherit}
+.steps.compact-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+.steps.compact-steps .step{padding:9px 10px;font-size:12px}
+@media(max-width:900px){
+  .mobile-float-status{display:flex;bottom:70px;padding:9px 12px;font-size:12px}
+  .mobile-float-support{display:flex}
+  .wrap{width:min(100%,96%);padding:10px 0 76px}
+  .topbar{padding:8px 10px;margin-bottom:8px;border-radius:18px}
+  .brand-mini{font-size:15px}
+  .status-pill{font-size:11px;padding:6px 9px}
+  .hero{margin-bottom:10px;gap:10px}
+  .hero-main{padding:12px!important;border-radius:18px!important}
+  .hero-main .badge{display:none}
+  .logo{font-size:25px!important;margin:10px 0 2px!important;line-height:1.05}
+  .hero-kicker{font-size:12px!important;line-height:1.5;margin:4px 0!important}
+  .sub{font-size:11px!important;line-height:1.55!important}
+  .quick{gap:6px;margin-top:10px!important}
+  .chip{font-size:10px!important;padding:7px 8px!important;border-radius:12px!important}
+  .quick .chip:nth-child(n+4){display:none!important}
+  .steps,.steps.compact-steps{display:none!important}
+  .trust-card{display:none!important}
+  .jump-nav{position:sticky;top:0;z-index:20;background:rgba(7,9,18,.92);backdrop-filter:blur(10px);padding:7px 0;margin-bottom:10px}
+  .jump-nav a{font-size:11px!important;padding:8px 9px!important}
+  .hero,.grid{grid-template-columns:1fr}
+  .product-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px}
+  .product{padding:10px!important;border-radius:17px!important;gap:8px!important;min-height:auto}
+  .product b{font-size:13px!important;line-height:1.35}
+  .product .type{font-size:11px}
+  .price{font-size:13px}
+  .hot{font-size:10px;padding:4px 7px}
+  .id-input,.input,.select,.file,.textarea{padding:10px;border-radius:12px;font-size:12px}
+  .btn{padding:10px 10px;border-radius:13px;font-size:12px}
+  .cart{position:static}
+  .section-title{align-items:flex-start;flex-direction:column}
+  .section-title h2,.cart h2{font-size:18px}
+  .tabs{width:100%}.tab{flex:1}
+  .phone-only-track{grid-template-columns:1fr}
+  .sticky-cart{display:block}
+}
+@media(max-width:390px){
+  .product-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px}
+  .logo{font-size:23px!important}
+  .sub{display:none}
+  .product{padding:9px!important}
+  .btn{font-size:11px;padding:9px 8px}
+}
+
 </style>
 </head>
 <body>
   <a class="mobile-float-status" href="#trackOrder">📦 حالة الطلب</a>
+  <a class="mobile-float-support" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
   <main class="wrap">
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
       <a href="#cartSection">🛒 السلة والدفع</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
-      <a href="#footerSupport">📞 الدعم</a>
+      <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
     </nav>
     <section class="hero">
       <div class="panel hero-main">
@@ -84,13 +151,11 @@
         <div class="hero-kicker">متجرك الرقمي للجيمرز | Digital Store For Gamers</div>
         <div class="sub">جهز طلبك بسهولة من مكان واحد. اختار المنتج، ضيفه للسلة، اختار طريقة الدفع، وارفع السكرين. بيانات الدفع تظهر وقت الاختيار فقط.</div>
         <div class="quick"><div class="chip">🛒 سلة منظمة</div><div class="chip">🛡 مراجعة آمنة</div><div class="chip">📦 متابعة بالموبايل</div><div class="chip">🎮 خدمات للجيمرز</div></div>
-        <div class="steps"><div class="step">1️⃣ اختار المنتج</div><div class="step">2️⃣ ضيف للسلة</div><div class="step">3️⃣ اختار الدفع</div><div class="step">4️⃣ ارفع السكرين</div><div class="step">5️⃣ تابع الحالة</div></div>
-      </div>
-      <div class="panel trust-card">
-        <div class="trust-title">ليه MOBA SHOP؟</div>
-        <div class="trust-box">⚡ تنفيذ سريع ومنظم<br>🛡 كل طلب بيتراجع قبل التنفيذ<br>📞 دعم مباشر لو فيه مشكلة<br>📦 متابعة حالة الطلب برقم الموبايل فقط</div>
-        <div class="games"><div class="game">🎮 PUBG Mobile</div><div class="game">💎 Mobile Legends قريباً</div><div class="game">🔥 Free Fire قريباً</div><div class="game">🧱 Roblox قريباً</div></div>
-      </div>
+        <div class="steps compact-steps">
+          <div class="step">1️⃣ اختار المنتج</div>
+          <div class="step">2️⃣ ضيف للسلة</div>
+          <div class="step">3️⃣ ادفع وارفع السكرين</div>
+        </div></div>
     </section>
     <section class="grid">
       <div class="panel products" id="productsSection">
@@ -128,7 +193,7 @@
     <section class="panel track-panel" id="trackOrder"><div class="section-title"><h2>📦 متابعة حالة الطلب | Order Status</h2></div><form id="trackForm" class="phone-only-track"><div><label>📱 رقم الموبايل</label><input class="input" id="trackPhone" inputmode="numeric" placeholder="010xxxxxxxx" required /></div><button class="btn add" type="submit">🔎 متابعة</button></form><div id="trackResult" class="track-result"></div><div class="notice">اكتب نفس رقم الموبايل اللي سجلت بيه الطلب، وهيظهرلك آخر طلب على الرقم ده.</div></section>
     <div class="footer" id="footerSupport">MOBA SHOP | Digital Store For Gamers</div>
   </main>
-  <div class="sticky-cart" id="stickyCart">🛒 السلة 0 منتجات | 0 جنيه</div>
+  <div class="sticky-cart" id="stickyCart" onclick="document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})" role="button" aria-label="افتح السلة">🛒 السلة 0 منتجات | 0 جنيه</div>
   <div id="modal" class="modal"><div class="modal-card"><h2>✅ تم اضافة المنتج للسلة</h2><p id="modalText"></p><div class="modal-actions"><button class="btn add" id="addMore">➕ إضافة منتج</button><button class="btn okbtn" id="goCheckout">✅ تنفيذ الشراء</button><button class="btn ghost" id="showCartBtn">🛒 عرض السلة</button></div></div></div>
   <script>
     const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{name:'325 UC',type:'شحن بالايدي | ID',price:235,hot:true},{name:'660 UC',type:'شحن بالايدي | ID',price:435},{name:'1800 UC',type:'شحن بالايدي | ID',price:1120},{name:'3850 UC',type:'شحن بالايدي | ID',price:2170},{name:'8100 UC',type:'شحن بالايدي | ID',price:4350}],growth:[{name:'ازدهار 1',type:'Growth Pack ID',price:55,warning:'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.'},{name:'ازدهار 2',type:'Growth Pack ID',price:150,warning:'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.'},{name:'ازدهار 3',type:'Growth Pack ID',price:250,warning:'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.'},{name:'الكريستالة الميثك',type:'Mythic Crystal ID',price:150,warning:'الكريستالة غالبا واحدة او اتنين في الاسبوع وبتتجدد يوم الاثنين. اتأكد انها متاحة عندك في اللعبة.'}],prime:[{name:'Prime',type:'150 UC Total',price:55},{name:'Prime Plus',type:'900 UC Total',price:445},{name:'Prime + Prime Plus',type:'1050 UC Total',price:500}]};
@@ -213,5 +278,119 @@
     async function loadOrderStatus(phone){const box=document.getElementById('trackResult');box.className='track-result show';box.textContent='⏳ جاري جلب حالة الطلب...';try{const res=await fetch(`/api/status?phone=${encodeURIComponent(phone)}`);const data=await res.json();if(!data.ok) throw new Error(data.error||'مش قادر اجيب حالة الطلب');window.__supportUrl=data.supportUrl||'https://t.me/MOFR3OON';renderTrack(data.order,data.recent||[]);}catch(err){box.className='track-result show';box.innerHTML=`⚠️ ${escapeText(err.message||'حصل خطأ')}`;}}
     document.getElementById('trackForm').addEventListener('submit',e=>{e.preventDefault();loadOrderStatus(document.getElementById('trackPhone').value.trim());}); renderProducts();renderCart();renderPaymentDetails();
   </script>
+
+<script id="moba-v7-overrides">
+(function(){
+  const qState = {};
+  const originalRenderProducts = window.renderProducts;
+  const originalRenderCart = window.renderCart;
+
+  function extractUc(productName){
+    const m = String(productName||'').match(/(\d+)\s*UC/i);
+    return m ? Number(m[1]) : 0;
+  }
+  function canUseQty(item){
+    const p = String(item && item.product || item && item.name || '');
+    return !/ازدهار|Growth|كريستالة|Crystal|Prime/i.test(p);
+  }
+  function itemQty(item){ return Math.max(1, Number((item && item.qty) || 1)); }
+  function itemLineTotal(item){ return Number((item && item.price) || 0) * itemQty(item); }
+  function itemUcTotal(item){ return extractUc(item && item.product) * itemQty(item); }
+  function productKey(cat,i){ return `${cat}_${i}`; }
+  function getProductQty(i){ return Math.max(1, Number(qState[productKey(window.activeCat || activeCat, i)] || 1)); }
+  function setProductQty(i, qty){
+    const cat = window.activeCat || activeCat;
+    const p = products[cat][i];
+    if(!canUseQty({product:p.name})) qty = 1;
+    qState[productKey(cat,i)] = Math.max(1, Number(qty||1));
+    window.renderProducts();
+  }
+
+  window.changeProductQty = function(i,delta){ setProductQty(i, getProductQty(i)+delta); };
+  window.changeQty = function(i,delta){
+    const item = cart[i];
+    if(!item || !canUseQty(item)) return;
+    item.qty = Math.max(1, itemQty(item) + delta);
+    saveCart(); window.renderCart();
+  };
+
+  window.renderProducts = function(){
+    const cat = window.activeCat || activeCat;
+    productList.innerHTML = products[cat].map((p,i)=>{
+      const q = getProductQty(i);
+      const qtyAllowed = canUseQty({product:p.name});
+      const ucTotal = extractUc(p.name) * q;
+      return `<div class="product">${p.hot?'<span class="hot">🔥 الاكثر طلبا</span>':''}<b>${escapeText(p.name)}</b>${p.type?`<div class="type">${escapeText(p.type)}</div>`:''}<div class="price">💰 ${money(p.price)}</div>${p.warning?`<div class="warn">⚠️ ${escapeText(p.warning)}</div>`:''}<input class="id-input" id="id_${i}" inputmode="numeric" placeholder="PUBG ID" /><input class="id-input" id="name_${i}" placeholder="اسم الحساب داخل اللعبة" />${qtyAllowed ? `<div class="product-qty"><span class="product-qty-label">الكمية</span><div class="qty-box"><button class="qty-btn" onclick="changeProductQty(${i},-1)" type="button">−</button><span class="qty-num">${q}</span><button class="qty-btn" onclick="changeProductQty(${i},1)" type="button">+</button></div></div><div class="product-uc-preview">🎮 إجمالي الشدات: <b>${ucTotal.toLocaleString('ar-EG')} UC</b></div>` : `<div class="product-uc-preview">⚠️ كمية واحدة فقط للمنتج ده</div>`}<button class="btn add" onclick="addToCart(${i})">➕ إضافة للسلة</button></div>`;
+    }).join('');
+  };
+
+  window.renderCart = function(){
+    if(!cart.length){
+      cartBox.innerHTML = '<div class="cart-empty">السلة فاضية<br>اختار منتج واكتب ID واضغط إضافة للسلة</div>';
+    } else {
+      cartBox.innerHTML = cart.map((item,i)=>`
+        <div class="cart-item">
+          <button class="remove" onclick="removeItem(${i})">حذف</button>
+          <b>${i+1}) ${escapeText(item.product)}</b><br>
+          🆔 ID: ${escapeText(item.pubgId)}<br>
+          👤 Name: ${escapeText(item.pubgName||'-')}<br>
+          ${canUseQty(item) ? `
+            <div class="qty-row">
+              <span>الكمية</span>
+              <div class="qty-box">
+                <button class="qty-btn" onclick="changeQty(${i},-1)" type="button">−</button>
+                <span class="qty-num">${itemQty(item)}</span>
+                <button class="qty-btn" onclick="changeQty(${i},1)" type="button">+</button>
+              </div>
+            </div>
+            <div class="uc-total">🎮 إجمالي الشدات لهذا ID: <b>${itemUcTotal(item).toLocaleString('ar-EG')} UC</b></div>
+          ` : `<div class="uc-total">⚠️ المنتج ده كمية 1 فقط عشان شروطه داخل اللعبة</div>`}
+          💰 ${money(item.price)} × ${itemQty(item)} = <b>${money(itemLineTotal(item))}</b>
+        </div>`).join('');
+    }
+    const total = cart.reduce((s,x)=>s+itemLineTotal(x),0);
+    totalEl.textContent = money(total);
+    if(typeof updateStickyCart === 'function') updateStickyCart();
+  };
+
+  window.addToCart = function(i){
+    const cat = window.activeCat || activeCat;
+    const p = products[cat][i];
+    const pubgId = document.getElementById(`id_${i}`).value.trim();
+    const pubgName = document.getElementById(`name_${i}`).value.trim();
+    if(!/^\d{5,15}$/.test(pubgId)){ showStatus('اكتب PUBG ID صحيح ارقام فقط','err'); return; }
+    if(pubgName.length < 2){ showStatus('اكتب اسم حسابك داخل اللعبة عشان نراجع الطلب صح','err'); return; }
+    const newItem = {product:p.name, price:p.price, pubgId, pubgName, qty:getProductQty(i)};
+    const existingIndex = cart.findIndex(x => canUseQty(newItem) && x.product===newItem.product && x.pubgId===newItem.pubgId && String(x.pubgName||'').trim()===pubgName);
+    if(existingIndex >= 0){
+      cart[existingIndex].qty = itemQty(cart[existingIndex]) + itemQty(newItem);
+    }else{
+      cart.push(newItem);
+    }
+    saveCart(); window.renderCart();
+    localStorage.setItem('moba_last_pubg', JSON.stringify({pubgId,pubgName}));
+    const activeItem = existingIndex >= 0 ? cart[existingIndex] : newItem;
+    const qtyText = canUseQty(activeItem) ? `<br>🔢 الكمية الآن: ${itemQty(activeItem)}<br>🎮 إجمالي الشدات لهذا ID: ${itemUcTotal(activeItem).toLocaleString('ar-EG')} UC` : '';
+    modalText.innerHTML = `🎮 ${escapeText(p.name)}<br>🆔 ${escapeText(pubgId)}<br>👤 ${escapeText(pubgName)}${qtyText}<br>💰 ${money(p.price)}<br><br>تحب تضيف حاجة تاني ولا نكمل الشراء؟`;
+    modal.classList.add('show');
+    document.getElementById(`id_${i}`).value='';
+    document.getElementById(`name_${i}`).value='';
+    setProductQty(i,1);
+  };
+
+  // Make top links and sticky cart reliably navigate
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a[href^="#"]');
+    if(a){
+      const el = document.querySelector(a.getAttribute('href'));
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    }
+  });
+
+  window.renderProducts();
+  window.renderCart();
+})();
+</script>
+
 </body>
 </html>
