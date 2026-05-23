@@ -9,6 +9,15 @@ const STATUS_LABELS = {
   cancelled: '🗑 ملغي | Cancelled'
 };
 
+const ACTION_REPLY = {
+  claimed: '🙋 تم استلام الطلب',
+  processing: '🔄 تم بدء التنفيذ',
+  delivered: '✅ تم الشحن بنجاح',
+  on_hold: '⏸ تم تعليق الطلب',
+  needs_fix: '⚠️ تم تحديد مشكلة في الطلب',
+  rejected: '❌ تم رفض الطلب'
+};
+
 function json(res, status, data) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -43,9 +52,7 @@ function adminIds() {
 }
 
 function isAdmin(id) {
-  const ids = adminIds();
-  if (!ids.length) return false;
-  return ids.includes(String(id));
+  return adminIds().includes(String(id));
 }
 
 function supabaseReady() {
@@ -128,7 +135,7 @@ function renderTelegramText(order, status, handlerName) {
 
   return `🚨 <b>طلب من موقع MOBA SHOP</b>\n` +
     `━━━━━━━━━━━━━━\n` +
-    `🧾 رقم الطلب: <code>${order.id}</code>\n` +
+    `🧾 رقم الطلب: <code>${escapeHtml(order.id)}</code>\n` +
     `📌 الحالة: <b>${STATUS_LABELS[status] || status}</b>\n` +
     (handlerName ? `👨‍💻 المسؤول: ${escapeHtml(handlerName)}\n` : '') +
     `👤 الاسم: ${escapeHtml(order.customer_name || 'غير محدد')}\n` +
@@ -177,6 +184,7 @@ export default async function handler(req, res) {
       const itemsText = cart.map((item, i) => `${i + 1}) ${item.product}\nID: ${item.pubgId}\nPrice: ${item.price}`).join('\n\n');
       await telegramApi('sendMessage', {
         chat_id: cb.message.chat.id,
+        reply_to_message_id: cb.message.message_id,
         text: `📋 بيانات الطلب ${order.id}\n━━━━━━━━━━━━━━\nPhone: ${order.phone}\nPayment: ${order.payment_method}\nTotal: ${order.total}\n\n${itemsText}`
       });
       await answerCallback(cb.id, 'تم إرسال البيانات');
@@ -203,6 +211,8 @@ export default async function handler(req, res) {
     await updateOrder(orderId, {
       status: newStatus,
       handler: adminName,
+      last_status_at: new Date().toISOString(),
+      last_status_by: adminName,
       status_history: history
     });
 
@@ -215,9 +225,20 @@ export default async function handler(req, res) {
       reply_markup: telegramKeyboard(orderId, newStatus)
     });
 
+    await telegramApi('sendMessage', {
+      chat_id: cb.message.chat.id,
+      reply_to_message_id: cb.message.message_id,
+      text: `${ACTION_REPLY[newStatus] || 'تم تحديث الطلب'}\n👨‍💻 بواسطة: ${adminName}\n🧾 الطلب: ${orderId}`
+    });
+
     await answerCallback(cb.id, `تم تحديث الحالة: ${STATUS_LABELS[newStatus]}`);
     return json(res, 200, { ok: true });
   } catch (error) {
+    try {
+      const update = await readJson(req).catch(() => ({}));
+      const cb = update.callback_query;
+      if (cb?.id) await answerCallback(cb.id, `Error: ${error.message}`, true);
+    } catch (_) {}
     return json(res, 200, { ok: false, error: error.message });
   }
 }

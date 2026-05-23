@@ -42,12 +42,17 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'Method not allowed' });
 
   try {
-    const orderId = String(req.query.orderId || '').trim().toUpperCase();
     const phone = String(req.query.phone || '').trim();
-    if (!orderId || !phone) return json(res, 400, { ok: false, error: 'اكتب رقم الطلب ورقم الموبايل' });
+    if (!/^01\d{9}$/.test(phone)) {
+      return json(res, 400, { ok: false, error: 'اكتب رقم موبايل صحيح' });
+    }
 
-    const rows = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&phone=eq.${encodeURIComponent(phone)}&select=id,phone,customer_name,total,status,handler,items,note,created_at,updated_at,status_history`);
-    if (!rows || rows.length === 0) return json(res, 404, { ok: false, error: 'الطلب غير موجود. راجع رقم الطلب ورقم الموبايل' });
+    const select = 'id,phone,customer_name,total,status,handler,items,note,created_at,updated_at,status_history';
+    const rows = await supabaseRequest(`orders?phone=eq.${encodeURIComponent(phone)}&select=${select}&order=created_at.desc&limit=1`);
+
+    if (!rows || rows.length === 0) {
+      return json(res, 404, { ok: false, error: 'مفيش طلبات مسجلة على الرقم ده' });
+    }
 
     const order = rows[0];
     return json(res, 200, {
