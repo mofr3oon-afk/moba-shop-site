@@ -72,8 +72,20 @@ async function supa(path,opts={}){
   return data;
 }
 async function getOrder(id){
-  const rows=await supa(`orders?id=eq.${encodeURIComponent(id)}&select=*`);
-  return rows && rows[0];
+  const key = String(id || '').trim();
+  let rows = await supa(`orders?id=eq.${encodeURIComponent(key)}&select=*`);
+  if(rows && rows[0]) return rows[0];
+
+  rows = await supa(`orders?order_code=eq.${encodeURIComponent(key)}&select=*`);
+  if(rows && rows[0]) return rows[0];
+
+  // fallback لو رقم MOBA فيه مسافات مختلفة
+  const compact = key.replace(/\s+/g,' ').trim();
+  if(compact !== key){
+    rows = await supa(`orders?order_code=eq.${encodeURIComponent(compact)}&select=*`);
+    if(rows && rows[0]) return rows[0];
+  }
+  return null;
 }
 async function updateOrder(id,patch){
   patch.updated_at=new Date().toISOString();
@@ -244,8 +256,10 @@ async function handleCommand(msg){
   const adminId=msg.from.id;
   if(!isAdmin(adminId)) return;
   const text=String(msg.text||'').trim();
-  const [cmd,...rest]=text.split(/\s+/);
-  const arg=rest.join(' ');
+  const parts=text.split(/\s+/);
+  const rawCmd=parts.shift() || '';
+  const cmd=rawCmd.split('@')[0].trim();
+  const arg=parts.join(' ').trim();
   if(cmd==='/admin' || cmd==='/help'){
     return tg('sendMessage',{chat_id:chatId,text:`🛠 أوامر MOBA SHOP
 
@@ -284,7 +298,7 @@ async function handleCommand(msg){
     if(!arg) return tg('sendMessage',{chat_id:chatId,text:'اكتب رقم الطلب\nمثال: /delete_order MOBA 1001',reply_to_message_id:msg.message_id});
     const o=await getOrder(arg);
     if(!o) return tg('sendMessage',{chat_id:chatId,text:'الطلب غير موجود.',reply_to_message_id:msg.message_id});
-    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${arg}?`,reply_markup:confirmDeleteKeyboard(arg)});
+    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${o.order_code || o.id}?`,reply_markup:confirmDeleteKeyboard(o.id)});
   }
   if(cmd==='/clear_pending'){
     const rows=await supa(`orders?status=in.(pending,claimed,processing,on_hold,needs_fix)&select=id`);
@@ -294,6 +308,9 @@ async function handleCommand(msg){
     const rows=await supa(`orders?status=eq.delivered&select=id`);
     for(const r of rows) await updateOrder(r.id,{status:'archived',status_text:'تمت الأرشفة',customer_status_text:'تم الشحن بنجاح'});
     return tg('sendMessage',{chat_id:chatId,text:`✅ تمت أرشفة ${rows.length} طلب منفذ.`});
+  }
+  if(cmd.startsWith('/')){
+    return tg('sendMessage',{chat_id:chatId,text:`الأمر غير معروف: ${cmd}\nاكتب /admin لعرض الأوامر.`,reply_to_message_id:msg.message_id});
   }
 }
 async function handleCallback(cb){
@@ -325,12 +342,12 @@ async function handleCallback(cb){
   }
   if(action==='delete_ask'){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تأكيد الحذف'});
-    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${id}?`,reply_to_message_id:msgId,reply_markup:confirmDeleteKeyboard(id)});
+    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${order.order_code || order.id}?`,reply_to_message_id:msgId,reply_markup:confirmDeleteKeyboard(id)});
   }
   if(action==='delete_confirm'){
-    await deleteOrder(id);
+    await deleteOrder(order.id);
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تم حذف الطلب'});
-    return tg('sendMessage',{chat_id:chatId,text:`🗑 تم حذف الطلب ${id}`,reply_to_message_id:msgId});
+    return tg('sendMessage',{chat_id:chatId,text:`🗑 تم حذف الطلب ${order.order_code || order.id}`,reply_to_message_id:msgId});
   }
   if(action==='open'){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'فتح الطلب'});
