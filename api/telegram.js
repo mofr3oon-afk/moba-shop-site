@@ -268,6 +268,8 @@ async function handleCommand(msg){
 /late - الطلبات المتأخرة
 /delete_order MOBA 1001 - حذف طلب
 /clear_pending - حذف كل المعلقات بتأكيد
+/clear_all_orders - حذف كل الأوردرات بتأكيد
+/new_month - بداية شهر جديد وحذف كل الأوردرات بتأكيد
 /archive_done - أرشفة الطلبات المنفذة
 
 🔎 البحث:
@@ -304,6 +306,12 @@ async function handleCommand(msg){
     const rows=await supa(`orders?status=in.(pending,claimed,processing,on_hold,needs_fix)&select=id`);
     return tg('sendMessage',{chat_id:chatId,text:`⚠️ هيتم حذف كل الطلبات المعلقة.\nالعدد: ${rows.length}`,reply_markup:confirmClearKeyboard('pending',rows.length)});
   }
+
+  if(cmd==='/clear_all_orders' || cmd==='/new_month'){
+    const rows=await supa(`orders?select=id`);
+    return tg('sendMessage',{chat_id:chatId,text:`⚠️ هيتم حذف كل الأوردرات من الموقع.\nالعدد: ${rows.length}\nاستخدم ده في بداية الشهر فقط.`,reply_markup:confirmClearKeyboard('all',rows.length)});
+  }
+
   if(cmd==='/archive_done'){
     const rows=await supa(`orders?status=eq.delivered&select=id`);
     for(const r of rows) await updateOrder(r.id,{status:'archived',status_text:'تمت الأرشفة',customer_status_text:'تم الشحن بنجاح'});
@@ -328,6 +336,14 @@ async function handleCallback(cb){
     return;
   }
   if(action==='clear_confirm'){
+
+    if(id==='all'){
+      const rows=await supa(`orders?select=id`);
+      for(const r of rows) await deleteOrder(r.id);
+      await tg('answerCallbackQuery',{callback_query_id:cb.id,text:`تم حذف ${rows.length} طلب`});
+      return tg('sendMessage',{chat_id:chatId,text:`🗑 تم حذف كل الأوردرات.\nالعدد: ${rows.length}`,reply_to_message_id:msgId});
+    }
+
     if(id==='pending'){
       const rows=await supa(`orders?status=in.(pending,claimed,processing,on_hold,needs_fix)&select=id`);
       for(const r of rows) await deleteOrder(r.id);

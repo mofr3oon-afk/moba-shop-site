@@ -402,6 +402,43 @@ html{scroll-behavior:smooth}
   .order-detail-row{grid-template-columns:110px 1fr;gap:10px;font-size:13px}
 }
 
+
+/* V13 text reviews + English numerals */
+.reviews-panel{margin-top:18px;padding:20px;position:relative;overflow:hidden}
+.reviews-panel:before{content:"";position:absolute;inset:-90px auto auto -70px;width:220px;height:220px;background:radial-gradient(circle,rgba(39,216,255,.14),transparent 68%);pointer-events:none}
+.reviews-title{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.reviews-title h2{margin:0;font-size:24px}
+.reviews-title p{margin:7px 0 0;color:var(--muted);font-size:13px;line-height:1.8}
+.reviews-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.reviews-stat{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));border-radius:18px;padding:12px;text-align:center}
+.reviews-stat b{display:block;font-size:24px;color:#fff;text-shadow:0 0 18px rgba(39,216,255,.28)}
+.reviews-stat span{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+.review-form{display:grid;gap:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:20px;padding:14px;margin:14px 0}
+.review-stars{display:flex;gap:8px;justify-content:center;direction:ltr}
+.review-star{border:0;background:rgba(255,255,255,.08);color:#7d8798;border-radius:12px;width:42px;height:38px;font-size:22px;cursor:pointer;transition:.15s}
+.review-star.active,.review-star:hover{color:#ffcf5c;background:rgba(255,207,92,.14);box-shadow:0 0 18px rgba(255,207,92,.12)}
+.review-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.review-card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border-radius:18px;padding:13px;line-height:1.8;min-height:130px}
+.review-card-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.review-name{font-weight:900;color:#fff}
+.review-date{font-size:11px;color:var(--muted)}
+.review-rating{color:#ffcf5c;letter-spacing:1px;direction:ltr;text-align:right}
+.review-text{color:#eaf2ff;font-size:13px;overflow-wrap:anywhere}
+.review-status{display:none;padding:10px;border-radius:14px;line-height:1.7}
+.review-status.ok{display:block;background:rgba(56,224,139,.12);border:1px solid rgba(56,224,139,.30);color:#dfffea}
+.review-status.err{display:block;background:rgba(255,77,104,.12);border:1px solid rgba(255,77,104,.30);color:#ffdce2}
+@media(max-width:900px){
+  .reviews-panel{padding:14px;border-radius:22px}
+  .reviews-title{display:block}
+  .reviews-title h2{font-size:20px}
+  .reviews-stats{gap:7px}
+  .reviews-stat{padding:9px 6px;border-radius:15px}
+  .reviews-stat b{font-size:18px}
+  .reviews-stat span{font-size:10px}
+  .review-list{grid-template-columns:1fr;gap:8px}
+  .review-star{width:38px;height:34px;font-size:20px}
+}
+
 </style>
 </head>
 <body>
@@ -411,9 +448,9 @@ html{scroll-behavior:smooth}
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
-      <a href="#customerReviews">💬 آراء العملاء</a>
       <a href="#cartSection">🛒 السلة</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
+      <a href="#customerReviews">💬 آراء العملاء</a>
       <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
     </nav>
     <section class="hero">
@@ -428,58 +465,6 @@ html{scroll-behavior:smooth}
           <div class="step">2️⃣ ضيف للسلة</div>
           <div class="step">3️⃣ ادفع وارفع السكرين</div>
         </div></div>
-    </section>
-    
-    <section class="panel trust-reviews" id="customerReviews">
-      <div class="trust-head">
-        <div>
-          <h2>💬 آراء العملاء في MOBA SHOP</h2>
-          <p>ثقة اتبنت معانا على مدار سنين، ودي نماذج حقيقية من كلام الناس اللي جربتنا.</p>
-        </div>
-        <div class="trust-badge">🛡 تقييمات حقيقية من عملائنا</div>
-      </div>
-
-      <div class="trust-stats">
-        <div class="trust-stat"><b>+7000</b><span>عميل وثق فينا</span></div>
-        <div class="trust-stat"><b>12+</b><span>سنة خبرة</span></div>
-        <div class="trust-stat"><b>+1000</b><span>تقييم ورأي</span></div>
-      </div>
-
-      <div class="reviews-strip" aria-label="صور آراء العملاء">
-        <div class="reviews-track">
-          <img class="review-shot" src="assets/reviews/review_01.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_02.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_03.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_04.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_05.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_06.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_07.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_08.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_09.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_10.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_11.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_12.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_13.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_14.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_15.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-          <img class="review-shot" src="assets/reviews/review_01.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_02.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_03.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_04.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_05.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_06.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_07.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_08.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_09.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_10.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_11.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_12.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_13.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_14.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-<img class="review-shot" src="assets/reviews/review_15.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
-        </div>
-      </div>
-      <div class="review-note">اضغط على أي صورة عشان تشوفها بحجم أكبر.</div>
     </section>
 
     <section class="grid">
@@ -540,6 +525,39 @@ html{scroll-behavior:smooth}
       <div id="trackResult" class="track-result"></div>
       <div id="historyList" class="history-list"></div>
       <div class="notice">اضغط على أي طلب عشان تشوف تفاصيله كاملة.</div>
+    </section>
+
+    
+    <section class="panel reviews-panel" id="customerReviews">
+      <div class="reviews-title">
+        <div>
+          <h2>💬 آراء العملاء</h2>
+          <p>اكتب رأيك في MOBA SHOP وقيّم تجربتك، وآراء العملاء هتظهر هنا للناس.</p>
+        </div>
+      </div>
+
+      <div class="reviews-stats">
+        <div class="reviews-stat"><b>+7000</b><span>عميل وثق فينا</span></div>
+        <div class="reviews-stat"><b>12+</b><span>سنة خبرة</span></div>
+        <div class="reviews-stat"><b>+1000</b><span>تقييم ورأي</span></div>
+      </div>
+
+      <form class="review-form" id="reviewForm">
+        <input class="input" name="customerName" placeholder="اسمك" maxlength="32" required>
+        <div class="review-stars" id="reviewStars" aria-label="تقييم النجوم">
+          <button type="button" class="review-star active" data-rate="1">★</button>
+          <button type="button" class="review-star active" data-rate="2">★</button>
+          <button type="button" class="review-star active" data-rate="3">★</button>
+          <button type="button" class="review-star active" data-rate="4">★</button>
+          <button type="button" class="review-star active" data-rate="5">★</button>
+        </div>
+        <input type="hidden" name="rating" id="reviewRating" value="5">
+        <textarea class="textarea" name="reviewText" placeholder="اكتب رأيك فينا" maxlength="260" required></textarea>
+        <button class="btn add" type="submit">⭐ نشر التقييم</button>
+        <div id="reviewStatus" class="review-status"></div>
+      </form>
+
+      <div id="reviewsList" class="review-list"></div>
     </section>
 
     <div class="footer" id="footerSupport">MOBA SHOP | Digital Store For Gamers</div>
@@ -797,33 +815,6 @@ html{scroll-behavior:smooth}
 </script>
 
 
-  <div class="review-modal" id="reviewModal" onclick="closeReviewImage()">
-    <div class="review-modal-card" onclick="event.stopPropagation()">
-      <button class="review-close" type="button" onclick="closeReviewImage()">×</button>
-      <img id="reviewModalImg" src="" alt="رأي عميل">
-    </div>
-  </div>
-  <script id="moba-review-modal">
-    function openReviewImage(src){
-      var modal = document.getElementById('reviewModal');
-      var img = document.getElementById('reviewModalImg');
-      if(!modal || !img) return;
-      img.src = src;
-      modal.classList.add('show');
-    }
-    function closeReviewImage(){
-      var modal = document.getElementById('reviewModal');
-      var img = document.getElementById('reviewModalImg');
-      if(!modal || !img) return;
-      modal.classList.remove('show');
-      setTimeout(function(){ img.src=''; }, 150);
-    }
-    document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape') closeReviewImage();
-    });
-  </script>
-
-
 <script id="moba-v10-cart-click">
 (function(){
   function goToCart(){
@@ -1044,6 +1035,118 @@ html{scroll-behavior:smooth}
       window.loadOrderStatus(phone);
     }, true);
   }
+})();
+</script>
+
+
+<script id="moba-v13-reviews-english-digits">
+(function(){
+  const arabicDigits = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+  function toEnglishDigitsText(s){ return String(s).replace(/[٠-٩۰-۹]/g, d => arabicDigits[d] || d); }
+  window.toEnglishDigitsText = toEnglishDigitsText;
+
+  function convertNode(node){
+    if(!node) return;
+    if(node.nodeType === 3){
+      const v = toEnglishDigitsText(node.nodeValue);
+      if(v !== node.nodeValue) node.nodeValue = v;
+      return;
+    }
+    if(node.nodeType !== 1) return;
+    if(['SCRIPT','STYLE','TEXTAREA','INPUT'].includes(node.tagName)) return;
+    node.childNodes.forEach(convertNode);
+  }
+  convertNode(document.body);
+  const obs = new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      m.addedNodes.forEach(convertNode);
+      if(m.type === 'characterData') convertNode(m.target);
+    });
+  });
+  obs.observe(document.body,{childList:true,subtree:true,characterData:true});
+  document.addEventListener('input', e=>{
+    if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')){
+      const pos = e.target.selectionStart;
+      const v = toEnglishDigitsText(e.target.value);
+      if(v !== e.target.value){
+        e.target.value = v;
+        try{ e.target.setSelectionRange(pos,pos); }catch(_){}
+      }
+    }
+  });
+
+  let reviewRate = 5;
+  function setStars(n){
+    reviewRate = Number(n || 5);
+    const hidden = document.getElementById('reviewRating');
+    if(hidden) hidden.value = reviewRate;
+    document.querySelectorAll('.review-star').forEach(btn=>{
+      btn.classList.toggle('active', Number(btn.dataset.rate) <= reviewRate);
+    });
+  }
+  document.addEventListener('click', e=>{
+    const star = e.target.closest('.review-star');
+    if(star) setStars(star.dataset.rate);
+  });
+
+  function escapeText(text){
+    return String(text ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  }
+  function reviewStars(n){ return '★★★★★'.slice(0, Math.max(1, Math.min(5, Number(n||5)))); }
+  function formatDate(v){
+    try{return toEnglishDigitsText(new Date(v).toLocaleDateString('en-GB'));}catch(_){return '';}
+  }
+  async function loadReviews(){
+    const box = document.getElementById('reviewsList');
+    if(!box) return;
+    try{
+      const res = await fetch('/api/reviews');
+      const data = await res.json();
+      const reviews = Array.isArray(data.reviews) ? data.reviews : [];
+      if(!reviews.length){
+        box.innerHTML = '<div class="review-card"><div class="review-text">لسه مفيش تقييمات على الموقع، كن أول واحد يكتب رأيه.</div></div>';
+        return;
+      }
+      box.innerHTML = reviews.map(r=>`
+        <div class="review-card">
+          <div class="review-card-top">
+            <div class="review-name">${escapeText(r.customer_name || 'عميل MOBA SHOP')}</div>
+            <div class="review-date">${formatDate(r.created_at)}</div>
+          </div>
+          <div class="review-rating">${reviewStars(r.rating)}</div>
+          <div class="review-text">${escapeText(r.review_text)}</div>
+        </div>
+      `).join('');
+    }catch(e){
+      box.innerHTML = '<div class="review-card"><div class="review-text">تعذر تحميل التقييمات حاليا.</div></div>';
+    }
+  }
+  const form = document.getElementById('reviewForm');
+  if(form){
+    form.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const status = document.getElementById('reviewStatus');
+      status.className = 'review-status';
+      const fd = new FormData(form);
+      try{
+        const res = await fetch('/api/reviews',{method:'POST',body:JSON.stringify({
+          customer_name: fd.get('customerName'),
+          rating: Number(fd.get('rating') || reviewRate),
+          review_text: fd.get('reviewText')
+        }),headers:{'Content-Type':'application/json'}});
+        const data = await res.json();
+        if(!data.ok) throw new Error(data.error || 'حصل خطأ');
+        status.textContent = '✅ شكرا ليك، تقييمك اتنشر بنجاح';
+        status.className = 'review-status ok';
+        form.reset(); setStars(5); loadReviews();
+      }catch(err){
+        status.textContent = '⚠️ ' + (err.message || 'حصل خطأ أثناء نشر التقييم');
+        status.className = 'review-status err';
+      }
+    });
+  }
+  setStars(5);
+  loadReviews();
 })();
 </script>
 

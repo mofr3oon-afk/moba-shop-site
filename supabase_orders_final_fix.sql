@@ -105,3 +105,23 @@ create index if not exists orders_phone_created_idx on public.orders(phone, crea
 create index if not exists orders_status_created_idx on public.orders(status, created_at desc);
 
 notify pgrst, 'reload schema';
+
+
+
+-- V13 reviews table
+create table if not exists public.reviews (
+  id bigserial primary key,
+  customer_name text not null,
+  rating integer not null default 5,
+  review_text text not null,
+  is_approved boolean default true,
+  created_at timestamptz default now()
+);
+
+create index if not exists reviews_created_at_idx on public.reviews(created_at desc);
+create index if not exists reviews_approved_idx on public.reviews(is_approved);
+
+-- Important: allow monthly reset and repeated daily MOBA codes if needed
+alter table public.orders drop constraint if exists orders_order_code_key;
+
+notify pgrst, 'reload schema';
