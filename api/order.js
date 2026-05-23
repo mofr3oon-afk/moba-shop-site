@@ -41,26 +41,29 @@ export default async function handler(req,res){
     const cart=JSON.parse(fields.cart||'[]');
     const customerPhone=String(fields.customerPhone||'').trim();
     const paymentMethod=String(fields.paymentMethod||'').trim();
-    const customerName=String(fields.customerName||'').trim() || 'غير محدد';
+    const customerName='غير محدد';
     const note=String(fields.note||'').trim();
+    const transferMode=String(fields.transferMode||'').trim(); // same | other
+    const transferLast3=String(fields.transferLast3||'').trim();
     const total=cart.reduce((s,item)=>s+Number(item.price||0),0);
     if(!/^01\d{9}$/.test(customerPhone)) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح'});
     if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
+    if(!['same','other'].includes(transferMode)) return json(res,400,{ok:false,error:'حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني'});
+    if(transferMode==='other' && !/^\d{3}$/.test(transferLast3)) return json(res,400,{ok:false,error:'اكتب آخر 3 أرقام من رقم التحويل عشان نقدر نراجع الدفع'});
+
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
-    for(const item of cart){ if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId))) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID في السلة'}); }
+    for(const item of cart){ if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
     if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
 
     const openPhone=await findOpenOrderByPhone(customerPhone);
     if(openPhone) return json(res,409,{ok:false,error:'عندك طلب مفتوح بالفعل. تابع حالته برقم الموبايل أو كلم الدعم لو محتاج تعديل.'});
-    const openId=await findOpenOrderByPubgId(cart);
-    if(openId) return json(res,409,{ok:false,error:'في طلب مفتوح بالفعل على نفس PUBG ID. تابع الطلب أو كلم الدعم.'});
 
     const identity=await nextDailyIdentity();
     const order={
       id:identity.id, order_code:identity.order_code, order_date:identity.order_date, daily_number:identity.daily_number,
       phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, total,
       status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
-      handler:null, items:cart, note, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
+      handler:null, items:cart, note, transfer_mode:transferMode, transfer_last3:transferMode==='other'?transferLast3:'', transfer_confirm_text:transferMode==='same'?'نفس رقم المتابعة':`آخر 3 أرقام: ${transferLast3}`, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
       raw_data:{userAgent:req.headers['user-agent']||''}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;

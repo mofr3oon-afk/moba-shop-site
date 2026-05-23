@@ -74,4 +74,17 @@ create index if not exists orders_created_at_idx on public.orders(created_at des
 create index if not exists orders_order_date_idx on public.orders(order_date);
 create index if not exists orders_daily_number_idx on public.orders(daily_number);
 
+
+-- V5 transfer verification and one-time customer fix columns
+alter table public.orders add column if not exists transfer_mode text;
+alter table public.orders add column if not exists transfer_last3 text;
+alter table public.orders add column if not exists transfer_confirm_text text;
+alter table public.orders add column if not exists fix_type text;
+alter table public.orders add column if not exists fix_reason text;
+alter table public.orders add column if not exists fix_attempts integer default 0;
+alter table public.orders add column if not exists fix_requested_at timestamptz;
+alter table public.orders add column if not exists fix_submitted_at timestamptz;
+alter table public.orders add column if not exists fix_payload jsonb default '{}'::jsonb;
+alter table public.orders add column if not exists rejection_reason text;
+
 notify pgrst, 'reload schema';

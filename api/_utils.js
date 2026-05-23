@@ -43,21 +43,30 @@ export function telegramKeyboard(orderId,status='pending'){
     [{text: status==='claimed'?'🙋 مستلم بالفعل':'🙋 استلمت | Claim',callback_data:`web_claim_${orderId}`},{text:status==='processing'?'🔄 جاري التنفيذ':'🔄 بدأ التنفيذ',callback_data:`web_processing_${orderId}`}],
     [{text:'✅ تم الشحن',callback_data:`web_delivered_${orderId}`},{text:status==='on_hold'?'⏸ معلق':'⏸ تعليق',callback_data:`web_hold_${orderId}`}],
     [{text:'📸 سكرين غير واضح',callback_data:`web_badshot_${orderId}`},{text:'🆔 ID غلط',callback_data:`web_badid_${orderId}`}],
-    [{text:status==='needs_fix'?'⚠️ فيه مشكلة':'⚠️ مشكلة',callback_data:`web_fix_${orderId}`},{text:status==='rejected'?'❌ مرفوض':'❌ رفض',callback_data:`web_reject_${orderId}`}],
+    [{text:'📱 رقم غلط',callback_data:`web_badphone_${orderId}`},{text:status==='rejected'?'❌ مرفوض':'❌ رفض',callback_data:`web_reject_${orderId}`}],
     [{text:'📊 سجل العميل',callback_data:`web_history_${orderId}`},{text:'📋 البيانات | Data',callback_data:`web_data_${orderId}`}]
   ]};
 }
+export function reportsKeyboard(){
+  return {inline_keyboard:[
+    [{text:'📊 تقرير اليوم',callback_data:'webreport_today'},{text:'📆 تقرير الاسبوع',callback_data:'webreport_week'}],
+    [{text:'🗓 تقرير الشهر',callback_data:'webreport_month'},{text:'📌 الطلبات المفتوحة',callback_data:'webreport_pending'}],
+    [{text:'✅ تم الشحن اليوم',callback_data:'webreport_delivered'}]
+  ]};
+}
+export function supportUrl(){return process.env.SUPPORT_URL || 'https://t.me/MOFR3OON';}
 export function buildTelegramText(order){
   const cart=Array.isArray(order.items)?order.items:[];
-  const itemLines=cart.map((item,i)=>`${i+1}) ${escapeHtml(item.product)}\n   ID: <code>${escapeHtml(item.pubgId)}</code>\n   السعر: ${escapeHtml(item.price)} جنيه`).join('\n\n');
+  const itemLines=cart.map((item,i)=>`${i+1}) ${escapeHtml(item.product)}\n   ID: <code>${escapeHtml(item.pubgId)}</code>\n   Name: <b>${escapeHtml(item.pubgName || '-')}</b>\n   السعر: ${escapeHtml(item.price)} جنيه`).join('\n\n');
   return `🚨 <b>طلب جديد من موقع MOBA SHOP</b>\n`+
   `━━━━━━━━━━━━━━\n`+
   `🧾 رقم الطلب: <code>${escapeHtml(order.order_code || order.id)}</code>\n`+
   `📌 الحالة: <b>${escapeHtml(STATUS_LABELS[order.status] || order.status)}</b>\n`+
   (order.handler?`👨‍💻 المسؤول: ${escapeHtml(order.handler)}\n`:``)+
-  `👤 الاسم: ${escapeHtml(order.customer_name || 'غير محدد')}\n`+
-  `📱 رقم العميل: <code>${escapeHtml(order.phone || order.customer_phone || '')}</code>\n`+
+  ((order.customer_name && order.customer_name !== 'غير محدد')?`👤 الاسم: ${escapeHtml(order.customer_name)}\n`:``)+
+  `📱 رقم المتابعة: <code>${escapeHtml(order.phone || order.customer_phone || '')}</code>\n`+
   `💳 الدفع: ${escapeHtml(order.payment_method || '')}\n`+
+  `🔐 تأكيد التحويل: ${escapeHtml(order.transfer_confirm_text || 'غير محدد')}\n`+
   `💰 الإجمالي: <b>${escapeHtml(order.total || 0)} جنيه</b>\n\n`+
   `🛒 <b>سلة الطلبات | Cart</b>\n${itemLines || 'لا يوجد'}\n\n`+
   (order.note?`📝 ملاحظة: ${escapeHtml(order.note)}\n\n`:``)+
