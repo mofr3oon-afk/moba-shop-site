@@ -417,9 +417,9 @@ async function handleCallback(cb){
     processing:['processing','جاري تنفيذ الطلب'],
     delivered:['delivered','تم الشحن بنجاح'],
     hold:['on_hold','الطلب معلق مؤقتا'],
-    bad_id:['needs_fix','ID غير صحيح - مطلوب تعديل مرة واحدة',{fix_type:'bad_id',fix_count:Number(order.fix_count||0)}],
-    bad_screen:['needs_fix','السكرين غير واضح - مطلوب رفع سكرين جديد مرة واحدة',{fix_type:'bad_screen',fix_count:Number(order.fix_count||0)}],
-    bad_phone:['needs_fix','رقم المتابعة غير صحيح - مطلوب تعديل مرة واحدة',{fix_type:'bad_phone',fix_count:Number(order.fix_count||0)}],
+    bad_id:['needs_fix','ID غير صحيح - مطلوب تعديل من العميل',{fix_type:'bad_id',fix_count:Number(order.fix_count||0)}],
+    bad_screen:['needs_fix','السكرين غير واضح - مطلوب رفع سكرين جديد من العميل',{fix_type:'bad_screen',fix_count:Number(order.fix_count||0)}],
+    bad_phone:['needs_fix','رقم المتابعة غير صحيح - مطلوب تعديل من العميل',{fix_type:'bad_phone',fix_count:Number(order.fix_count||0)}],
     reject:['rejected','تم رفض الطلب - برجاء التواصل مع الدعم']
   };
   if(map[action]){

@@ -171,3 +171,16 @@ create index if not exists orders_order_code_created_idx on public.orders(order_
 create index if not exists orders_daily_number_created_idx on public.orders(daily_number, created_at desc);
 
 notify pgrst, 'reload schema';
+
+
+
+-- V14 customer fix flow columns
+alter table public.orders add column if not exists customer_fix_note text;
+alter table public.orders add column if not exists fix_type text;
+alter table public.orders add column if not exists fix_count integer default 0;
+alter table public.orders add column if not exists last_status_by text;
+alter table public.orders add column if not exists last_status_at timestamptz;
+alter table public.orders add column if not exists customer_status_text text;
+alter table public.orders add column if not exists admin_status_text text;
+
+notify pgrst, 'reload schema';
