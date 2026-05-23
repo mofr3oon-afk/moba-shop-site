@@ -6,6 +6,8 @@ const ADMIN_IDS = String(process.env.ADMIN_IDS || '').split(',').map(x=>x.trim()
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || '';
 
 function json(res,status,obj){res.status(status).json(obj);}
+function displayOrderCode(order){ return order?.order_code || order?.id || ''; }
+function realOrderId(order){ return order?.id || order?.order_code || ''; }
 function escapeHtml(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function isAdmin(id){return ADMIN_IDS.includes(String(id));}
 function adminPublic(){return 'مسؤول الطلب';}
@@ -120,7 +122,7 @@ Total: ${itemLineTotal(x)} جنيه`).join('\n\n') || 'لا يوجد';
 function orderText(order, title='📦 تفاصيل الطلب'){
   return `${title}
 ━━━━━━━━━━━━━━
-🧾 رقم الطلب: <b>${escapeHtml(order.id)}</b>
+🧾 رقم الطلب: <b>${escapeHtml(displayOrderCode(order))}</b>
 📱 رقم العميل: <code>${escapeHtml(order.phone || order.customer_phone || '')}</code>
 💳 الدفع: ${escapeHtml(order.payment_method || '')}
 🔐 تأكيد التحويل: ${escapeHtml(order.transfer_confirm || order.transfer_info || order.transfer_last3 || 'غير محدد')}
@@ -140,7 +142,7 @@ async function sendOrderCard(chatId,order,replyTo){
     text:orderText(order,'👁 فتح الطلب'),
     parse_mode:'HTML',
     reply_to_message_id:replyTo,
-    reply_markup:orderKeyboard(order.id)
+    reply_markup:orderKeyboard(realOrderId(order))
   });
 }
 function statusHistory(order,status,label,adminId){
@@ -233,7 +235,7 @@ async function pendingList(chatId,replyTo){
     await tg('sendMessage',{
       chat_id:chatId,
       text:`📌 ${o.id}\n📱 ${o.phone||''}\n🎮 ${first}\n📌 ${statusLabel(o.status)}`,
-      reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${o.id}`},{text:'🗑 حذف',callback_data:`delete_ask:${o.id}`}]]}
+      reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${realOrderId(o)}`},{text:'🗑 حذف',callback_data:`delete_ask:${realOrderId(o)}`}]]}
     });
   }
 }
@@ -243,7 +245,7 @@ async function lateList(chatId,replyTo){
   if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'✅ لا يوجد طلبات متأخرة أكتر من 30 دقيقة.',reply_to_message_id:replyTo});
   await tg('sendMessage',{chat_id:chatId,text:`⏰ طلبات متأخرة: ${rows.length}`});
   for(const o of rows.slice(0,10)){
-    await tg('sendMessage',{chat_id:chatId,text:`⏰ ${o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${o.id}`}]]}});
+    await tg('sendMessage',{chat_id:chatId,text:`⏰ ${o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${realOrderId(o)}`}]]}});
   }
 }
 async function findByPubgId(chatId,id,replyTo){
@@ -257,7 +259,7 @@ async function findByPubgId(chatId,id,replyTo){
   if(!results.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد طلبات للـ ID ده.',reply_to_message_id:replyTo});
   await tg('sendMessage',{chat_id:chatId,text:`🔎 نتائج PUBG ID: ${id}`});
   for(const o of results){
-    await tg('sendMessage',{chat_id:chatId,text:`${o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${o.id}`}]]}});
+    await tg('sendMessage',{chat_id:chatId,text:`${o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${realOrderId(o)}`}]]}});
   }
 }
 async function handleCommand(msg){
@@ -367,7 +369,7 @@ async function handleCallback(cb){
   }
   if(action==='delete_ask'){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تأكيد الحذف'});
-    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${order.order_code || order.id}?`,reply_to_message_id:msgId,reply_markup:confirmDeleteKeyboard(id)});
+    return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${order.order_code || order.id}?`,reply_to_message_id:msgId,reply_markup:confirmDeleteKeyboard(realOrderId(order))});
   }
   if(action==='delete_confirm'){
     await deleteOrder(order.id);
@@ -402,7 +404,7 @@ async function handleCallback(cb){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:label});
     await tg('sendMessage',{chat_id:chatId,text:`✅ تم تحديث حالة الطلب:\n${label}\n👨‍💻 بواسطة: ${adminPublic()}`,reply_to_message_id:msgId});
     try{
-      await tg('editMessageReplyMarkup',{chat_id:chatId,message_id:msgId,reply_markup:orderKeyboard(id)});
+      await tg('editMessageReplyMarkup',{chat_id:chatId,message_id:msgId,reply_markup:orderKeyboard(realOrderId(order))});
     }catch(e){}
     return;
   }

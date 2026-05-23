@@ -15,7 +15,9 @@ export const STATUS_LABELS = {
 };
 export const OPEN_STATUSES = ['pending','claimed','processing','on_hold','needs_fix'];
 export function json(res, status, data){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(JSON.stringify(data));}
-export function escapeHtml(value=''){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
+export function displayOrderCode(order){ return order?.order_code || order?.id || ''; }
+function realOrderId(order){ return order?.id || order?.order_code || ''; }
+function escapeHtml(value=''){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
 export function supabaseReady(){return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);}
 export async function supabaseRequest(path, options={}){
   if(!supabaseReady()) throw new Error('Supabase Environment Variables missing');
