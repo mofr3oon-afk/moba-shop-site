@@ -1,0 +1,11 @@
+{
+  "name": "moba-shop-order-page",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MOBA SHOP order page with cart and Telegram order forwarding",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOBA SHOP | Digital Store</title>
+  <meta name="description" content="MOBA SHOP - شحن ببجي موبايل بسرعة وأمان" />
+  <style>
+    :root{
+      --bg:#070912; --card:#101522; --card2:#151d2e; --text:#f6f7fb; --muted:#9aa4b5;
+      --cyan:#27d8ff; --orange:#ff9a2f; --green:#38e08b; --red:#ff4d68; --line:rgba(255,255,255,.10);
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top,#162442 0,#070912 45%,#04050a 100%);color:var(--text);min-height:100vh}
+    body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 20% 20%,rgba(39,216,255,.16),transparent 30%),radial-gradient(circle at 80% 5%,rgba(255,154,47,.18),transparent 28%);pointer-events:none}
+    .wrap{width:min(1120px,94%);margin:auto;padding:26px 0 60px;position:relative}.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch;margin-bottom:18px}
+    .panel{background:linear-gradient(180deg,rgba(21,29,46,.92),rgba(9,13,24,.92));border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);overflow:hidden}.hero-main{padding:28px;position:relative}.badge{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(39,216,255,.35);background:rgba(39,216,255,.10);padding:8px 12px;border-radius:999px;color:#dff8ff;font-size:13px}.logo{font-size:42px;font-weight:900;letter-spacing:1px;margin:18px 0 6px;text-shadow:0 0 22px rgba(39,216,255,.55)}.logo span{color:var(--orange);text-shadow:0 0 22px rgba(255,154,47,.55)}.sub{color:var(--muted);line-height:1.9;font-size:16px}.quick{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.chip{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:10px 13px;color:#e9eef8;font-size:13px}.pay-card{padding:22px}.pay-title{font-weight:800;font-size:18px;margin-bottom:12px}.pay-box{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:10px;line-height:1.8}.grid{display:grid;grid-template-columns:1fr 380px;gap:18px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}.section-title h2{font-size:22px;margin:0}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab,.btn{border:0;border-radius:16px;padding:11px 14px;font-weight:800;cursor:pointer;color:var(--text);background:rgba(255,255,255,.08);border:1px solid var(--line);transition:.18s}.tab.active{background:linear-gradient(135deg,rgba(39,216,255,.95),rgba(37,120,255,.9));color:#00111a}.products{padding:20px}.product-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.product{padding:15px;border-radius:20px;background:rgba(255,255,255,.055);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}.product b{font-size:15px;line-height:1.5}.price{color:var(--green);font-weight:900}.id-input{width:100%;background:#0a0f1c;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;outline:none}.id-input:focus{border-color:rgba(39,216,255,.65);box-shadow:0 0 0 3px rgba(39,216,255,.10)}.add{background:linear-gradient(135deg,var(--cyan),#277bff);color:#00111a}.cart{padding:20px;position:sticky;top:14px}.cart h2{margin:0 0 12px}.cart-empty{color:var(--muted);text-align:center;padding:24px 10px;border:1px dashed var(--line);border-radius:18px}.cart-item{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px;line-height:1.7}.cart-item .remove{float:left;background:rgba(255,77,104,.12);color:#ffcbd3;border:1px solid rgba(255,77,104,.35);border-radius:10px;padding:5px 8px;cursor:pointer}.total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:12px;padding-top:14px;font-size:18px;font-weight:900}.form{margin-top:14px;display:grid;gap:10px}.form label{font-size:13px;color:#dce6f7}.input,.select,.file,.textarea{width:100%;background:#0a0f1c;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;outline:none}.textarea{min-height:74px;resize:vertical}.checkout{width:100%;padding:14px;border-radius:18px;background:linear-gradient(135deg,var(--orange),#ffcf5c);color:#1b1000;font-size:16px}.ghost{width:100%;background:rgba(255,255,255,.07)}.status{margin-top:12px;padding:12px;border-radius:16px;display:none;line-height:1.7}.status.ok{display:block;background:rgba(56,224,139,.12);border:1px solid rgba(56,224,139,.35);color:#dfffea}.status.err{display:block;background:rgba(255,77,104,.12);border:1px solid rgba(255,77,104,.35);color:#ffdce2}.notice{margin-top:12px;color:var(--muted);font-size:12px;line-height:1.7}.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.show{display:flex}.modal-card{max-width:430px;width:100%;background:linear-gradient(180deg,#182236,#0d1322);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:var(--shadow);text-align:center}.modal-actions{display:grid;gap:10px;margin-top:14px}.okbtn{background:linear-gradient(135deg,var(--green),#9dffbf);color:#00170a}.warn{color:#ffdebd;font-size:13px;line-height:1.8;text-align:right;background:rgba(255,154,47,.10);border:1px solid rgba(255,154,47,.28);border-radius:16px;padding:12px;margin-top:10px}
+    @media(max-width:900px){.hero,.grid{grid-template-columns:1fr}.product-list{grid-template-columns:1fr}.cart{position:static}.logo{font-size:34px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="panel hero-main">
+        <div class="badge">⚡ شحن سريع وآمن | Fast & Safe</div>
+        <div class="logo">MOBA <span>SHOP</span></div>
+        <div class="sub">واجهة طلبات بسيطة لتجهيز اوردرك بسرعة. اختار الباقة، اكتب ID، ضيف للسلة، وارفع سكرين التحويل.</div>
+        <div class="quick">
+          <div class="chip">🛒 سلة الطلبات | Cart</div>
+          <div class="chip">📸 رفع السكرين</div>
+          <div class="chip">📩 الطلب يوصلك لتليجرام</div>
+          <div class="chip">🛡 مراجعة قبل التنفيذ</div>
+        </div>
+      </div>
+      <div class="panel pay-card">
+        <div class="pay-title">💳 طرق الدفع | Payment</div>
+        <div class="pay-box"><b>🟢 InstaPay</b><br>Phone: 01061707294<br>User: mofr3oon1<br>Name: مؤمن</div>
+        <div class="pay-box"><b>📱 محفظة | Wallet</b><br>Vodafone / Orange / Etisalat / WE<br>Phone: 01061707294</div>
+        <div class="notice">بعد التحويل ارفع السكرين واكتب نفس رقم الموبايل اللي حولت منه.</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel products">
+        <div class="section-title">
+          <h2>🎮 المنتجات | Products</h2>
+          <div class="tabs">
+            <button class="tab active" data-cat="uc">شدات | UC</button>
+            <button class="tab" data-cat="growth">ازدهار</button>
+            <button class="tab" data-cat="prime">برايم</button>
+          </div>
+        </div>
+        <div id="productList" class="product-list"></div>
+      </div>
+
+      <aside class="panel cart">
+        <h2>🛒 سلة الطلبات | Cart</h2>
+        <div id="cartBox"></div>
+        <div class="total"><span>الإجمالي | Total</span><span id="total">0 جنيه</span></div>
+        <form id="orderForm" class="form">
+          <div>
+            <label>👤 الاسم اختياري</label>
+            <input class="input" name="customerName" placeholder="اسم العميل" />
+          </div>
+          <div>
+            <label>📱 رقم الموبايل</label>
+            <input class="input" name="customerPhone" inputmode="numeric" placeholder="010xxxxxxxx" required />
+          </div>
+          <div>
+            <label>💳 طريقة الدفع | Payment</label>
+            <select class="select" name="paymentMethod" required>
+              <option value="">اختار طريقة الدفع</option>
+              <option>🟢 InstaPay</option>
+              <option>📱 محفظة | Wallet</option>
+            </select>
+          </div>
+          <div>
+            <label>📸 سكرين التحويل</label>
+            <input class="file" name="screenshot" type="file" accept="image/*" required />
+          </div>
+          <div>
+            <label>📝 ملاحظة اختيارية</label>
+            <textarea class="textarea" name="note" placeholder="اي ملاحظة للطلب"></textarea>
+          </div>
+          <button class="btn checkout" type="submit">✅ تنفيذ الشراء | Checkout</button>
+          <button class="btn ghost" type="button" id="clearCart">🗑 تفريغ السلة</button>
+          <div id="status" class="status"></div>
+          <div class="notice">⚠️ راجع كل ID كويس قبل تنفيذ الطلب. اي ID غلط بعد التأكيد مسؤولية العميل.</div>
+        </form>
+      </aside>
+    </section>
+    <div class="footer">MOBA SHOP | Digital Store</div>
+  </main>
+
+  <div id="modal" class="modal">
+    <div class="modal-card">
+      <h2>✅ تم اضافة المنتج للسلة</h2>
+      <p id="modalText"></p>
+      <div class="modal-actions">
+        <button class="btn add" id="addMore">➕ إضافة منتج</button>
+        <button class="btn okbtn" id="goCheckout">✅ تنفيذ الشراء</button>
+        <button class="btn ghost" id="showCartBtn">🛒 عرض السلة</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const products = {
+      uc: [
+        { name: '60 UC ID | 60 شدة', price: 50 },
+        { name: '325 UC ID | 325 شدة', price: 235 },
+        { name: '660 UC ID | 660 شدة', price: 435 },
+        { name: '1800 UC ID | 1800 شدة', price: 1120 },
+        { name: '3850 UC ID | 3850 شدة', price: 2170 },
+        { name: '8100 UC ID | 8100 شدة', price: 4350 }
+      ],
+      growth: [
+        { name: 'ازدهار 1 ID | Growth Pack 1', price: 55, warning: 'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.' },
+        { name: 'ازدهار 2 ID | Growth Pack 2', price: 150, warning: 'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.' },
+        { name: 'ازدهار 3 ID | Growth Pack 3', price: 250, warning: 'الازدهار بيتشحن مرة واحدة فقط على الاكونت في العمر كله. اتأكد من اللعبة قبل الطلب.' },
+        { name: 'الكريستالة الميثك ID | Mythic Crystal', price: 150, warning: 'الكريستالة غالبا واحدة او اتنين في الاسبوع وبتتجدد يوم الاثنين. اتأكد انها متاحة عندك في اللعبة.' }
+      ],
+      prime: [
+        { name: 'Prime ID | 150 UC Total', price: 55 },
+        { name: 'Prime Plus ID | 900 UC Total', price: 445 },
+        { name: 'Prime + Prime Plus ID | 1050 UC Total', price: 500 }
+      ]
+    };
+
+    let activeCat = 'uc';
+    let cart = JSON.parse(localStorage.getItem('moba_cart') || '[]');
+    const productList = document.getElementById('productList');
+    const cartBox = document.getElementById('cartBox');
+    const totalEl = document.getElementById('total');
+    const statusEl = document.getElementById('status');
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modalText');
+
+    function saveCart(){ localStorage.setItem('moba_cart', JSON.stringify(cart)); }
+    function money(n){ return `${Number(n || 0).toLocaleString('ar-EG')} جنيه`; }
+    function escapeText(text){ return String(text).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+
+    function renderProducts(){
+      productList.innerHTML = products[activeCat].map((p, i) => `
+        <div class="product">
+          <b>${escapeText(p.name)}</b>
+          <div class="price">💰 ${money(p.price)}</div>
+          ${p.warning ? `<div class="warn">⚠️ ${escapeText(p.warning)}</div>` : ''}
+          <input class="id-input" id="id_${i}" inputmode="numeric" placeholder="اكتب PUBG ID" />
+          <button class="btn add" onclick="addToCart(${i})">➕ إضافة للسلة</button>
+        </div>`).join('');
+    }
+
+    function renderCart(){
+      if(!cart.length){ cartBox.innerHTML = '<div class="cart-empty">السلة فاضية<br>اختار منتج واكتب ID واضغط إضافة للسلة</div>'; }
+      else {
+        cartBox.innerHTML = cart.map((item, i) => `
+          <div class="cart-item">
+            <button class="remove" onclick="removeItem(${i})">حذف</button>
+            <b>${i+1}) ${escapeText(item.product)}</b><br>
+            🆔 ID: ${escapeText(item.pubgId)}<br>
+            💰 ${money(item.price)}
+          </div>`).join('');
+      }
+      const total = cart.reduce((s,x)=>s+Number(x.price||0),0);
+      totalEl.textContent = money(total);
+    }
+
+    function addToCart(i){
+      const p = products[activeCat][i];
+      const pubgId = document.getElementById(`id_${i}`).value.trim();
+      if(!/^\d{5,15}$/.test(pubgId)){
+        showStatus('اكتب PUBG ID صحيح ارقام فقط', 'err');
+        return;
+      }
+      cart.push({ product:p.name, price:p.price, pubgId });
+      saveCart(); renderCart();
+      modalText.innerHTML = `🎮 ${escapeText(p.name)}<br>🆔 ${escapeText(pubgId)}<br>💰 ${money(p.price)}<br><br>تحب تضيف حاجة تاني ولا نكمل الشراء؟`;
+      modal.classList.add('show');
+      document.getElementById(`id_${i}`).value = '';
+    }
+
+    function removeItem(i){ cart.splice(i,1); saveCart(); renderCart(); }
+    function showStatus(msg, type){ statusEl.textContent = msg; statusEl.className = `status ${type}`; }
+    function hideStatus(){ statusEl.className = 'status'; statusEl.textContent = ''; }
+
+    document.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        activeCat = btn.dataset.cat;
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderProducts(); hideStatus();
+      });
+    });
+
+    document.getElementById('addMore').onclick = ()=> modal.classList.remove('show');
+    document.getElementById('showCartBtn').onclick = ()=> { modal.classList.remove('show'); document.querySelector('.cart').scrollIntoView({behavior:'smooth'}); };
+    document.getElementById('goCheckout').onclick = ()=> { modal.classList.remove('show'); document.querySelector('.cart').scrollIntoView({behavior:'smooth'}); };
+    document.getElementById('clearCart').onclick = ()=> { cart=[]; saveCart(); renderCart(); hideStatus(); };
+
+    document.getElementById('orderForm').addEventListener('submit', async (e)=>{
+      e.preventDefault(); hideStatus();
+      if(!cart.length){ showStatus('سلة الطلبات فاضية', 'err'); return; }
+      const form = e.currentTarget;
+      const fd = new FormData(form);
+      fd.append('cart', JSON.stringify(cart));
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = '⏳ جاري ارسال الطلب...';
+      try{
+        const res = await fetch('/api/order', { method:'POST', body:fd });
+        const data = await res.json();
+        if(!data.ok) throw new Error(data.error || 'حصل خطأ');
+        showStatus(`✅ تم استلام طلبك بنجاح. رقم الطلب: ${data.orderId}`, 'ok');
+        cart=[]; saveCart(); renderCart(); form.reset();
+      }catch(err){
+        showStatus(err.message || 'حصل خطأ اثناء ارسال الطلب', 'err');
+      }finally{
+        btn.disabled = false; btn.textContent = '✅ تنفيذ الشراء | Checkout';
+      }
+    });
+
+    renderProducts(); renderCart();
+  </script>
+</body>
+</html>
