@@ -148,3 +148,10 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
 ## تحديث V13.2
 - إصلاح جذري لأزرار تليجرام: الأزرار تستخدم ID الداخلي الحقيقي، والرسالة تعرض رقم MOBA للقراءة فقط.
 - إضافة /api/debug-order لفحص آخر الطلبات لو ظهر أي خطأ.
+
+
+## تحديث V13.3
+- إصلاح خطأ Unexpected token A بسبب عدم تصدير escapeHtml من _utils.js.
+- توحيد أزرار تليجرام بين order.js و telegram.js.
+- دعم الأزرار القديمة web_ callbacks مؤقتا.
+- إصلاح حساب الإجمالي مع الكمية.

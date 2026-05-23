@@ -17,7 +17,7 @@ export const OPEN_STATUSES = ['pending','claimed','processing','on_hold','needs_
 export function json(res, status, data){res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(JSON.stringify(data));}
 export function displayOrderCode(order){ return order?.order_code || order?.id || ''; }
 function realOrderId(order){ return order?.id || order?.order_code || ''; }
-function escapeHtml(value=''){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
+export function escapeHtml(value=''){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
 export function supabaseReady(){return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);}
 export async function supabaseRequest(path, options={}){
   if(!supabaseReady()) throw new Error('Supabase Environment Variables missing');
@@ -47,11 +47,30 @@ export function isAdmin(userId){return String(process.env.ADMIN_IDS||'').split('
 export function adminName(from={}){return from.first_name || from.username || 'Admin';}
 export function telegramKeyboard(orderId,status='pending'){
   return {inline_keyboard:[
-    [{text: status==='claimed'?'🙋 مستلم بالفعل':'🙋 استلمت | Claim',callback_data:`web_claim_${orderId}`},{text:status==='processing'?'🔄 جاري التنفيذ':'🔄 بدأ التنفيذ',callback_data:`web_processing_${orderId}`}],
-    [{text:'✅ تم الشحن',callback_data:`web_delivered_${orderId}`},{text:status==='on_hold'?'⏸ معلق':'⏸ تعليق',callback_data:`web_hold_${orderId}`}],
-    [{text:'📸 سكرين غير واضح',callback_data:`web_badshot_${orderId}`},{text:'🆔 ID غلط',callback_data:`web_badid_${orderId}`}],
-    [{text:'📱 رقم غلط',callback_data:`web_badphone_${orderId}`},{text:status==='rejected'?'❌ مرفوض':'❌ رفض',callback_data:`web_reject_${orderId}`}],
-    [{text:'📊 سجل العميل',callback_data:`web_history_${orderId}`},{text:'📋 البيانات | Data',callback_data:`web_data_${orderId}`}]
+    [
+      {text: status==='claimed'?'🙋 مستلم بالفعل':'🙋 استلمت | Claim',callback_data:`claim:${orderId}`},
+      {text: status==='processing'?'🔄 جاري التنفيذ':'🔄 بدأ التنفيذ',callback_data:`processing:${orderId}`}
+    ],
+    [
+      {text:'✅ تم الشحن',callback_data:`delivered:${orderId}`},
+      {text: status==='on_hold'?'⏸ معلق':'⏸ تعليق',callback_data:`hold:${orderId}`}
+    ],
+    [
+      {text:'📸 سكرين غير واضح',callback_data:`bad_screen:${orderId}`},
+      {text:'🆔 ID غلط',callback_data:`bad_id:${orderId}`}
+    ],
+    [
+      {text:'📱 رقم غلط',callback_data:`bad_phone:${orderId}`},
+      {text: status==='rejected'?'❌ مرفوض':'❌ رفض',callback_data:`reject:${orderId}`}
+    ],
+    [
+      {text:'📊 سجل العميل',callback_data:`customer_history:${orderId}`},
+      {text:'📋 البيانات | Data',callback_data:`data:${orderId}`}
+    ],
+    [
+      {text:'👁 فتح الطلب',callback_data:`open:${orderId}`},
+      {text:'🗑 حذف الطلب',callback_data:`delete_ask:${orderId}`}
+    ]
   ]};
 }
 export function reportsKeyboard(){

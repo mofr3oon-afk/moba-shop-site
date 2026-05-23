@@ -48,7 +48,7 @@ export default async function handler(req,res){
     const note=String(fields.note||'').trim();
     const transferMode=String(fields.transferMode||'').trim(); // same | other
     const transferLast3=String(fields.transferLast3||'').trim();
-    const total=cart.reduce((s,item)=>s+Number(item.price||0),0);
+    let total=0;
     if(!/^01\d{9}$/.test(customerPhone)) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح'});
     if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
     if(!['same','other'].includes(transferMode)) return json(res,400,{ok:false,error:'حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني'});
@@ -56,6 +56,7 @@ export default async function handler(req,res){
 
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
     for(const item of cart){ item.qty = itemQty(item); if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
+    total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
     if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
 
     const openPhone=await findOpenOrderByPhone(customerPhone);

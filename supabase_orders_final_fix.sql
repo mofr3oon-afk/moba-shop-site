@@ -148,3 +148,26 @@ create index if not exists orders_order_code_created_idx on public.orders(order_
 create index if not exists orders_daily_number_created_idx on public.orders(daily_number, created_at desc);
 
 notify pgrst, 'reload schema';
+
+
+
+-- V13.3 final server json fix support
+alter table public.orders add column if not exists daily_number integer;
+alter table public.orders add column if not exists order_code text;
+alter table public.orders drop constraint if exists orders_order_code_key;
+
+create table if not exists public.reviews (
+  id bigserial primary key,
+  customer_name text not null,
+  rating integer not null default 5,
+  review_text text not null,
+  is_approved boolean default true,
+  created_at timestamptz default now()
+);
+
+create index if not exists reviews_created_at_idx on public.reviews(created_at desc);
+create index if not exists reviews_approved_idx on public.reviews(is_approved);
+create index if not exists orders_order_code_created_idx on public.orders(order_code, created_at desc);
+create index if not exists orders_daily_number_created_idx on public.orders(daily_number, created_at desc);
+
+notify pgrst, 'reload schema';

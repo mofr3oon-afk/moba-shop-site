@@ -340,8 +340,32 @@ async function handleCallback(cb){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'مش مصرح لك',show_alert:true});
     return;
   }
-  const [action,...rest]=String(cb.data||'').split(':');
-  const id=rest.join(':');
+  let [action,...rest]=String(cb.data||'').split(':');
+  let id=rest.join(':');
+
+  // Support old buttons created by earlier versions: web_claim_ORDERID
+  const legacyWebMap = {
+    web_claim_: 'claim',
+    web_processing_: 'processing',
+    web_delivered_: 'delivered',
+    web_hold_: 'hold',
+    web_badshot_: 'bad_screen',
+    web_badid_: 'bad_id',
+    web_badphone_: 'bad_phone',
+    web_reject_: 'reject',
+    web_history_: 'customer_history',
+    web_data_: 'data'
+  };
+  if(!id){
+    const raw = String(cb.data || '');
+    for(const prefix of Object.keys(legacyWebMap)){
+      if(raw.startsWith(prefix)){
+        action = legacyWebMap[prefix];
+        id = raw.slice(prefix.length);
+        break;
+      }
+    }
+  }
   if(action==='noop' || action==='noop_clear'){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تم الإلغاء'});
     return;
