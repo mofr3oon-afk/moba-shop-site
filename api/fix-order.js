@@ -57,6 +57,9 @@ export default async function handler(req,res){
     if(count >= 2) return json(res,403,{ok:false,error:'تم استخدام فرص التعديل برجاء التواصل مع الدعم'});
     const fixType = order.fix_type || 'general';
     if(fixType === 'bad_screen' && (!fixFile || !fixFile.name)) return json(res,400,{ok:false,error:'ارفع صورة السكرين الجديدة'});
+    // V16 server validation
+    if(fixType === 'bad_phone' && !/^01[0-9]{9}$/.test(fixValue)) return json(res,400,{ok:false,error:'رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01'});
+    if(fixType === 'bad_id' && !/ID:\s*[0-9]{5,15}\s*-\s*Name:\s*.{2,}/i.test(fixValue)) return json(res,400,{ok:false,error:'اكتب ID صحيح واسم الحساب'});
     if(fixType !== 'bad_screen' && fixValue.length < 2) return json(res,400,{ok:false,error:'اكتب التعديل المطلوب'});
     let fileName = '';
     if(fixFile && fixFile.name) fileName = fixFile.name;

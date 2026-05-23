@@ -36,7 +36,8 @@ function orderKeyboard(orderId){
       [{text:'⚠️ ID غلط',callback_data:`bad_id:${orderId}`},{text:'📸 سكرين غير واضح',callback_data:`bad_screen:${orderId}`}],
       [{text:'📱 رقم غلط',callback_data:`bad_phone:${orderId}`},{text:'❌ رفض',callback_data:`reject:${orderId}`}],
       [{text:'📊 سجل العميل',callback_data:`customer_history:${orderId}`},{text:'📋 البيانات',callback_data:`data:${orderId}`}],
-      [{text:'👁 فتح الطلب',callback_data:`open:${orderId}`},{text:'🗑 حذف الطلب',callback_data:`delete_ask:${orderId}`}]
+      [{text:'📌 مهم',callback_data:`pin:${orderId}`},{text:'👁 فتح الطلب',callback_data:`open:${orderId}`}],
+      [{text:'🗑 حذف الطلب',callback_data:`delete_ask:${orderId}`}]
     ]
   };
 }
@@ -287,6 +288,12 @@ async function handleCommand(msg){
 /customer 010xxxx - سجل عميل
 /orders 010xxxx - طلبات رقم
 /find_id PUBGID - بحث بالـ ID
+/open MOBA 1001 - فتح طلب
+/today_pending - طلبات النهارده المفتوحة
+/done_today - طلبات اتشحنت النهارده
+/stats - إحصائيات بدون أرباح
+/reviews - تقييمات العملاء الجديدة
+/pinned - الطلبات المهمة
 
 📊 التقارير:
 /today - تقرير اليوم
@@ -307,6 +314,49 @@ async function handleCommand(msg){
     if(!arg) return tg('sendMessage',{chat_id:chatId,text:'اكتب PUBG ID بعد الأمر\nمثال: /find_id 123456789',reply_to_message_id:msg.message_id});
     return findByPubgId(chatId,arg,msg.message_id);
   }
+
+  if(cmd==='/open'){
+    if(!arg) return tg('sendMessage',{chat_id:chatId,text:'اكتب رقم الطلب بعد الأمر\nمثال: /open MOBA 1001',reply_to_message_id:msg.message_id});
+    const o=await getOrder(arg);
+    if(!o) return tg('sendMessage',{chat_id:chatId,text:'الطلب غير موجود.',reply_to_message_id:msg.message_id});
+    return sendOrderCard(chatId,o,msg.message_id);
+  }
+  if(cmd==='/today_pending'){
+    const start=new Date(); start.setHours(0,0,0,0);
+    const rows=await supa(`orders?created_at=gte.${encodeURIComponent(start.toISOString())}&status=in.(pending,claimed,processing,on_hold,needs_fix)&select=*&order=created_at.desc&limit=30`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'✅ لا يوجد طلبات مفتوحة النهارده.',reply_to_message_id:msg.message_id});
+    await tg('sendMessage',{chat_id:chatId,text:`📌 طلبات النهارده المفتوحة: ${rows.length}`});
+    for(const o of rows.slice(0,12)) await tg('sendMessage',{chat_id:chatId,text:`${o.order_code||o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${o.id}`}]]}});
+    return;
+  }
+  if(cmd==='/done_today'){
+    const start=new Date(); start.setHours(0,0,0,0);
+    const rows=await supa(`orders?created_at=gte.${encodeURIComponent(start.toISOString())}&status=eq.delivered&select=*&order=created_at.desc&limit=30`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لسه مفيش طلبات مكتملة النهارده.',reply_to_message_id:msg.message_id});
+    return tg('sendMessage',{chat_id:chatId,text:`✅ الطلبات المكتملة النهارده: ${rows.length}\n`+rows.slice(0,20).map(o=>`${o.order_code||o.id} | ${o.phone||''} | ${o.total||0}ج`).join('\n')});
+  }
+  if(cmd==='/stats'){
+    const start=new Date(); start.setHours(0,0,0,0);
+    const rows=await supa(`orders?created_at=gte.${encodeURIComponent(start.toISOString())}&select=*&order=created_at.desc&limit=1000`);
+    const count=s=>rows.filter(o=>o.status===s).length;
+    const products={}; const pay={};
+    for(const o of rows){ pay[o.payment_method||'غير محدد']=(pay[o.payment_method||'غير محدد']||0)+1; for(const it of orderItems(o)){products[it.product]=(products[it.product]||0)+itemQty(it)}}
+    const top=Object.entries(products).sort((a,b)=>b[1]-a[1])[0];
+    return tg('sendMessage',{chat_id:chatId,text:`📊 إحصائيات اليوم\n━━━━━━━━━━━━━━\nطلبات اليوم: ${rows.length}\nتم الشحن: ${count('delivered')}\nمعلق: ${rows.filter(o=>['pending','claimed','processing','on_hold'].includes(o.status)).length}\nمحتاج تعديل: ${count('needs_fix')}\nأكثر باقة: ${top?top[0]+' × '+top[1]:'لا يوجد'}\nطرق الدفع:\n${Object.entries(pay).map(([k,v])=>`• ${k}: ${v}`).join('\n')||'لا يوجد'}`});
+  }
+  if(cmd==='/pinned'){
+    const rows=await supa(`orders?pinned=eq.true&select=*&order=created_at.desc&limit=20`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد طلبات مهمة.',reply_to_message_id:msg.message_id});
+    for(const o of rows) await tg('sendMessage',{chat_id:chatId,text:`📌 ${o.order_code||o.id}\n📱 ${o.phone||''}\n${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح',callback_data:`open:${o.id}`}]]}});
+    return;
+  }
+  if(cmd==='/reviews'){
+    const rows=await supa(`reviews?is_approved=eq.false&select=*&order=created_at.desc&limit=10`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد تقييمات جديدة للمراجعة.',reply_to_message_id:msg.message_id});
+    for(const r of rows) await tg('sendMessage',{chat_id:chatId,text:`⭐ تقييم جديد\nالاسم: ${r.customer_name}\nالتقييم: ${r.rating}/5\nالرأي: ${r.review_text}`,reply_markup:{inline_keyboard:[[{text:'✅ موافقة',callback_data:`review_ok:${r.id}`},{text:'🗑 حذف',callback_data:`review_del:${r.id}`}]]}});
+    return;
+  }
+
   if(cmd==='/delete_order'){
     if(!arg) return tg('sendMessage',{chat_id:chatId,text:'اكتب رقم الطلب\nمثال: /delete_order MOBA 1001',reply_to_message_id:msg.message_id});
     const o=await getOrder(arg);
@@ -386,11 +436,32 @@ async function handleCallback(cb){
       return tg('sendMessage',{chat_id:chatId,text:`🗑 تم حذف ${rows.length} طلب معلق.`,reply_to_message_id:msgId});
     }
   }
+
+  if(action==='review_ok' || action==='review_del'){
+    if(action==='review_ok'){
+      await supa(`reviews?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({is_approved:true})});
+      await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تم نشر التقييم'});
+      return tg('sendMessage',{chat_id:chatId,text:'✅ تم نشر التقييم على الموقع',reply_to_message_id:msgId});
+    }else{
+      await supa(`reviews?id=eq.${encodeURIComponent(id)}`,{method:'DELETE'});
+      await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تم حذف التقييم'});
+      return tg('sendMessage',{chat_id:chatId,text:'🗑 تم حذف التقييم',reply_to_message_id:msgId});
+    }
+  }
+
   const order=await getOrder(id);
   if(!order){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:`الطلب غير موجود: ${id}`,show_alert:true});
     return;
   }
+
+  if(action==='pin'){
+    const next=!order.pinned;
+    await updateOrder(order.id,{pinned:next});
+    await tg('answerCallbackQuery',{callback_query_id:cb.id,text:next?'تم تثبيت الطلب':'تم إلغاء التثبيت'});
+    return tg('sendMessage',{chat_id:chatId,text:next?'📌 تم تمييز الطلب كمهم':'تم إلغاء تمييز الطلب',reply_to_message_id:msgId});
+  }
+
   if(action==='delete_ask'){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'تأكيد الحذف'});
     return tg('sendMessage',{chat_id:chatId,text:`⚠️ متأكد تحذف الطلب ${order.order_code || order.id}?`,reply_to_message_id:msgId,reply_markup:confirmDeleteKeyboard(realOrderId(order))});

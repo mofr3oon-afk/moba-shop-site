@@ -184,3 +184,14 @@ alter table public.orders add column if not exists customer_status_text text;
 alter table public.orders add column if not exists admin_status_text text;
 
 notify pgrst, 'reload schema';
+
+
+
+-- V17 ops upgrade
+alter table public.orders add column if not exists pinned boolean default false;
+create index if not exists orders_pinned_idx on public.orders(pinned);
+
+alter table public.reviews add column if not exists is_approved boolean default false;
+update public.reviews set is_approved=false where is_approved is null;
+
+notify pgrst, 'reload schema';

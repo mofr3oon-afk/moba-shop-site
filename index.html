@@ -701,6 +701,448 @@ html{scroll-behavior:smooth}
   .timeline-item{padding:8px}
 }
 
+
+/* V16 history filter simplification + fix forms */
+.history-tabs{
+  display:none!important;
+}
+.history-summary{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:14px 0 16px;
+}
+.history-summary div{
+  cursor:pointer;
+  transition:.16s ease;
+  position:relative;
+  overflow:hidden;
+}
+.history-summary div:hover{
+  transform:translateY(-2px);
+  border-color:rgba(39,216,255,.35);
+  box-shadow:0 12px 30px rgba(0,0,0,.24),0 0 20px rgba(39,216,255,.10);
+}
+.history-summary div.active{
+  background:linear-gradient(135deg,rgba(39,216,255,.22),rgba(39,216,255,.07))!important;
+  border-color:rgba(39,216,255,.45)!important;
+}
+.history-summary div b{
+  font-size:22px!important;
+  margin-bottom:4px;
+}
+.history-summary div span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+}
+.fix-form .fix-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.fix-form label{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+.fix-form .input,.fix-form .file,.fix-form .textarea{
+  width:100%;
+}
+.fix-submit{
+  min-height:42px;
+}
+.fix-alert b{
+  color:#fff;
+}
+@media(max-width:900px){
+  .history-summary{
+    grid-template-columns:repeat(4,1fr);
+    gap:7px;
+  }
+  .history-summary div{
+    padding:10px 5px!important;
+    border-radius:15px!important;
+  }
+  .history-summary div b{
+    font-size:16px!important;
+  }
+  .history-summary div span{
+    font-size:10px!important;
+  }
+  .fix-form .fix-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V17 operations + safety + reviews moderation */
+.rules-panel,.popular-panel{
+  margin:16px 0;
+  padding:16px;
+  border:1px solid rgba(255,207,92,.22);
+  background:
+    radial-gradient(circle at 10% 0%,rgba(255,207,92,.10),transparent 34%),
+    rgba(255,255,255,.04);
+}
+.rules-grid,.popular-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.rule-card,.popular-card{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.045);
+  border-radius:18px;
+  padding:12px;
+  line-height:1.7;
+}
+.rule-card b,.popular-card b{display:block;color:#fff;margin-bottom:4px}
+.rule-card span,.popular-card span{font-size:12px;color:var(--muted)}
+.popular-card{
+  cursor:pointer;
+  transition:.16s ease;
+}
+.popular-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(39,216,255,.34);
+  box-shadow:0 0 22px rgba(39,216,255,.12);
+}
+.last-id-btn{
+  width:100%;
+  margin:6px 0;
+  border:1px solid rgba(39,216,255,.25);
+  background:rgba(39,216,255,.08);
+  color:#dff8ff;
+  border-radius:12px;
+  padding:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+.toast-moba{
+  position:fixed;
+  top:18px;
+  right:50%;
+  transform:translateX(50%) translateY(-20px);
+  z-index:120;
+  opacity:0;
+  pointer-events:none;
+  padding:12px 16px;
+  border-radius:999px;
+  background:rgba(15,23,42,.94);
+  border:1px solid rgba(39,216,255,.28);
+  color:#fff;
+  box-shadow:0 14px 42px rgba(0,0,0,.35),0 0 22px rgba(39,216,255,.15);
+  transition:.22s ease;
+  font-weight:900;
+}
+.toast-moba.show{opacity:1;transform:translateX(50%) translateY(0)}
+.checkout-confirm{
+  position:fixed;
+  inset:0;
+  z-index:95;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(6px);
+  padding:18px;
+}
+.checkout-confirm.show{display:flex}
+.checkout-confirm-card{
+  width:min(520px,96vw);
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.14);
+  background:#111729;
+  padding:20px;
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+}
+.checkout-confirm-card h3{margin:0 0 12px;font-size:22px}
+.confirm-summary{
+  display:grid;
+  gap:8px;
+  margin:12px 0;
+  line-height:1.7;
+}
+.confirm-summary div{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  padding:10px;
+}
+.confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.confirm-actions button{
+  border:0;border-radius:14px;padding:12px;font-weight:900;cursor:pointer;
+}
+.confirm-ok{background:linear-gradient(135deg,#38e08b,#9cffc6);color:#00150b}
+.confirm-cancel{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--line)!important}
+.review-locked-note{
+  display:none;
+  margin-top:8px;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(255,207,92,.10);
+  border:1px solid rgba(255,207,92,.28);
+  color:#fff6d8;
+  line-height:1.7;
+}
+@media(max-width:900px){
+  .rules-grid,.popular-grid{grid-template-columns:1fr;gap:8px}
+  .rules-panel,.popular-panel{padding:13px;border-radius:20px}
+  .confirm-actions{grid-template-columns:1fr}
+}
+
+
+/* V18 MOba draggable assistant */
+.moba-assistant-fab{
+  position:fixed;
+  right:18px;
+  bottom:96px;
+  z-index:140;
+  width:82px;
+  height:92px;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));
+}
+.moba-assistant-fab.dragging{cursor:grabbing}
+.moba-character{
+  width:72px;
+  height:72px;
+  border-radius:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 35% 20%,rgba(255,220,120,.28),transparent 34%),
+    linear-gradient(135deg,rgba(39,216,255,.18),rgba(255,154,47,.18)),
+    rgba(14,20,38,.96);
+  border:1px solid rgba(255,207,92,.35);
+  box-shadow:0 0 26px rgba(255,207,92,.16),0 0 22px rgba(39,216,255,.14),inset 0 1px 0 rgba(255,255,255,.12);
+  animation:mobaFloat 2.8s ease-in-out infinite;
+  position:relative;
+  overflow:hidden;
+}
+.moba-character:before{
+  content:"";
+  position:absolute;
+  inset:-20px;
+  background:linear-gradient(110deg,transparent,rgba(255,255,255,.16),transparent);
+  transform:translateX(110%);
+  animation:mobaShine 4.8s ease-in-out infinite;
+}
+.moba-pharaoh{
+  position:relative;
+  z-index:1;
+  font-size:42px;
+  line-height:1;
+}
+.moba-name-badge{
+  margin-top:-6px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:rgba(9,13,24,.92);
+  border:1px solid rgba(39,216,255,.28);
+  color:#eaf8ff;
+  font-weight:900;
+  font-size:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.32);
+}
+.moba-assistant-fab.has-notify .moba-character:after{
+  content:"";
+  position:absolute;
+  top:7px;
+  right:8px;
+  width:11px;
+  height:11px;
+  border-radius:999px;
+  background:#38e08b;
+  box-shadow:0 0 12px #38e08b;
+}
+@keyframes mobaFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-7px)}
+}
+@keyframes mobaShine{
+  0%,55%{transform:translateX(120%)}
+  75%,100%{transform:translateX(-120%)}
+}
+.moba-chat-panel{
+  position:fixed;
+  right:18px;
+  bottom:196px;
+  z-index:139;
+  width:min(420px,calc(100vw - 24px));
+  height:min(620px,calc(100vh - 120px));
+  display:none;
+  flex-direction:column;
+  border-radius:26px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.13);
+  background:
+    radial-gradient(circle at 20% 0%,rgba(39,216,255,.14),transparent 38%),
+    radial-gradient(circle at 95% 0%,rgba(255,207,92,.10),transparent 38%),
+    rgba(13,18,34,.98);
+  box-shadow:0 28px 90px rgba(0,0,0,.56),0 0 32px rgba(39,216,255,.14);
+  backdrop-filter:blur(12px);
+}
+.moba-chat-panel.show{display:flex}
+.moba-chat-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px 16px;
+  background:linear-gradient(135deg,rgba(39,216,255,.18),rgba(39,216,255,.04));
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.moba-chat-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.moba-mini{
+  width:42px;
+  height:42px;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,207,92,.30);
+  font-size:25px;
+}
+.moba-chat-title b{
+  display:block;
+  color:#fff;
+  font-size:17px;
+}
+.moba-chat-title span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+}
+.moba-close{
+  width:36px;
+  height:36px;
+  border:0;
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+}
+.moba-chat-body{
+  flex:1;
+  overflow:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.moba-msg{
+  max-width:86%;
+  padding:11px 13px;
+  border-radius:18px;
+  line-height:1.75;
+  font-size:13px;
+  border:1px solid rgba(255,255,255,.08);
+}
+.moba-msg.bot{
+  align-self:flex-start;
+  background:rgba(255,255,255,.06);
+  color:#eaf2ff;
+  border-top-right-radius:6px;
+}
+.moba-msg.user{
+  align-self:flex-end;
+  background:linear-gradient(135deg,rgba(39,216,255,.95),rgba(39,120,255,.92));
+  color:#00111a;
+  border-top-left-radius:6px;
+  font-weight:800;
+}
+.moba-quick{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:4px;
+}
+.moba-quick button{
+  border:1px solid rgba(39,216,255,.22);
+  background:rgba(39,216,255,.08);
+  color:#dff8ff;
+  border-radius:999px;
+  padding:8px 10px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:800;
+}
+.moba-quick button:hover{
+  background:rgba(39,216,255,.16);
+}
+.moba-chat-foot{
+  padding:12px;
+  border-top:1px solid rgba(255,255,255,.10);
+  display:flex;
+  gap:8px;
+}
+.moba-chat-foot input{
+  flex:1;
+  border:1px solid rgba(255,255,255,.13);
+  background:#080d19;
+  color:#fff;
+  border-radius:14px;
+  padding:12px;
+  outline:none;
+}
+.moba-chat-foot button{
+  border:0;
+  border-radius:14px;
+  padding:0 14px;
+  background:linear-gradient(135deg,var(--cyan),#277bff);
+  color:#00111a;
+  font-weight:900;
+  cursor:pointer;
+}
+.moba-typing{
+  display:none;
+  align-self:flex-start;
+  color:var(--muted);
+  font-size:12px;
+  margin:2px 6px;
+}
+.moba-typing.show{display:block}
+@media(max-width:900px){
+  .moba-assistant-fab{
+    width:72px;
+    height:82px;
+    right:12px;
+    bottom:86px;
+  }
+  .moba-character{
+    width:62px;
+    height:62px;
+    border-radius:22px;
+  }
+  .moba-pharaoh{font-size:36px}
+  .moba-name-badge{font-size:11px;padding:3px 8px}
+  .moba-chat-panel{
+    right:10px;
+    left:10px;
+    bottom:172px;
+    width:auto;
+    height:min(560px,calc(100vh - 130px));
+    border-radius:22px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -710,6 +1152,7 @@ html{scroll-behavior:smooth}
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
+      <a href="#shippingRules">🛡️ الضمان</a>
       <a href="#cartSection">🛒 السلة</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
       <a href="#customerReviews">💬 آراء العملاء</a>
@@ -727,6 +1170,26 @@ html{scroll-behavior:smooth}
           <div class="step">2️⃣ ضيف للسلة</div>
           <div class="step">3️⃣ ادفع وارفع السكرين</div>
         </div></div>
+    </section>
+
+    
+    <section class="panel rules-panel" id="shippingRules">
+      <div class="section-title"><h2>🛡️ قواعد الشحن والضمان</h2></div>
+      <div class="rules-grid">
+        <div class="rule-card"><b>راجع بياناتك قبل الدفع</b><span>تأكد من ID واسم الحساب وطريقة الدفع قبل تنفيذ الطلب.</span></div>
+        <div class="rule-card"><b>فرصتين تعديل</b><span>لو السكرين أو الرقم أو ID فيه مشكلة، عندك فرصتين تعديل قبل تحويل الطلب للدعم.</span></div>
+        <div class="rule-card"><b>التنفيذ حسب الضغط</b><span>الطلبات بتتنفذ بأسرع وقت، وقد تزيد المدة وقت الضغط أو خارج مواعيد العمل.</span></div>
+      </div>
+    </section>
+
+    
+    <section class="panel popular-panel" id="popularProducts">
+      <div class="section-title"><h2>🔥 الأكثر طلبًا</h2></div>
+      <div class="popular-grid">
+        <div class="popular-card" data-jump-product="60"><b>60 UC</b><span>باقة سريعة ومناسبة</span></div>
+        <div class="popular-card" data-jump-product="325"><b>325 UC</b><span>الأكثر طلبًا</span></div>
+        <div class="popular-card" data-jump-product="660"><b>660 UC</b><span>قيمة أعلى وشحن أسرع</span></div>
+      </div>
     </section>
 
     <section class="grid">
@@ -1657,6 +2120,542 @@ html{scroll-behavior:smooth}
       },80);
     };
   }
+})();
+</script>
+
+
+<script id="moba-v16-history-fix-forms">
+(function(){
+  function esc(text){
+    if(typeof escapeText === 'function') return escapeText(text);
+    return String(text ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  }
+  function statusKindV16(status){
+    if(['delivered','archived'].includes(status)) return 'done';
+    if(['rejected','cancelled'].includes(status)) return 'cancelled';
+    if(status === 'needs_fix') return 'open';
+    return 'open';
+  }
+  function getOrders(){ return window.allHistoryOrders || []; }
+  function countBy(filter){
+    const rows = getOrders();
+    if(filter === 'all') return rows.length;
+    return rows.filter(o => statusKindV16(o.status) === filter).length;
+  }
+  function renderSummaryOnly(){
+    const tabs = document.getElementById('historyTabs');
+    if(tabs) tabs.style.display = 'none';
+    let sum = document.getElementById('historySummary');
+    const target = tabs || document.getElementById('historyList');
+    if(!sum && target){
+      sum = document.createElement('div');
+      sum.id = 'historySummary';
+      sum.className = 'history-summary';
+      if(tabs) tabs.insertAdjacentElement('afterend', sum);
+      else target.insertAdjacentElement('beforebegin', sum);
+    }
+    if(!sum) return;
+    const current = window.currentHistoryFilterV16 || 'all';
+    const items = [
+      ['all','الجميع',countBy('all')],
+      ['open','معلق',countBy('open')],
+      ['done','مكتمل',countBy('done')],
+      ['cancelled','ملغي',countBy('cancelled')]
+    ];
+    sum.innerHTML = items.map(([key,label,num])=>`
+      <div data-history-filter="${key}" class="${current===key?'active':''}">
+        <b>${num}</b>
+        <span>${label}</span>
+      </div>
+    `).join('');
+  }
+  function applyFilter(filter){
+    window.currentHistoryFilterV16 = filter || 'all';
+    if(typeof currentHistoryFilter !== 'undefined') currentHistoryFilter = window.currentHistoryFilterV16;
+    if(typeof renderHistoryList === 'function') renderHistoryList();
+    setTimeout(renderSummaryOnly,60);
+  }
+  document.addEventListener('click', function(e){
+    const box = e.target.closest('[data-history-filter]');
+    if(box){
+      e.preventDefault();
+      applyFilter(box.dataset.historyFilter || 'all');
+    }
+  });
+  const oldLoad = window.loadOrderStatus;
+  if(typeof oldLoad === 'function'){
+    window.loadOrderStatus = async function(phone){
+      const res = await oldLoad.apply(this, arguments);
+      setTimeout(renderSummaryOnly,250);
+      setTimeout(renderSummaryOnly,650);
+      return res;
+    };
+  }
+  setTimeout(renderSummaryOnly,500);
+
+  function problemText(type){
+    return ({
+      bad_screen:'السكرين غير واضح',
+      bad_id:'الـ ID أو اسم الحساب محتاج تعديل',
+      bad_phone:'رقم المتابعة أو بيانات التحويل محتاجة تعديل'
+    })[type] || 'الطلب محتاج تعديل';
+  }
+  function fixInputHtmlV16(order){
+    const type = order.fix_type || 'general';
+    if(type === 'bad_screen'){
+      return `<div>
+        <label>ارفع السكرين الجديد</label>
+        <input class="file" name="fixFile" type="file" accept="image/*" required>
+        <div class="fix-small">لازم الصورة تكون واضحة وفيها بيانات التحويل.</div>
+      </div>`;
+    }
+    if(type === 'bad_phone'){
+      return `<div>
+        <label>رقم الموبايل الصحيح</label>
+        <input class="input" name="fixPhone" inputmode="numeric" pattern="01[0-9]{9}" placeholder="010xxxxxxxx" required>
+        <div class="fix-small">لازم يكون 11 رقم ويبدأ بـ 01.</div>
+      </div>`;
+    }
+    if(type === 'bad_id'){
+      return `<div class="fix-grid">
+        <div>
+          <label>PUBG ID الصحيح</label>
+          <input class="input" name="fixPubgId" inputmode="numeric" pattern="[0-9]{5,15}" placeholder="اكتب ID الصحيح" required>
+        </div>
+        <div>
+          <label>اسم الحساب داخل اللعبة</label>
+          <input class="input" name="fixPubgName" placeholder="اسم الحساب الصحيح" required>
+        </div>
+      </div>`;
+    }
+    return `<div>
+      <label>التعديل المطلوب</label>
+      <textarea class="textarea" name="fixValue" placeholder="اكتب التعديل المطلوب" required></textarea>
+    </div>`;
+  }
+  function buildFixSectionV16(order){
+    if(!order || order.status !== 'needs_fix') return '';
+    const count = Number(order.fix_count || 0);
+    if(count >= 2){
+      return `<div class="fix-alert">⚠️ تم استخدام فرص التعديل المتاحة. برجاء التواصل مع الدعم عشان نحل المشكلة.</div>
+        <a class="fix-support" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 تواصل مع الدعم</a>`;
+    }
+    const left = 2 - count;
+    return `<div class="fix-alert">
+      ⚠️ يوجد مشكلة في الطلب: <b>${problemText(order.fix_type)}</b><br>
+      عندك ${left} فرصة تعديل قبل تحويل الطلب للدعم.
+    </div>
+    <form class="fix-form" onsubmit="submitOrderFixV16(event,'${esc(order.id)}')">
+      <div class="fix-form-title">✏️ إرسال تعديل الطلب</div>
+      ${fixInputHtmlV16(order)}
+      <input type="hidden" name="phone" value="${esc(order.phone || '')}">
+      <input type="hidden" name="fixType" value="${esc(order.fix_type || '')}">
+      <button class="fix-submit" type="submit">✅ إرسال التعديل للمراجعة</button>
+      <div class="fix-small">بعد الإرسال هيرجع الطلب للمراجعة وهيظهر لمسؤول الطلب.</div>
+    </form>`;
+  }
+  window.submitOrderFixV16 = async function(e, orderId){
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    const old = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'جاري الإرسال...';
+    try{
+      const fd = new FormData(form);
+      const type = fd.get('fixType');
+      if(type === 'bad_phone'){
+        const phone = String(fd.get('fixPhone')||'').trim();
+        if(!/^01[0-9]{9}$/.test(phone)) throw new Error('رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01');
+        fd.set('fixValue', phone);
+      }
+      if(type === 'bad_id'){
+        const id = String(fd.get('fixPubgId')||'').trim();
+        const name = String(fd.get('fixPubgName')||'').trim();
+        if(!/^[0-9]{5,15}$/.test(id)) throw new Error('اكتب PUBG ID صحيح');
+        if(name.length < 2) throw new Error('اكتب اسم الحساب داخل اللعبة');
+        fd.set('fixValue', `ID: ${id} - Name: ${name}`);
+      }
+      fd.append('orderId', orderId);
+      const res = await fetch('/api/fix-order',{method:'POST',body:fd});
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'حصل خطأ');
+      form.innerHTML = '<div class="fix-alert">✅ تم إرسال التعديل للمراجعة. تابع حالة الطلب من سجل الطلبات.</div>';
+      const phone = fd.get('phone');
+      if(phone && window.loadOrderStatus) setTimeout(()=>window.loadOrderStatus(phone), 700);
+    }catch(err){
+      btn.disabled = false;
+      btn.textContent = old;
+      alert(err.message || 'حصل خطأ أثناء إرسال التعديل');
+    }
+  };
+  const oldOpen = window.openOrderDetailsByIndex;
+  if(typeof oldOpen === 'function'){
+    window.openOrderDetailsByIndex = function(orderId){
+      oldOpen.apply(this, arguments);
+      setTimeout(function(){
+        const orders = getOrders();
+        const order = orders.find(o => String(o.id) === String(orderId));
+        const content = document.getElementById('orderDetailsContent');
+        if(!order || !content) return;
+        content.querySelectorAll('.fix-form,.fix-alert,.fix-support').forEach(x=>x.remove());
+        const html = buildFixSectionV16(order);
+        if(html) content.insertAdjacentHTML('beforeend', html);
+      },120);
+    };
+  }
+})();
+</script>
+
+
+  <div class="toast-moba" id="mobaToast"></div>
+  <div class="checkout-confirm" id="checkoutConfirm">
+    <div class="checkout-confirm-card">
+      <h3>راجع الطلب قبل الإرسال</h3>
+      <div class="confirm-summary" id="checkoutConfirmSummary"></div>
+      <div class="notice">تأكد من ID واسم الحساب وبيانات الدفع قبل التأكيد.</div>
+      <div class="confirm-actions">
+        <button class="confirm-ok" type="button" id="confirmSendOrder">✅ تأكيد الطلب</button>
+        <button class="confirm-cancel" type="button" id="cancelSendOrder">رجوع للتعديل</button>
+      </div>
+    </div>
+  </div>
+
+
+<script id="moba-v17-ops-upgrade">
+(function(){
+  let pendingCheckoutForm = null;
+  function toast(msg){
+    const t=document.getElementById('mobaToast');
+    if(!t) return;
+    t.textContent=msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),1800);
+  }
+  window.mobaToast = toast;
+
+  // Better copy feedback
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-copy], .copy-btn');
+    if(btn){
+      setTimeout(()=>toast('تم النسخ ✅'),60);
+    }
+  });
+
+  // Popular product jump
+  document.addEventListener('click', function(e){
+    const card = e.target.closest('[data-jump-product]');
+    if(card){
+      const wanted = card.dataset.jumpProduct;
+      const products = Array.from(document.querySelectorAll('.product'));
+      const found = products.find(p => (p.textContent||'').includes(wanted + ' UC') || (p.textContent||'').includes(wanted + 'UC'));
+      if(found){
+        found.scrollIntoView({behavior:'smooth',block:'center'});
+        found.style.boxShadow='0 0 0 3px rgba(39,216,255,.25),0 0 28px rgba(39,216,255,.25)';
+        setTimeout(()=>found.style.boxShadow='',1300);
+      }else{
+        document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth'});
+      }
+    }
+  });
+
+  // Use last ID button inside product cards
+  function addLastIdButtons(){
+    let last = null;
+    try{ last = JSON.parse(localStorage.getItem('moba_last_pubg') || 'null'); }catch(e){}
+    if(!last || !last.pubgId) return;
+    document.querySelectorAll('.product').forEach(card=>{
+      if(card.querySelector('.last-id-btn')) return;
+      const idInput = card.querySelector('input[id^="id_"]');
+      const nameInput = card.querySelector('input[id^="name_"]');
+      if(!idInput || !nameInput) return;
+      const btn = document.createElement('button');
+      btn.type='button';
+      btn.className='last-id-btn';
+      btn.textContent='⚡ استخدم آخر ID';
+      btn.onclick=function(){
+        idInput.value = last.pubgId || '';
+        nameInput.value = last.pubgName || '';
+        toast('تم وضع آخر ID ✅');
+      };
+      nameInput.insertAdjacentElement('afterend', btn);
+    });
+  }
+  const oldRenderProducts = window.renderProducts;
+  if(typeof oldRenderProducts === 'function'){
+    window.renderProducts = function(){
+      oldRenderProducts.apply(this,arguments);
+      setTimeout(addLastIdButtons,0);
+    };
+  }
+  setTimeout(addLastIdButtons,800);
+
+  // Checkout confirmation before real submit
+  function cartSummary(){
+    const items = window.cart || [];
+    const count = items.reduce((s,x)=>s+Number(x.qty||1),0);
+    const total = items.reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+    const uc = items.reduce((s,x)=>{
+      const m=String(x.product||'').match(/(\d+)\s*UC/i);
+      return s + ((m?Number(m[1]):0)*Number(x.qty||1));
+    },0);
+    return {items,count,total,uc};
+  }
+  function openConfirm(form){
+    const box = document.getElementById('checkoutConfirm');
+    const sum = document.getElementById('checkoutConfirmSummary');
+    const s = cartSummary();
+    const method = form.querySelector('[name="paymentMethod"]')?.value || 'غير محدد';
+    sum.innerHTML = `
+      <div>🛒 عدد المنتجات: <b>${s.count}</b></div>
+      <div>🎮 إجمالي الشدات: <b>${s.uc} UC</b></div>
+      <div>💳 طريقة الدفع: <b>${method}</b></div>
+      <div>💰 الإجمالي: <b>${s.total} جنيه</b></div>
+    `;
+    pendingCheckoutForm = form;
+    box.classList.add('show');
+  }
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(form && (form.id==='orderForm' || form.classList.contains('checkout-form')) && !form.dataset.confirmed){
+      e.preventDefault();
+      e.stopPropagation();
+      openConfirm(form);
+    }
+  }, true);
+  document.getElementById('confirmSendOrder')?.addEventListener('click', function(){
+    const box=document.getElementById('checkoutConfirm');
+    box?.classList.remove('show');
+    if(pendingCheckoutForm){
+      pendingCheckoutForm.dataset.confirmed='1';
+      pendingCheckoutForm.requestSubmit ? pendingCheckoutForm.requestSubmit() : pendingCheckoutForm.submit();
+      setTimeout(()=>delete pendingCheckoutForm.dataset.confirmed,1000);
+    }
+  });
+  document.getElementById('cancelSendOrder')?.addEventListener('click', function(){
+    document.getElementById('checkoutConfirm')?.classList.remove('show');
+    pendingCheckoutForm=null;
+  });
+
+  // Review button after delivered order in details
+  const oldOpen = window.openOrderDetailsByIndex;
+  if(typeof oldOpen === 'function'){
+    window.openOrderDetailsByIndex = function(orderId){
+      oldOpen.apply(this,arguments);
+      setTimeout(()=>{
+        const order=(window.allHistoryOrders||[]).find(o=>String(o.id)===String(orderId));
+        const content=document.getElementById('orderDetailsContent');
+        if(order && content && ['delivered','archived'].includes(order.status) && !content.querySelector('.leave-review-btn')){
+          content.insertAdjacentHTML('beforeend', `<button class="fix-submit leave-review-btn" type="button" onclick="document.getElementById('customerReviews')?.scrollIntoView({behavior:'smooth'});closeOrderDetails&&closeOrderDetails();">⭐ اكتب تقييمك للتجربة</button>`);
+        }
+      },120);
+    };
+  }
+})();
+</script>
+
+
+  <div class="moba-chat-panel" id="mobaChatPanel" dir="rtl">
+    <div class="moba-chat-head">
+      <div class="moba-chat-title">
+        <div class="moba-mini">👑</div>
+        <div>
+          <b>MOba Assistant</b>
+          <span>مساعد MOBA SHOP للشحن والدعم</span>
+        </div>
+      </div>
+      <button class="moba-close" type="button" id="mobaClose">×</button>
+    </div>
+    <div class="moba-chat-body" id="mobaChatBody">
+      <div class="moba-msg bot">
+        أهلا بيك 👑 أنا <b>MOba</b> مساعد MOBA SHOP.<br>
+        اسألني عن الشحن، الدفع، مواعيد العمل، متابعة الطلب، أو أي مشكلة في الطلب.
+      </div>
+      <div class="moba-quick">
+        <button type="button" data-moba-q="ازاي اشحن">ازاي اشحن؟</button>
+        <button type="button" data-moba-q="طرق الدفع">طرق الدفع</button>
+        <button type="button" data-moba-q="مواعيد العمل">مواعيد العمل</button>
+        <button type="button" data-moba-q="متابعة الطلب">متابعة الطلب</button>
+        <button type="button" data-moba-q="مشكلة في الطلب">مشكلة في الطلب</button>
+        <button type="button" data-moba-q="التقييمات">التقييمات</button>
+        <button type="button" data-moba-q="الدعم">الدعم</button>
+      </div>
+      <div class="moba-typing" id="mobaTyping">MOba بيكتب...</div>
+    </div>
+    <form class="moba-chat-foot" id="mobaChatForm">
+      <input id="mobaChatInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+      <button type="submit">إرسال</button>
+    </form>
+  </div>
+
+  <div class="moba-assistant-fab has-notify" id="mobaAssistantFab" title="MOba Assistant">
+    <div class="moba-character">
+      <div class="moba-pharaoh">👑</div>
+    </div>
+    <div class="moba-name-badge">MOba</div>
+  </div>
+
+
+<script id="moba-v18-assistant">
+(function(){
+  const fab = document.getElementById('mobaAssistantFab');
+  const panel = document.getElementById('mobaChatPanel');
+  const closeBtn = document.getElementById('mobaClose');
+  const body = document.getElementById('mobaChatBody');
+  const form = document.getElementById('mobaChatForm');
+  const input = document.getElementById('mobaChatInput');
+  const typing = document.getElementById('mobaTyping');
+  if(!fab || !panel) return;
+
+  let drag = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+
+  function loadPos(){
+    try{
+      const p = JSON.parse(localStorage.getItem('moba_assistant_pos') || 'null');
+      if(p && typeof p.x === 'number' && typeof p.y === 'number'){
+        fab.style.left = p.x + 'px';
+        fab.style.top = p.y + 'px';
+        fab.style.right = 'auto';
+        fab.style.bottom = 'auto';
+      }
+    }catch(e){}
+  }
+  function savePos(){
+    const rect = fab.getBoundingClientRect();
+    localStorage.setItem('moba_assistant_pos', JSON.stringify({x:rect.left,y:rect.top}));
+  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function positionPanel(){
+    const r = fab.getBoundingClientRect();
+    const pw = Math.min(420, window.innerWidth - 24);
+    const ph = Math.min(620, window.innerHeight - 120);
+    let left = r.left;
+    let top = r.top - ph - 12;
+    if(top < 10) top = r.bottom + 12;
+    left = clamp(left, 10, window.innerWidth - pw - 10);
+    if(top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.width = pw + 'px';
+    panel.style.height = ph + 'px';
+  }
+  function togglePanel(show){
+    const willShow = typeof show === 'boolean' ? show : !panel.classList.contains('show');
+    if(willShow){
+      positionPanel();
+      panel.classList.add('show');
+      fab.classList.remove('has-notify');
+      setTimeout(()=>input && input.focus(),120);
+    }else{
+      panel.classList.remove('show');
+    }
+  }
+
+  fab.addEventListener('pointerdown', function(e){
+    drag = true; moved = false;
+    fab.classList.add('dragging');
+    fab.setPointerCapture(e.pointerId);
+    const r = fab.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    baseX = r.left; baseY = r.top;
+  });
+  fab.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if(Math.abs(dx) + Math.abs(dy) > 5) moved = true;
+    const x = clamp(baseX + dx, 0, window.innerWidth - fab.offsetWidth);
+    const y = clamp(baseY + dy, 0, window.innerHeight - fab.offsetHeight);
+    fab.style.left = x + 'px';
+    fab.style.top = y + 'px';
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+    if(panel.classList.contains('show')) positionPanel();
+  });
+  fab.addEventListener('pointerup', function(e){
+    drag = false;
+    fab.classList.remove('dragging');
+    savePos();
+    if(!moved) togglePanel();
+  });
+
+  closeBtn && closeBtn.addEventListener('click', ()=>togglePanel(false));
+  window.addEventListener('resize', ()=>{ if(panel.classList.contains('show')) positionPanel(); });
+
+  function addMsg(type, html){
+    const msg = document.createElement('div');
+    msg.className = 'moba-msg ' + type;
+    msg.innerHTML = html;
+    const quick = body.querySelector('.moba-quick');
+    const typeEl = document.getElementById('mobaTyping');
+    body.insertBefore(msg, typeEl || quick);
+    body.scrollTop = body.scrollHeight;
+  }
+  function goTo(sel){
+    const el = document.querySelector(sel);
+    if(el){
+      togglePanel(false);
+      setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}),100);
+    }
+  }
+  function replyFor(q){
+    const t = String(q||'').toLowerCase();
+    if(/ازاي|اشحن|اطلب|طلب/.test(t)){
+      return `طريقة الطلب سهلة:<br>1) اختار الباقة<br>2) اكتب PUBG ID واسم الحساب<br>3) ضيف للسلة<br>4) اختار الدفع وارفع السكرين<br><br><button data-moba-action="products">افتح المنتجات 🎮</button>`;
+    }
+    if(/دفع|فودافون|انستا|insta|wallet|محفظ/.test(t)){
+      return `طرق الدفع المتاحة عندك داخل الموقع:<br>🟢 InstaPay<br>📱 Wallet<br><br>بعد التحويل ارفع السكرين، ولو التحويل من محل أو رقم تاني اكتب آخر 3 أرقام في الملاحظات.`;
+    }
+    if(/ميعاد|مواعيد|وقت|امتى|متاح/.test(t)){
+      return `مواعيد العمل:<br>يوميًا من 12 صباحًا حتى 5 الفجر.<br>الاثنين والأربعاء والخميس والجمعة من 3 العصر حتى 5 الفجر.<br><br>تقدر تعمل الطلب في أي وقت، والتنفيذ داخل مواعيد العمل.`;
+    }
+    if(/متابعة|حالة|فين|طلبي|اوردر|order/.test(t)){
+      return `لمتابعة الطلب اكتب رقم الموبايل في سجل الطلبات، وهيظهرلك كل الطلبات وحالتها.<br><br><button data-moba-action="track">افتح سجل الطلبات 📦</button>`;
+    }
+    if(/مشكلة|غلط|سكرين|id|ايدي|رقم/.test(t)){
+      return `لو في مشكلة في الطلب، افتح سجل الطلبات برقم موبايلك.<br>لو مطلوب تعديل هتلاقي فورم تعديل حسب المشكلة:<br>📸 سكرين جديد<br>🆔 ID واسم الحساب<br>📱 رقم صحيح<br><br>عندك فرصتين تعديل قبل تحويل الطلب للدعم.`;
+    }
+    if(/تقييم|رأي|راي|نجوم/.test(t)){
+      return `تقدر تكتب تقييمك من قسم آراء العملاء، والتقييم بيظهر بعد مراجعة الإدارة.<br><br><button data-moba-action="reviews">افتح آراء العملاء ⭐</button>`;
+    }
+    if(/دعم|كلم|تواصل|مساعدة/.test(t)){
+      return `تقدر تتواصل مع الدعم مباشرة من هنا:<br><br><a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>`;
+    }
+    if(/ضمان|قواعد|سياسة/.test(t)){
+      return `قواعد الشحن والضمان موجودة في الموقع، أهم حاجة تراجع ID واسم الحساب قبل الدفع.<br><br><button data-moba-action="rules">افتح قواعد الضمان 🛡️</button>`;
+    }
+    return `أنا MOba 👑 أقدر أساعدك في:<br>الشحن - الدفع - مواعيد العمل - متابعة الطلب - مشاكل الطلب - الدعم.<br><br>جرب تكتب: "ازاي اشحن" أو "متابعة الطلب".`;
+  }
+  function botReply(q){
+    addMsg('user', String(q).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+    typing && typing.classList.add('show');
+    setTimeout(()=>{
+      typing && typing.classList.remove('show');
+      addMsg('bot', replyFor(q));
+    },450);
+  }
+  document.addEventListener('click', function(e){
+    const quick = e.target.closest('[data-moba-q]');
+    if(quick){ botReply(quick.dataset.mobaQ); }
+    const action = e.target.closest('[data-moba-action]');
+    if(action){
+      const a = action.dataset.mobaAction;
+      if(a==='products') goTo('#productsSection');
+      if(a==='track') goTo('#trackOrder');
+      if(a==='reviews') goTo('#customerReviews');
+      if(a==='rules') goTo('#shippingRules');
+    }
+  });
+  form && form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const q = input.value.trim();
+    if(!q) return;
+    input.value = '';
+    botReply(q);
+  });
+  loadPos();
 })();
 </script>
 

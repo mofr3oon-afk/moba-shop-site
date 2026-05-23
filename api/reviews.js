@@ -34,7 +34,7 @@ export default async function handler(req,res){
       if(customer_name.length<2) return json(res,400,{ok:false,error:'اكتب اسمك'});
       if(review_text.length<4) return json(res,400,{ok:false,error:'اكتب رأيك بشكل واضح'});
       const badWords=['شتيمة','نصب','احتيال']; // placeholder بسيط، ممكن نعدلها بعدين
-      const row={customer_name,rating,review_text,is_approved:true,created_at:new Date().toISOString()};
+      const row={customer_name,rating,review_text,is_approved:false,created_at:new Date().toISOString()};
       const inserted=await supa('reviews',{method:'POST',body:JSON.stringify(row)});
       return json(res,200,{ok:true,review:inserted && inserted[0]});
     }
