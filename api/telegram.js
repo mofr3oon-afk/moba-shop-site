@@ -73,18 +73,27 @@ async function supa(path,opts={}){
 }
 async function getOrder(id){
   const key = String(id || '').trim();
-  let rows = await supa(`orders?id=eq.${encodeURIComponent(key)}&select=*`);
+  if(!key) return null;
+
+  let rows = await supa(`orders?id=eq.${encodeURIComponent(key)}&select=*&limit=1`);
   if(rows && rows[0]) return rows[0];
 
-  rows = await supa(`orders?order_code=eq.${encodeURIComponent(key)}&select=*`);
+  rows = await supa(`orders?order_code=eq.${encodeURIComponent(key)}&select=*&order=created_at.desc&limit=1`);
   if(rows && rows[0]) return rows[0];
 
-  // fallback لو رقم MOBA فيه مسافات مختلفة
   const compact = key.replace(/\s+/g,' ').trim();
   if(compact !== key){
-    rows = await supa(`orders?order_code=eq.${encodeURIComponent(compact)}&select=*`);
+    rows = await supa(`orders?order_code=eq.${encodeURIComponent(compact)}&select=*&order=created_at.desc&limit=1`);
     if(rows && rows[0]) return rows[0];
   }
+
+  const m = compact.match(/MOBA\s*(\d+)/i);
+  if(m){
+    const n = Number(m[1]);
+    rows = await supa(`orders?daily_number=eq.${n}&select=*&order=created_at.desc&limit=1`);
+    if(rows && rows[0]) return rows[0];
+  }
+
   return null;
 }
 async function updateOrder(id,patch){
@@ -353,7 +362,7 @@ async function handleCallback(cb){
   }
   const order=await getOrder(id);
   if(!order){
-    await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'الطلب غير موجود',show_alert:true});
+    await tg('answerCallbackQuery',{callback_query_id:cb.id,text:`الطلب غير موجود: ${id}`,show_alert:true});
     return;
   }
   if(action==='delete_ask'){

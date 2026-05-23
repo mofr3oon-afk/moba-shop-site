@@ -125,3 +125,14 @@ create index if not exists reviews_approved_idx on public.reviews(is_approved);
 alter table public.orders drop constraint if exists orders_order_code_key;
 
 notify pgrst, 'reload schema';
+
+
+
+-- V13.1 Telegram button lookup fix support
+alter table public.orders add column if not exists daily_number integer;
+alter table public.orders add column if not exists order_code text;
+alter table public.orders drop constraint if exists orders_order_code_key;
+create index if not exists orders_order_code_created_idx on public.orders(order_code, created_at desc);
+create index if not exists orders_daily_number_created_idx on public.orders(daily_number, created_at desc);
+
+notify pgrst, 'reload schema';

@@ -138,3 +138,8 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
 - إضافة جدول Supabase جديد reviews داخل ملف SQL.
 - إضافة أمر /clear_all_orders و /new_month لحذف كل الأوردرات ببداية الشهر بعد تأكيد.
 - تحويل أرقام الموقع إلى English digits تلقائيا.
+
+
+## تحديث V13.1
+- إصلاح مشكلة أزرار التليجرام التي تظهر الطلب غير موجود.
+- البحث الآن يتم بالـ id أو order_code أو daily_number مثل MOBA 1001.
