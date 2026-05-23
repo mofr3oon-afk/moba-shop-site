@@ -77,3 +77,35 @@ export function buildTelegramText(order){
   (order.note?`📝 ملاحظة: ${escapeHtml(order.note)}\n\n`:``)+
   `📸 السكرين مرفق تحت الرسالة`;
 }
+
+
+export function orderKeyboard(orderId){
+  return {
+    inline_keyboard:[
+      [
+        {text:'🙋 استلمت',callback_data:`claim:${orderId}`},
+        {text:'🔄 بدأ التنفيذ',callback_data:`processing:${orderId}`}
+      ],
+      [
+        {text:'✅ تم الشحن',callback_data:`delivered:${orderId}`},
+        {text:'⏸ تعليق',callback_data:`hold:${orderId}`}
+      ],
+      [
+        {text:'⚠️ ID غلط',callback_data:`bad_id:${orderId}`},
+        {text:'📸 سكرين غير واضح',callback_data:`bad_screen:${orderId}`}
+      ],
+      [
+        {text:'📱 رقم غلط',callback_data:`bad_phone:${orderId}`},
+        {text:'❌ رفض',callback_data:`reject:${orderId}`}
+      ],
+      [
+        {text:'📊 سجل العميل',callback_data:`customer_history:${orderId}`},
+        {text:'📋 البيانات',callback_data:`data:${orderId}`}
+      ],
+      [
+        {text:'👁 فتح الطلب',callback_data:`open:${orderId}`},
+        {text:'🗑 حذف الطلب',callback_data:`delete_ask:${orderId}`}
+      ]
+    ]
+  };
+}

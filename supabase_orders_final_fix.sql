@@ -88,3 +88,20 @@ alter table public.orders add column if not exists fix_payload jsonb default '{}
 alter table public.orders add column if not exists rejection_reason text;
 
 notify pgrst, 'reload schema';
+
+
+
+-- V10 admin order management columns
+alter table public.orders add column if not exists archived_at timestamptz;
+alter table public.orders add column if not exists deleted_reason text;
+alter table public.orders add column if not exists pinned boolean default false;
+alter table public.orders add column if not exists fix_type text;
+alter table public.orders add column if not exists fix_count integer default 0;
+alter table public.orders add column if not exists transfer_confirm text;
+alter table public.orders add column if not exists transfer_info text;
+alter table public.orders add column if not exists transfer_last3 text;
+
+create index if not exists orders_phone_created_idx on public.orders(phone, created_at desc);
+create index if not exists orders_status_created_idx on public.orders(status, created_at desc);
+
+notify pgrst, 'reload schema';

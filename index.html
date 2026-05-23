@@ -191,6 +191,68 @@ html{scroll-behavior:smooth}
   }
 }
 
+
+/* V9 Reviews and trust section */
+.trust-reviews{margin:18px 0;padding:20px;position:relative;overflow:hidden}
+.trust-reviews:before{content:"";position:absolute;inset:-80px auto auto -80px;width:220px;height:220px;background:radial-gradient(circle,rgba(39,216,255,.16),transparent 68%);pointer-events:none}
+.trust-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.trust-head h2{margin:0;font-size:24px;line-height:1.4}
+.trust-head p{margin:6px 0 0;color:var(--muted);line-height:1.8;font-size:14px}
+.trust-badge{white-space:nowrap;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(56,224,139,.32);background:rgba(56,224,139,.10);color:#dbffe9;border-radius:999px;padding:9px 12px;font-weight:900;font-size:13px}
+.trust-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.trust-stat{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));border-radius:20px;padding:14px;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.trust-stat b{display:block;font-size:26px;color:#fff;text-shadow:0 0 18px rgba(39,216,255,.30)}
+.trust-stat span{display:block;margin-top:4px;color:var(--muted);font-size:13px}
+.reviews-strip{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--line);background:rgba(0,0,0,.16);padding:14px 0}
+.reviews-strip:before,.reviews-strip:after{content:"";position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none}
+.reviews-strip:before{right:0;background:linear-gradient(90deg,transparent,rgba(9,13,24,.95))}
+.reviews-strip:after{left:0;background:linear-gradient(270deg,transparent,rgba(9,13,24,.95))}
+.reviews-track{display:flex;gap:12px;width:max-content;animation:mobaReviews 42s linear infinite;padding:0 12px}
+.reviews-strip:hover .reviews-track{animation-play-state:paused}
+.review-shot{width:300px;height:118px;object-fit:cover;object-position:center;border-radius:18px;border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.28);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;background:#0c1220}
+.review-shot:hover{transform:translateY(-2px) scale(1.015);border-color:rgba(39,216,255,.35);box-shadow:0 12px 34px rgba(0,0,0,.35),0 0 20px rgba(39,216,255,.13)}
+@keyframes mobaReviews{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.review-note{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.7}
+.review-modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
+.review-modal.show{display:flex}
+.review-modal-card{position:relative;width:min(760px,96vw);max-height:88vh;border-radius:22px;border:1px solid rgba(255,255,255,.16);background:#0b1020;box-shadow:0 24px 80px rgba(0,0,0,.55);padding:12px}
+.review-modal-card img{display:block;width:100%;max-height:78vh;object-fit:contain;border-radius:16px}
+.review-close{position:absolute;top:-12px;left:-12px;width:38px;height:38px;border:0;border-radius:999px;background:linear-gradient(135deg,#ff4d68,#ff9a2f);color:white;font-weight:900;cursor:pointer;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+@media(max-width:900px){.trust-reviews{padding:14px;margin:12px 0;border-radius:22px}.trust-head{display:block}.trust-head h2{font-size:19px}.trust-head p{font-size:12px}.trust-badge{margin-top:10px;font-size:11px;padding:7px 10px}.trust-stats{grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.trust-stat{padding:10px 6px;border-radius:16px}.trust-stat b{font-size:18px}.trust-stat span{font-size:10px}.review-shot{width:235px;height:96px;border-radius:15px}.reviews-track{gap:9px}.reviews-strip{padding:10px 0;border-radius:18px}}
+
+
+/* V10 sticky cart premium polish */
+.sticky-cart{
+  border:1px solid rgba(39,216,255,.26)!important;
+  background:linear-gradient(135deg,rgba(39,216,255,.18),rgba(255,154,47,.14),rgba(255,255,255,.08))!important;
+  box-shadow:0 14px 38px rgba(0,0,0,.35),0 0 22px rgba(39,216,255,.14)!important;
+  backdrop-filter:blur(14px);
+}
+.sticky-cart:before{
+  content:"🛒";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;height:28px;
+  border-radius:999px;
+  margin-inline-end:6px;
+  background:rgba(39,216,255,.14);
+  border:1px solid rgba(39,216,255,.22);
+}
+.sticky-cart:hover{
+  box-shadow:0 16px 45px rgba(0,0,0,.42),0 0 28px rgba(39,216,255,.22)!important;
+}
+@media(max-width:900px){
+  .sticky-cart{
+    width:calc(100% - 24px)!important;
+    right:12px!important;
+    left:12px!important;
+    bottom:12px!important;
+    border-radius:20px!important;
+    padding:10px 12px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -200,6 +262,7 @@ html{scroll-behavior:smooth}
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
+      <a href="#customerReviews">💬 آراء العملاء</a>
       <a href="#cartSection">🛒 السلة</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
       <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
@@ -217,6 +280,59 @@ html{scroll-behavior:smooth}
           <div class="step">3️⃣ ادفع وارفع السكرين</div>
         </div></div>
     </section>
+    
+    <section class="panel trust-reviews" id="customerReviews">
+      <div class="trust-head">
+        <div>
+          <h2>💬 آراء العملاء في MOBA SHOP</h2>
+          <p>ثقة اتبنت معانا على مدار سنين، ودي نماذج حقيقية من كلام الناس اللي جربتنا.</p>
+        </div>
+        <div class="trust-badge">🛡 تقييمات حقيقية من عملائنا</div>
+      </div>
+
+      <div class="trust-stats">
+        <div class="trust-stat"><b>+7000</b><span>عميل وثق فينا</span></div>
+        <div class="trust-stat"><b>12+</b><span>سنة خبرة</span></div>
+        <div class="trust-stat"><b>+1000</b><span>تقييم ورأي</span></div>
+      </div>
+
+      <div class="reviews-strip" aria-label="صور آراء العملاء">
+        <div class="reviews-track">
+          <img class="review-shot" src="assets/reviews/review_01.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_02.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_03.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_04.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_05.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_06.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_07.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_08.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_09.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_10.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_11.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_12.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_13.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_14.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_15.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+          <img class="review-shot" src="assets/reviews/review_01.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_02.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_03.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_04.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_05.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_06.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_07.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_08.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_09.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_10.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_11.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_12.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_13.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_14.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+<img class="review-shot" src="assets/reviews/review_15.png" loading="lazy" alt="رأي عميل في MOBA SHOP" onclick="openReviewImage(this.src)">
+        </div>
+      </div>
+      <div class="review-note">اضغط على أي صورة عشان تشوفها بحجم أكبر.</div>
+    </section>
+
     <section class="grid">
       <div class="panel products" id="productsSection">
         <div class="section-title"><h2>🎮 المنتجات | Products</h2><div class="tabs"><button class="tab active" data-cat="uc">شدات | UC</button><button class="tab" data-cat="growth">ازدهار</button><button class="tab" data-cat="prime">برايم</button></div></div>
@@ -502,6 +618,51 @@ html{scroll-behavior:smooth}
       }
     });
   }, 500);
+})();
+</script>
+
+
+  <div class="review-modal" id="reviewModal" onclick="closeReviewImage()">
+    <div class="review-modal-card" onclick="event.stopPropagation()">
+      <button class="review-close" type="button" onclick="closeReviewImage()">×</button>
+      <img id="reviewModalImg" src="" alt="رأي عميل">
+    </div>
+  </div>
+  <script id="moba-review-modal">
+    function openReviewImage(src){
+      var modal = document.getElementById('reviewModal');
+      var img = document.getElementById('reviewModalImg');
+      if(!modal || !img) return;
+      img.src = src;
+      modal.classList.add('show');
+    }
+    function closeReviewImage(){
+      var modal = document.getElementById('reviewModal');
+      var img = document.getElementById('reviewModalImg');
+      if(!modal || !img) return;
+      modal.classList.remove('show');
+      setTimeout(function(){ img.src=''; }, 150);
+    }
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape') closeReviewImage();
+    });
+  </script>
+
+
+<script id="moba-v10-cart-click">
+(function(){
+  function goToCart(){
+    const el = document.getElementById('cartSection') || document.querySelector('.cart');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  document.addEventListener('click', function(e){
+    const target = e.target.closest('.sticky-cart, .mobile-cart, .floating-cart, [data-go-cart]');
+    if(target){
+      e.preventDefault();
+      e.stopPropagation();
+      goToCart();
+    }
+  }, true);
 })();
 </script>
 
