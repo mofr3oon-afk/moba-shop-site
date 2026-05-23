@@ -131,6 +131,66 @@ html{scroll-behavior:smooth}
   .btn{font-size:11px;padding:9px 8px}
 }
 
+
+/* V8 nav + sticky cart click fix polish */
+.jump-nav{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:8px 2px 12px;
+}
+.jump-nav a{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:38px;
+  border-radius:999px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.045))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.18);
+}
+.jump-nav a.primary{
+  background:linear-gradient(135deg,rgba(39,216,255,.95),rgba(37,120,255,.92))!important;
+  color:#00111a!important;
+  border-color:rgba(39,216,255,.45)!important;
+  box-shadow:0 0 18px rgba(39,216,255,.22),0 8px 22px rgba(0,0,0,.22);
+}
+.jump-nav a.support-link{
+  background:linear-gradient(135deg,rgba(56,224,139,.18),rgba(255,255,255,.045))!important;
+  border-color:rgba(56,224,139,.36)!important;
+}
+.jump-nav a::after{
+  content:"";
+  position:absolute;
+  inset:auto 14px 5px 14px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(39,216,255,.55),transparent);
+  opacity:.0;
+  transition:.16s ease;
+}
+.jump-nav a:hover::after{opacity:1}
+.sticky-cart,.mobile-cart,.floating-cart{
+  cursor:pointer!important;
+  pointer-events:auto!important;
+}
+.sticky-cart:active,.mobile-cart:active,.floating-cart:active{
+  transform:scale(.98);
+}
+@media(max-width:900px){
+  .jump-nav{
+    gap:7px;
+    padding:7px 0 9px;
+  }
+  .jump-nav a{
+    min-height:35px;
+    font-size:11px!important;
+    padding:8px 10px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -140,7 +200,7 @@ html{scroll-behavior:smooth}
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
-      <a href="#cartSection">🛒 السلة والدفع</a>
+      <a href="#cartSection">🛒 السلة</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
       <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
     </nav>
@@ -389,6 +449,59 @@ html{scroll-behavior:smooth}
 
   window.renderProducts();
   window.renderCart();
+})();
+</script>
+
+
+<script id="moba-v8-click-fixes">
+(function(){
+  function goToCart(){
+    const el = document.getElementById('cartSection') || document.querySelector('.cart');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function goToProducts(){
+    const el = document.getElementById('productsSection') || document.querySelector('.products');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function goToStatus(){
+    const el = document.getElementById('trackOrder');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  document.addEventListener('click', function(e){
+    const target = e.target.closest('.sticky-cart, .mobile-cart, .floating-cart, [data-go-cart]');
+    if(target){
+      e.preventDefault();
+      e.stopPropagation();
+      goToCart();
+      return;
+    }
+
+    const link = e.target.closest('a[href="#cartSection"], a[href="#productsSection"], a[href="#trackOrder"]');
+    if(link){
+      const href = link.getAttribute('href');
+      e.preventDefault();
+      if(href === '#cartSection') goToCart();
+      if(href === '#productsSection') goToProducts();
+      if(href === '#trackOrder') goToStatus();
+    }
+  }, true);
+
+  // لو السلة العائمة معمولة div ومفيهاش كلاس واضح، نمسكها من النص
+  setTimeout(function(){
+    document.querySelectorAll('div,button,a').forEach(function(el){
+      const txt = (el.textContent || '').trim();
+      if(txt.includes('السلة') && txt.includes('جنيه') && !el.dataset.goCartBound){
+        el.dataset.goCartBound = '1';
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          goToCart();
+        }, true);
+      }
+    });
+  }, 500);
 })();
 </script>
 
