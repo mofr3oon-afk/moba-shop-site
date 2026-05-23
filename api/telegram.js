@@ -1,248 +1,63 @@
-const STATUS_LABELS = {
-  pending: '⏳ قيد المراجعة | Pending',
-  claimed: '🙋 تم استلام الطلب | Claimed',
-  processing: '🔄 بدأ التنفيذ | Processing',
-  delivered: '✅ تم الشحن | Delivered',
-  on_hold: '⏸ معلق | On Hold',
-  needs_fix: '⚠️ محتاج مراجعة | Needs Fix',
-  rejected: '❌ مرفوض | Rejected',
-  cancelled: '🗑 ملغي | Cancelled'
-};
-
-const ACTION_REPLY = {
-  claimed: '🙋 تم استلام الطلب',
-  processing: '🔄 تم بدء التنفيذ',
-  delivered: '✅ تم الشحن بنجاح',
-  on_hold: '⏸ تم تعليق الطلب',
-  needs_fix: '⚠️ تم تحديد مشكلة في الطلب',
-  rejected: '❌ تم رفض الطلب'
-};
-
-function json(res, status, data) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.end(JSON.stringify(data));
+import { json, supabaseRequest, telegramJson, isAdmin, adminName, STATUS_LABELS, telegramKeyboard, buildTelegramText } from './_utils.js';
+const ACTION_REPLY={claimed:'🙋 تم استلام الطلب',processing:'🔄 تم بدء التنفيذ',delivered:'✅ تم الشحن بنجاح',on_hold:'⏸ تم تعليق الطلب',needs_fix:'⚠️ الطلب محتاج مراجعة',rejected:'❌ تم رفض الطلب'};
+function readJson(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}'))}catch(e){reject(e)}});req.on('error',reject);});}
+async function answerCallback(id,text,showAlert=false){return telegramJson('answerCallbackQuery',{callback_query_id:id,text,show_alert:Boolean(showAlert)});}
+async function getOrder(orderId){const rows=await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&select=*&limit=1`);return rows?.[0]||null;}
+async function updateOrder(orderId,payload){return supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,updated_at:new Date().toISOString()})});}
+function itemSummary(items=[]){return (Array.isArray(items)?items:[]).map((x,i)=>`${i+1}) ${x.product}\nID: ${x.pubgId}\nPrice: ${x.price}`).join('\n\n') || 'لا يوجد';}
+async function customerHistoryText(phone){
+  const rows=await supabaseRequest(`orders?phone=eq.${encodeURIComponent(phone)}&select=id,order_code,status,total,items,created_at,payment_method&order=created_at.desc&limit=10`).catch(()=>[]);
+  const delivered=(rows||[]).filter(x=>x.status==='delivered').length;
+  const totalValue=(rows||[]).reduce((s,x)=>s+Number(x.total||0),0);
+  const last=(rows||[]).slice(0,5).map((o,i)=>`${i+1}) ${o.order_code||o.id} | ${STATUS_LABELS[o.status]||o.status} | ${o.total} جنيه`).join('\n') || 'لا يوجد';
+  return `📊 سجل العميل\n━━━━━━━━━━━━━━\nرقم العميل: ${phone}\nعدد الطلبات المعروضة: ${(rows||[]).length}\nتم الشحن ضمن آخر 10: ${delivered}\nإجمالي آخر 10 طلبات: ${totalValue} جنيه\n\nآخر الطلبات:\n${last}`;
 }
-
-function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+function periodStart(kind){const d=new Date(); if(kind==='today') d.setUTCHours(0,0,0,0); if(kind==='week') d.setUTCDate(d.getUTCDate()-7); if(kind==='month') d.setUTCDate(d.getUTCDate()-30); return d.toISOString();}
+async function reportText(kind){
+  const from=periodStart(kind); const title=kind==='today'?'تقرير اليوم':kind==='week'?'تقرير الاسبوع':'تقرير الشهر';
+  const rows=await supabaseRequest(`orders?created_at=gte.${encodeURIComponent(from)}&select=status,total,payment_method,items,phone,created_at&order=created_at.desc&limit=1000`).catch(()=>[]);
+  const counts={}; const payments={}; const products={}; let total=0;
+  for(const o of rows||[]){counts[o.status]=(counts[o.status]||0)+1; payments[o.payment_method||'غير محدد']=(payments[o.payment_method||'غير محدد']||0)+1; total+=Number(o.total||0); for(const it of (Array.isArray(o.items)?o.items:[])){products[it.product]=(products[it.product]||0)+1;}}
+  const c=s=>counts[s]||0; const prod=Object.entries(products).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`${k}: ${v}`).join('\n')||'لا يوجد'; const pay=Object.entries(payments).map(([k,v])=>`${k}: ${v}`).join('\n')||'لا يوجد';
+  return `📊 ${title} | MOBA SHOP\n━━━━━━━━━━━━━━\nإجمالي الطلبات: ${(rows||[]).length}\nتم الشحن: ${c('delivered')}\nجاري التنفيذ: ${c('processing')}\nمعلق/مشكلة: ${c('on_hold')+c('needs_fix')}\nمرفوض: ${c('rejected')}\n\nإجمالي قيمة الطلبات: ${total} جنيه\n\nالمنتجات:\n${prod}\n\nطرق الدفع:\n${pay}`;
 }
-
-function readJson(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => {
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); }
-      catch (e) { reject(e); }
-    });
-    req.on('error', reject);
-  });
+async function handleCommand(msg){
+  const userId=msg.from?.id; if(!isAdmin(userId)) return;
+  const text=String(msg.text||'').trim(); const chat_id=msg.chat.id;
+  let reply='';
+  if(text==='/today') reply=await reportText('today');
+  else if(text==='/week') reply=await reportText('week');
+  else if(text==='/month') reply=await reportText('month');
+  else if(text.startsWith('/customer')||text.startsWith('/orders')){const phone=(text.split(/\s+/)[1]||'').trim(); reply=/^01\d{9}$/.test(phone)?await customerHistoryText(phone):'استخدمها كده: /customer 010xxxxxxxx';}
+  else if(text==='/pending'){const rows=await supabaseRequest(`orders?status=in.(pending,claimed,processing,on_hold,needs_fix)&select=order_code,phone,status,total,created_at&order=created_at.desc&limit=20`).catch(()=>[]); reply='📌 الطلبات المفتوحة\n━━━━━━━━━━━━━━\n'+((rows||[]).map(o=>`${o.order_code} | ${o.phone} | ${STATUS_LABELS[o.status]||o.status} | ${o.total} جنيه`).join('\n')||'لا يوجد');}
+  else if(text==='/delivered') {const rows=await supabaseRequest(`orders?status=eq.delivered&created_at=gte.${encodeURIComponent(periodStart('today'))}&select=order_code,phone,total&order=created_at.desc&limit=50`).catch(()=>[]); reply='✅ تم الشحن اليوم\n━━━━━━━━━━━━━━\n'+((rows||[]).map(o=>`${o.order_code} | ${o.phone} | ${o.total} جنيه`).join('\n')||'لا يوجد');}
+  else if(text==='/help'||text==='/admin') reply='🛠 اوامر MOBA SHOP\n/today تقرير اليوم\n/week تقرير الاسبوع\n/month تقرير الشهر\n/customer 010xxxxxxxx سجل عميل\n/orders 010xxxxxxxx طلبات رقم\n/pending الطلبات المفتوحة\n/delivered تم الشحن اليوم';
+  if(reply) await telegramJson('sendMessage',{chat_id,reply_to_message_id:msg.message_id,text:reply});
 }
-
-function isAdmin(userId) {
-  const ids = String(process.env.ADMIN_IDS || '')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean);
-  return ids.includes(String(userId));
-}
-
-async function telegramApi(method, payload) {
-  const token = process.env.BOT_TOKEN;
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) throw new Error(data.description || `Telegram ${method} failed`);
-  return data;
-}
-
-async function supabaseRequest(path, options = {}) {
-  const url = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${path}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(`Supabase error: ${text || response.status}`);
-  }
-  return response.json().catch(() => null);
-}
-
-async function getOrder(orderId) {
-  const select = 'id,phone,customer_name,payment_method,total,status,handler,items,note,status_history,telegram_message_id';
-  const rows = await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}&select=${select}&limit=1`);
-  return rows?.[0] || null;
-}
-
-async function updateOrder(orderId, payload) {
-  return supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ ...payload, updated_at: new Date().toISOString() })
-  });
-}
-
-function telegramKeyboard(orderId, status) {
-  return {
-    inline_keyboard: [
-      [
-        { text: status === 'claimed' ? '🙋 مستلم بالفعل' : '🙋 استلمت | Claim', callback_data: `web_claim_${orderId}` },
-        { text: status === 'processing' ? '🔄 جاري التنفيذ' : '🔄 بدأ التنفيذ', callback_data: `web_processing_${orderId}` }
-      ],
-      [
-        { text: status === 'delivered' ? '✅ تم الشحن' : '✅ تم الشحن', callback_data: `web_delivered_${orderId}` },
-        { text: status === 'on_hold' ? '⏸ معلق' : '⏸ تعليق', callback_data: `web_hold_${orderId}` }
-      ],
-      [
-        { text: status === 'needs_fix' ? '⚠️ فيه مشكلة' : '⚠️ مشكلة', callback_data: `web_fix_${orderId}` },
-        { text: status === 'rejected' ? '❌ مرفوض' : '❌ رفض', callback_data: `web_reject_${orderId}` }
-      ],
-      [
-        { text: '📋 البيانات | Data', callback_data: `web_data_${orderId}` }
-      ]
-    ]
-  };
-}
-
-function renderTelegramText(order, status, handlerName) {
-  const cart = Array.isArray(order.items) ? order.items : [];
-  const itemLines = cart.map((item, index) => (
-    `${index + 1}) ${escapeHtml(item.product)}\n` +
-    `   ID: <code>${escapeHtml(item.pubgId)}</code>\n` +
-    `   السعر: ${escapeHtml(item.price)} جنيه`
-  )).join('\n\n');
-
-  return `🚨 <b>طلب من موقع MOBA SHOP</b>\n` +
-    `━━━━━━━━━━━━━━\n` +
-    `🧾 رقم الطلب: <code>${escapeHtml(order.id)}</code>\n` +
-    `📌 الحالة: <b>${STATUS_LABELS[status] || status}</b>\n` +
-    (handlerName ? `👨‍💻 المسؤول: ${escapeHtml(handlerName)}\n` : '') +
-    `👤 الاسم: ${escapeHtml(order.customer_name || 'غير محدد')}\n` +
-    `📱 رقم العميل: <code>${escapeHtml(order.phone || '')}</code>\n` +
-    `💳 الدفع: ${escapeHtml(order.payment_method || '')}\n` +
-    `💰 الإجمالي: <b>${escapeHtml(order.total || 0)} جنيه</b>\n\n` +
-    `🛒 <b>سلة الطلبات | Cart</b>\n${itemLines}\n\n` +
-    (order.note ? `📝 ملاحظة: ${escapeHtml(order.note)}\n\n` : '') +
-    `📸 السكرين مرفق تحت الرسالة`;
-}
-
-async function answerCallback(callbackQueryId, text, showAlert = false) {
-  await telegramApi('answerCallbackQuery', {
-    callback_query_id: callbackQueryId,
-    text,
-    show_alert: Boolean(showAlert)
-  });
-}
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return json(res, 405, { ok: false });
-  if (process.env.TELEGRAM_WEBHOOK_SECRET && req.query.secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
-    return json(res, 403, { ok: false });
-  }
-
-  let cb = null;
-  try {
-    const update = await readJson(req);
-    cb = update.callback_query;
-    if (!cb) return json(res, 200, { ok: true });
-
-    const userId = cb.from?.id;
-    const adminName = cb.from?.first_name || cb.from?.username || 'Admin';
-
-    if (!isAdmin(userId)) {
-      await answerCallback(cb.id, 'مش مصرح لك', true);
-      return json(res, 200, { ok: true });
-    }
-
-    const data = String(cb.data || '');
-    if (!data.startsWith('web_')) return json(res, 200, { ok: true });
-
-    const [, action, ...rest] = data.split('_');
-    const orderId = rest.join('_');
-    const order = await getOrder(orderId);
-
-    if (!order) {
-      await answerCallback(cb.id, 'الطلب مش موجود', true);
-      return json(res, 200, { ok: true });
-    }
-
-    if (action === 'data') {
-      const cart = Array.isArray(order.items) ? order.items : [];
-      const itemsText = cart.map((item, i) => `${i + 1}) ${item.product}\nID: ${item.pubgId}\nPrice: ${item.price}`).join('\n\n');
-      await telegramApi('sendMessage', {
-        chat_id: cb.message.chat.id,
-        reply_to_message_id: cb.message.message_id,
-        text: `📋 بيانات الطلب ${order.id}\n━━━━━━━━━━━━━━\nPhone: ${order.phone}\nPayment: ${order.payment_method}\nTotal: ${order.total}\n\n${itemsText}`
-      });
-      await answerCallback(cb.id, 'تم إرسال البيانات');
-      return json(res, 200, { ok: true });
-    }
-
-    const actionToStatus = {
-      claim: 'claimed',
-      processing: 'processing',
-      delivered: 'delivered',
-      hold: 'on_hold',
-      fix: 'needs_fix',
-      reject: 'rejected'
-    };
-
-    const newStatus = actionToStatus[action];
-    if (!newStatus) {
-      await answerCallback(cb.id, 'امر غير معروف', true);
-      return json(res, 200, { ok: true });
-    }
-
-    const history = Array.isArray(order.status_history) ? order.status_history : [];
-    history.push({ status: newStatus, label: STATUS_LABELS[newStatus], at: new Date().toISOString(), by: adminName, admin_id: String(userId) });
-
-    await updateOrder(orderId, {
-      status: newStatus,
-      status_text: STATUS_LABELS[newStatus],
-      handler: adminName,
-      handler_id: String(userId),
-      admin_id: String(userId),
-      admin_name: adminName,
-      last_status_at: new Date().toISOString(),
-      last_status_by: adminName,
-      status_history: history
-    });
-
-    const newText = renderTelegramText(order, newStatus, adminName);
-    await telegramApi('editMessageText', {
-      chat_id: cb.message.chat.id,
-      message_id: cb.message.message_id,
-      text: newText,
-      parse_mode: 'HTML',
-      reply_markup: telegramKeyboard(orderId, newStatus)
-    });
-
-    await telegramApi('sendMessage', {
-      chat_id: cb.message.chat.id,
-      reply_to_message_id: cb.message.message_id,
-      text: `${ACTION_REPLY[newStatus] || 'تم تحديث الطلب'}\n👨‍💻 بواسطة: ${adminName}\n🧾 الطلب: ${orderId}`
-    });
-
-    await answerCallback(cb.id, `تم تحديث الحالة: ${STATUS_LABELS[newStatus]}`);
-    return json(res, 200, { ok: true });
-  } catch (error) {
-    try {
-      if (cb?.id) await answerCallback(cb.id, error.message || 'حصل خطأ', true);
-    } catch {}
-    return json(res, 200, { ok: false, error: error.message || 'Server error' });
-  }
+export default async function handler(req,res){
+  if(req.method!=='POST') return json(res,405,{ok:false});
+  if(process.env.TELEGRAM_WEBHOOK_SECRET && req.query.secret!==process.env.TELEGRAM_WEBHOOK_SECRET) return json(res,403,{ok:false});
+  let cb=null;
+  try{
+    const update=await readJson(req);
+    if(update.message?.text?.startsWith('/')){await handleCommand(update.message); return json(res,200,{ok:true});}
+    cb=update.callback_query; if(!cb) return json(res,200,{ok:true});
+    if(!isAdmin(cb.from?.id)){await answerCallback(cb.id,'مش مصرح لك',true); return json(res,200,{ok:true});}
+    const data=String(cb.data||''); if(!data.startsWith('web_')) return json(res,200,{ok:true});
+    const [,action,...rest]=data.split('_'); const orderId=rest.join('_'); const order=await getOrder(orderId);
+    if(!order){await answerCallback(cb.id,'الطلب مش موجود',true); return json(res,200,{ok:true});}
+    if(action==='data'){await telegramJson('sendMessage',{chat_id:cb.message.chat.id,reply_to_message_id:cb.message.message_id,text:`📋 بيانات الطلب ${order.order_code||order.id}\n━━━━━━━━━━━━━━\nPhone: ${order.phone}\nPayment: ${order.payment_method}\nTotal: ${order.total}\nNote: ${order.note||'-'}\n\n${itemSummary(order.items)}`}); await answerCallback(cb.id,'تم إرسال البيانات'); return json(res,200,{ok:true});}
+    if(action==='history'){await telegramJson('sendMessage',{chat_id:cb.message.chat.id,reply_to_message_id:cb.message.message_id,text:await customerHistoryText(order.phone)}); await answerCallback(cb.id,'تم إرسال سجل العميل'); return json(res,200,{ok:true});}
+    const actionToStatus={claim:'claimed',processing:'processing',delivered:'delivered',hold:'on_hold',fix:'needs_fix',badshot:'needs_fix',badid:'needs_fix',reject:'rejected'};
+    const customCustomer={badshot:'📸 السكرين غير واضح. برجاء التواصل مع الدعم أو إعادة رفع سكرين واضح.',badid:'🆔 الايدي محتاج مراجعة. برجاء التواصل مع الدعم.'};
+    const newStatus=actionToStatus[action]; if(!newStatus){await answerCallback(cb.id,'امر غير معروف',true); return json(res,200,{ok:true});}
+    const name=adminName(cb.from); const history=Array.isArray(order.status_history)?order.status_history:[]; const label=customCustomer[action]||STATUS_LABELS[newStatus]; history.push({status:newStatus,label,at:new Date().toISOString(),by:name,admin_id:String(cb.from.id)});
+    const payload={status:newStatus,status_text:STATUS_LABELS[newStatus],customer_status_text:label,admin_status_text:STATUS_LABELS[newStatus],handler:name,handler_id:String(cb.from.id),admin_id:String(cb.from.id),admin_name:name,last_status_at:new Date().toISOString(),last_status_by:name,status_history:history};
+    if(newStatus==='claimed') Object.assign(payload,{claimed_by:String(cb.from.id),claimed_by_name:name,claimed_at:new Date().toISOString()});
+    await updateOrder(orderId,payload);
+    const updated={...order,...payload};
+    await telegramJson('editMessageText',{chat_id:cb.message.chat.id,message_id:cb.message.message_id,text:buildTelegramText(updated),parse_mode:'HTML',reply_markup:telegramKeyboard(orderId,newStatus)});
+    await telegramJson('sendMessage',{chat_id:cb.message.chat.id,reply_to_message_id:cb.message.message_id,text:`${ACTION_REPLY[newStatus]||'تم تحديث الطلب'}\n👨‍💻 بواسطة: ${name}\n🧾 الطلب: ${order.order_code||orderId}`});
+    await answerCallback(cb.id,`تم تحديث الحالة: ${STATUS_LABELS[newStatus]}`); return json(res,200,{ok:true});
+  }catch(error){try{if(cb?.id) await answerCallback(cb.id,error.message||'حصل خطأ',true)}catch{} return json(res,200,{ok:false,error:error.message});}
 }

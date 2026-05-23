@@ -1,270 +1,80 @@
-export const config = {
-  api: { bodyParser: false }
-};
+export const config = { api: { bodyParser: false } };
+import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
 
-const STATUS_LABELS = {
-  pending: '⏳ قيد المراجعة | Pending',
-  claimed: '🙋 تم استلام الطلب | Claimed',
-  processing: '🔄 بدأ التنفيذ | Processing',
-  delivered: '✅ تم الشحن | Delivered',
-  on_hold: '⏸ معلق | On Hold',
-  needs_fix: '⚠️ محتاج مراجعة | Needs Fix',
-  rejected: '❌ مرفوض | Rejected',
-  cancelled: '🗑 ملغي | Cancelled'
-};
-
-function json(res, status, data) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.end(JSON.stringify(data));
-}
-
-function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
-
-function readRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
-
-function parseMultipart(buffer, contentType) {
-  const boundaryMatch = /boundary=(?:(?:"([^"]+)")|([^;]+))/i.exec(contentType || '');
-  if (!boundaryMatch) return { fields: {}, files: {} };
-
-  const boundary = boundaryMatch[1] || boundaryMatch[2];
-  const boundaryBuffer = Buffer.from(`--${boundary}`);
-  const fields = {};
-  const files = {};
-
-  let start = buffer.indexOf(boundaryBuffer);
-  while (start !== -1) {
-    start += boundaryBuffer.length;
-    if (buffer[start] === 45 && buffer[start + 1] === 45) break;
-    if (buffer[start] === 13 && buffer[start + 1] === 10) start += 2;
-
-    const headerEnd = buffer.indexOf(Buffer.from('\r\n\r\n'), start);
-    if (headerEnd === -1) break;
-
-    const headerText = buffer.slice(start, headerEnd).toString('utf8');
-    const partStart = headerEnd + 4;
-    let nextBoundary = buffer.indexOf(boundaryBuffer, partStart);
-    if (nextBoundary === -1) break;
-
-    let partEnd = nextBoundary;
-    if (buffer[partEnd - 2] === 13 && buffer[partEnd - 1] === 10) partEnd -= 2;
-    const content = buffer.slice(partStart, partEnd);
-
-    const nameMatch = /name="([^"]+)"/i.exec(headerText);
-    const filenameMatch = /filename="([^"]*)"/i.exec(headerText);
-    const typeMatch = /Content-Type:\s*([^\r\n]+)/i.exec(headerText);
-
-    if (nameMatch) {
-      const name = nameMatch[1];
-      if (filenameMatch && filenameMatch[1]) {
-        files[name] = {
-          filename: filenameMatch[1],
-          contentType: typeMatch ? typeMatch[1].trim() : 'application/octet-stream',
-          buffer: content
-        };
-      } else {
-        fields[name] = content.toString('utf8');
-      }
-    }
-    start = nextBoundary;
+function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
+function parseMultipart(buffer,contentType){
+  const m=/boundary=(?:(?:"([^"]+)")|([^;]+))/i.exec(contentType||''); if(!m) return {fields:{},files:{}};
+  const boundary=m[1]||m[2], bb=Buffer.from(`--${boundary}`); const fields={}, files={}; let start=buffer.indexOf(bb);
+  while(start!==-1){start+=bb.length; if(buffer[start]===45&&buffer[start+1]===45) break; if(buffer[start]===13&&buffer[start+1]===10) start+=2;
+    const he=buffer.indexOf(Buffer.from('\r\n\r\n'),start); if(he===-1) break; const ht=buffer.slice(start,he).toString('utf8'); const ps=he+4; let nb=buffer.indexOf(bb,ps); if(nb===-1) break; let pe=nb; if(buffer[pe-2]===13&&buffer[pe-1]===10) pe-=2; const content=buffer.slice(ps,pe);
+    const nm=/name="([^"]+)"/i.exec(ht), fm=/filename="([^"]*)"/i.exec(ht), tm=/Content-Type:\s*([^\r\n]+)/i.exec(ht);
+    if(nm){const name=nm[1]; if(fm&&fm[1]) files[name]={filename:fm[1],contentType:tm?tm[1].trim():'application/octet-stream',buffer:content}; else fields[name]=content.toString('utf8');}
+    start=nb;
   }
-  return { fields, files };
+  return {fields,files};
+}
+async function nextDailyIdentity(){
+  const orderDate=cairoDateKey(); let dailyNumber=1001;
+  if(supabaseReady()){
+    const rows=await supabaseRequest(`orders?order_date=eq.${encodeURIComponent(orderDate)}&select=daily_number&order=daily_number.desc&limit=1`).catch(()=>[]);
+    const last=Number(rows?.[0]?.daily_number || 1000); dailyNumber=Number.isFinite(last)?last+1:1001;
+  } else dailyNumber=1000+Number(String(Date.now()).slice(-3));
+  return { id:`MOBA-${orderDate.replaceAll('-','')}-${dailyNumber}`, order_code:`MOBA ${dailyNumber}`, order_date:orderDate, daily_number:dailyNumber };
+}
+async function findOpenOrderByPhone(phone){
+  if(!supabaseReady()) return null;
+  const rows=await supabaseRequest(`orders?phone=eq.${encodeURIComponent(phone)}&status=in.(${OPEN_STATUSES.join(',')})&select=id,order_code,status,created_at&order=created_at.desc&limit=1`).catch(()=>[]);
+  return rows?.[0] || null;
+}
+async function findOpenOrderByPubgId(cart){
+  if(!supabaseReady()) return null;
+  const rows=await supabaseRequest(`orders?status=in.(${OPEN_STATUSES.join(',')})&select=id,order_code,phone,status,items,created_at&order=created_at.desc&limit=50`).catch(()=>[]);
+  const ids=new Set(cart.map(x=>String(x.pubgId)));
+  return (rows||[]).find(o=>(Array.isArray(o.items)?o.items:[]).some(it=>ids.has(String(it.pubgId)))) || null;
 }
 
-async function telegramApi(method, body) {
-  const token = process.env.BOT_TOKEN;
-  if (!token || token.includes('PUT_YOUR')) throw new Error('BOT_TOKEN missing in Vercel Environment Variables');
+export default async function handler(req,res){
+  if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
+  try{
+    const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw new Error('ORDER_GROUP_ID missing');
+    const raw=await readRawBody(req); const {fields,files}=parseMultipart(raw,req.headers['content-type']);
+    const cart=JSON.parse(fields.cart||'[]');
+    const customerPhone=String(fields.customerPhone||'').trim();
+    const paymentMethod=String(fields.paymentMethod||'').trim();
+    const customerName=String(fields.customerName||'').trim() || 'غير محدد';
+    const note=String(fields.note||'').trim();
+    const total=cart.reduce((s,item)=>s+Number(item.price||0),0);
+    if(!/^01\d{9}$/.test(customerPhone)) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح'});
+    if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
+    if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
+    for(const item of cart){ if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId))) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID في السلة'}); }
+    if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
 
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: 'POST',
-    body
-  });
+    const openPhone=await findOpenOrderByPhone(customerPhone);
+    if(openPhone) return json(res,409,{ok:false,error:'عندك طلب مفتوح بالفعل. تابع حالته برقم الموبايل أو كلم الدعم لو محتاج تعديل.'});
+    const openId=await findOpenOrderByPubgId(cart);
+    if(openId) return json(res,409,{ok:false,error:'في طلب مفتوح بالفعل على نفس PUBG ID. تابع الطلب أو كلم الدعم.'});
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) throw new Error(data.description || `Telegram ${method} failed`);
-  return data;
-}
-
-function supabaseReady() {
-  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-}
-
-async function supabaseRequest(path, options = {}) {
-  if (!supabaseReady()) throw new Error('Supabase Environment Variables missing');
-  const url = `${process.env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${path}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(`Supabase error: ${text || response.status}`);
-  }
-  return response.json().catch(() => null);
-}
-
-function telegramKeyboard(orderId, status = 'pending') {
-  return {
-    inline_keyboard: [
-      [
-        { text: status === 'claimed' ? '🙋 مستلم بالفعل' : '🙋 استلمت | Claim', callback_data: `web_claim_${orderId}` },
-        { text: status === 'processing' ? '🔄 جاري التنفيذ' : '🔄 بدأ التنفيذ', callback_data: `web_processing_${orderId}` }
-      ],
-      [
-        { text: status === 'delivered' ? '✅ تم الشحن' : '✅ تم الشحن', callback_data: `web_delivered_${orderId}` },
-        { text: status === 'on_hold' ? '⏸ معلق' : '⏸ تعليق', callback_data: `web_hold_${orderId}` }
-      ],
-      [
-        { text: status === 'needs_fix' ? '⚠️ فيه مشكلة' : '⚠️ مشكلة', callback_data: `web_fix_${orderId}` },
-        { text: status === 'rejected' ? '❌ مرفوض' : '❌ رفض', callback_data: `web_reject_${orderId}` }
-      ],
-      [
-        { text: '📋 البيانات | Data', callback_data: `web_data_${orderId}` }
-      ]
-    ]
-  };
-}
-
-function buildTelegramText(order) {
-  const cart = Array.isArray(order.items) ? order.items : [];
-  const itemLines = cart.map((item, index) => (
-    `${index + 1}) ${escapeHtml(item.product)}\n` +
-    `   ID: <code>${escapeHtml(item.pubgId)}</code>\n` +
-    `   السعر: ${escapeHtml(item.price)} جنيه`
-  )).join('\n\n');
-
-  return `🚨 <b>طلب جديد من موقع MOBA SHOP</b>\n` +
-    `━━━━━━━━━━━━━━\n` +
-    `🧾 رقم الطلب: <code>${escapeHtml(order.id)}</code>\n` +
-    `📌 الحالة: <b>${STATUS_LABELS[order.status] || order.status}</b>\n` +
-    `👤 الاسم: ${escapeHtml(order.customer_name || 'غير محدد')}\n` +
-    `📱 رقم العميل: <code>${escapeHtml(order.phone)}</code>\n` +
-    `💳 الدفع: ${escapeHtml(order.payment_method)}\n` +
-    `💰 الإجمالي: <b>${escapeHtml(order.total)} جنيه</b>\n\n` +
-    `🛒 <b>سلة الطلبات | Cart</b>\n${itemLines}\n\n` +
-    (order.note ? `📝 ملاحظة: ${escapeHtml(order.note)}\n\n` : '') +
-    `📸 السكرين مرفق تحت الرسالة`;
-}
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Method not allowed' });
-
-  try {
-    const groupId = process.env.ORDER_GROUP_ID;
-    if (!groupId) throw new Error('ORDER_GROUP_ID is missing in Vercel Environment Variables');
-
-    const raw = await readRawBody(req);
-    const { fields, files } = parseMultipart(raw, req.headers['content-type']);
-
-    const cart = JSON.parse(fields.cart || '[]');
-    const customerPhone = String(fields.customerPhone || '').trim();
-    const paymentMethod = String(fields.paymentMethod || '').trim();
-    const customerName = String(fields.customerName || '').trim() || 'غير محدد';
-    const note = String(fields.note || '').trim();
-    const total = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
-    const orderId = `WEB-${Date.now().toString().slice(-8)}`;
-
-    if (!customerPhone || !/^01\d{9}$/.test(customerPhone)) return json(res, 400, { ok: false, error: 'رقم الموبايل غير صحيح' });
-    if (!paymentMethod) return json(res, 400, { ok: false, error: 'اختار طريقة الدفع' });
-    if (!Array.isArray(cart) || cart.length === 0) return json(res, 400, { ok: false, error: 'سلة الطلبات فاضية' });
-
-    for (const item of cart) {
-      if (!item.product || !item.pubgId || !/^\d{5,15}$/.test(String(item.pubgId))) {
-        return json(res, 400, { ok: false, error: 'راجع المنتج و PUBG ID في السلة' });
-      }
-    }
-    if (!files.screenshot || files.screenshot.buffer.length < 50) return json(res, 400, { ok: false, error: 'ارفع سكرين التحويل' });
-
-    const order = {
-      id: orderId,
-      order_code: orderId,
-      phone: customerPhone,
-      customer_phone: customerPhone,
-      customer_name: customerName,
-      payment_method: paymentMethod,
-      total,
-      status: 'pending',
-      status_text: STATUS_LABELS.pending,
-      handler: null,
-      items: cart,
-      note,
-      telegram_chat_id: String(groupId),
-      source: 'website',
-      order_type: 'cart',
-      raw_data: { userAgent: req.headers['user-agent'] || '' },
-      status_history: [{ status: 'pending', label: STATUS_LABELS.pending, at: new Date().toISOString(), by: 'website' }]
+    const identity=await nextDailyIdentity();
+    const order={
+      id:identity.id, order_code:identity.order_code, order_date:identity.order_date, daily_number:identity.daily_number,
+      phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, total,
+      status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
+      handler:null, items:cart, note, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
+      raw_data:{userAgent:req.headers['user-agent']||''}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
+    const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
+    if(supabaseReady()) await supabaseRequest('orders',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(order)});
 
-    const message = buildTelegramText(order);
-    order.telegram_text = message;
+    const msgForm=new FormData(); msgForm.append('chat_id',groupId); msgForm.append('text',message); msgForm.append('parse_mode','HTML'); msgForm.append('reply_markup',JSON.stringify(telegramKeyboard(order.id,'pending')));
+    const msgData=await telegramForm('sendMessage',msgForm);
+    const messageId=msgData?.result?.message_id || null;
+    if(supabaseReady()) await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({telegram_message_id:messageId,admin_message_id:String(messageId||''),message_id:String(messageId||''),updated_at:new Date().toISOString()})});
 
-    if (supabaseReady()) {
-      await supabaseRequest('orders', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify(order)
-      });
-    }
+    const photoForm=new FormData(); photoForm.append('chat_id',groupId); if(messageId) photoForm.append('reply_to_message_id',String(messageId)); photoForm.append('caption',`📸 Screenshot for ${order.order_code}`); photoForm.append('photo',new Blob([files.screenshot.buffer],{type:files.screenshot.contentType}),files.screenshot.filename||'screenshot.jpg');
+    const photoData=await telegramForm('sendPhoto',photoForm);
+    if(supabaseReady()) await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString()})});
 
-    const msgForm = new FormData();
-    msgForm.append('chat_id', groupId);
-    msgForm.append('text', message);
-    msgForm.append('parse_mode', 'HTML');
-    msgForm.append('reply_markup', JSON.stringify(telegramKeyboard(orderId, 'pending')));
-    const msgData = await telegramApi('sendMessage', msgForm);
-
-    if (supabaseReady()) {
-      await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          telegram_message_id: msgData?.result?.message_id || null,
-          admin_message_id: String(msgData?.result?.message_id || ''),
-          message_id: String(msgData?.result?.message_id || ''),
-          updated_at: new Date().toISOString()
-        })
-      });
-    }
-
-    const photoForm = new FormData();
-    photoForm.append('chat_id', groupId);
-    photoForm.append('caption', `📸 Screenshot for ${orderId}`);
-    photoForm.append('photo', new Blob([files.screenshot.buffer], { type: files.screenshot.contentType }), files.screenshot.filename || 'screenshot.jpg');
-    const photoData = await telegramApi('sendPhoto', photoForm);
-
-    if (supabaseReady()) {
-      await supabaseRequest(`orders?id=eq.${encodeURIComponent(orderId)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          telegram_photo_file_id: photoData?.result?.photo?.slice(-1)?.[0]?.file_id || null,
-          screenshot_file_name: files.screenshot.filename || 'screenshot.jpg',
-          updated_at: new Date().toISOString()
-        })
-      });
-    }
-
-    return json(res, 200, { ok: true, orderId, statusTracking: supabaseReady() });
-  } catch (error) {
-    return json(res, 500, { ok: false, error: error.message || 'Server error' });
-  }
+    return json(res,200,{ok:true,statusTracking:supabaseReady()});
+  }catch(error){return json(res,500,{ok:false,error:error.message||'Server error'});}
 }
