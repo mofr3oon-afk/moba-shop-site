@@ -1846,6 +1846,131 @@ html{scroll-behavior:smooth}
 @keyframes ph-shadow-grab{0%{opacity:.35; transform:translateX(-50%) scale(1)}100%{opacity:.15; transform:translateX(-50%) scale(.68)}}
 @keyframes ph-shadow-drop{0%{opacity:.15; transform:translateX(-50%) scale(.68)}50%{opacity:.5; transform:translateX(-50%) scale(1.18)}100%{opacity:.35; transform:translateX(-50%) scale(1)}}
 
+
+/* V29 premium effects for Pharaoh assistant */
+#pharaohAssistantFab{overflow:visible !important}
+#pharaohAssistantFab::before,
+#pharaohAssistantFab::after{
+  content:'';
+  position:absolute;
+  inset:auto;
+  border-radius:999px;
+  pointer-events:none;
+  opacity:0;
+}
+#pharaohAssistantFab.pulse::before{
+  width:84px;
+  height:84px;
+  left:50%;
+  top:16px;
+  transform:translateX(-50%);
+  border:2px solid rgba(255,207,92,.40);
+  box-shadow:0 0 20px rgba(255,207,92,.16), inset 0 0 20px rgba(255,207,92,.08);
+  animation:phFabPulse 2.2s ease-out infinite;
+  opacity:1;
+}
+#pharaohAssistantFab.pulse::after{
+  width:104px;
+  height:104px;
+  left:50%;
+  top:6px;
+  transform:translateX(-50%);
+  border:1px solid rgba(39,216,255,.22);
+  animation:phFabPulse2 2.2s ease-out infinite .4s;
+  opacity:1;
+}
+.pharaoh-hint-bubble{
+  position:absolute;
+  right:94px;
+  top:10px;
+  max-width:220px;
+  padding:10px 12px;
+  border-radius:16px;
+  background:linear-gradient(135deg, rgba(18,24,40,.96), rgba(11,16,28,.96));
+  border:1px solid rgba(255,207,92,.28);
+  color:#fff;
+  font-size:12px;
+  line-height:1.7;
+  box-shadow:0 14px 35px rgba(0,0,0,.28), 0 0 18px rgba(255,207,92,.10);
+  transform:translateY(6px) scale(.96);
+  opacity:0;
+  transition:.28s ease;
+  pointer-events:none;
+}
+.pharaoh-hint-bubble::after{
+  content:'';
+  position:absolute;
+  right:-8px;
+  top:24px;
+  width:16px;
+  height:16px;
+  background:inherit;
+  border-right:1px solid rgba(255,207,92,.28);
+  border-top:1px solid rgba(255,207,92,.28);
+  transform:rotate(45deg);
+}
+#pharaohAssistantFab.show-hint .pharaoh-hint-bubble{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+.pharaoh-tip-tag{
+  display:inline-block;
+  margin-top:6px;
+  font-size:11px;
+  color:#ffe9a9;
+}
+.pharaoh-msg{
+  animation:phMsgIn .26s ease both;
+}
+#pharaohChatPanel{
+  transform-origin:bottom right;
+}
+#pharaohChatPanel.show{
+  animation:phPanelIn .24s ease both;
+}
+.pharaoh-typing{
+  animation:phTypingPulse 1s ease-in-out infinite;
+}
+.pharaoh-particles,
+.pharaoh-dust{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:visible;
+}
+.pharaoh-particle,
+.pharaoh-dust-particle{
+  position:absolute;
+  border-radius:999px;
+  pointer-events:none;
+}
+.pharaoh-particle{
+  width:7px; height:7px;
+  background:radial-gradient(circle, #fff6be 0%, #ffcf5c 45%, rgba(255,207,92,0) 72%);
+  box-shadow:0 0 10px rgba(255,207,92,.6);
+  animation:phSparkBurst .7s ease-out forwards;
+}
+.pharaoh-dust-particle{
+  width:14px; height:8px;
+  background:radial-gradient(circle, rgba(255,207,92,.30), rgba(255,207,92,0));
+  filter:blur(1px);
+  animation:phDustPuff .7s ease-out forwards;
+}
+.pharaoh-waving .pharaoh-figure{
+  animation:phWaveWelcome .95s ease-in-out 1, ph-idle-float 2.2s ease-in-out infinite 1s, ph-idle-sway 3.1s ease-in-out infinite 1s, ph-hand-vibe 1.8s ease-in-out infinite 1s !important;
+}
+@keyframes phFabPulse{0%{transform:translateX(-50%) scale(.8); opacity:.0}25%{opacity:.85}100%{transform:translateX(-50%) scale(1.45); opacity:0}}
+@keyframes phFabPulse2{0%{transform:translateX(-50%) scale(.85); opacity:0}30%{opacity:.55}100%{transform:translateX(-50%) scale(1.35); opacity:0}}
+@keyframes phPanelIn{from{opacity:0; transform:translateY(14px) scale(.96)}to{opacity:1; transform:translateY(0) scale(1)}}
+@keyframes phMsgIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:translateY(0)}}
+@keyframes phTypingPulse{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes phSparkBurst{0%{transform:translate(0,0) scale(.6); opacity:1}100%{transform:translate(var(--dx), var(--dy)) scale(1.1); opacity:0}}
+@keyframes phDustPuff{0%{transform:translate(0,0) scale(.5); opacity:.7}100%{transform:translate(var(--dx), var(--dy)) scale(1.2); opacity:0}}
+@keyframes phWaveWelcome{0%,100%{transform:translateY(0) rotate(0)}20%{transform:translateY(-8px) rotate(6deg)}40%{transform:translateY(-6px) rotate(-5deg)}60%{transform:translateY(-8px) rotate(5deg)}80%{transform:translateY(-5px) rotate(-3deg)}}
+@media(max-width:900px){
+  .pharaoh-hint-bubble{right:78px; top:2px; max-width:180px; font-size:11px;}
+}
+
 </style>
 </head>
 <body>
@@ -3184,6 +3309,7 @@ html{scroll-behavior:smooth}
   <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
     <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent.png" alt="فرعون"></div>
     <div class="pharaoh-name-badge">فرعون</div>
+    <div class="pharaoh-hint-bubble" id="pharaohHintBubble"></div>
   </div>
 
 
@@ -3843,6 +3969,119 @@ html{scroll-behavior:smooth}
     window.addEventListener('mouseup', onEnd, {passive:false});
     window.addEventListener('resize', applyPos);
     applyPos();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+<script id="pharaoh-v29-effects">
+(function(){
+  function init(){
+    const fab = document.getElementById('pharaohAssistantFab');
+    const panel = document.getElementById('pharaohChatPanel');
+    const body = document.getElementById('pharaohChatBody');
+    const hint = document.getElementById('pharaohHintBubble');
+    if(!fab || !panel || !hint) return;
+
+    let openedOnce = localStorage.getItem('pharaoh_opened_once') === '1';
+    let autoHintTimer = null;
+    let lastContext = '';
+    const tips = [
+      'محتاج مساعدة؟ اضغط عليا 👑',
+      'اسألني عن الشحن أو متابعة الطلب',
+      'أقدر أشرحلك الدفع ومواعيد العمل'
+    ];
+    let tipIndex = 0;
+
+    function showHint(text, tag=''){
+      hint.innerHTML = text + (tag ? `<div class="pharaoh-tip-tag">${tag}</div>` : '');
+      fab.classList.add('show-hint');
+      clearTimeout(autoHintTimer);
+      autoHintTimer = setTimeout(()=>fab.classList.remove('show-hint'), 4200);
+    }
+    function cycleHint(){
+      if(panel.classList.contains('show')) return;
+      showHint(tips[tipIndex % tips.length]);
+      tipIndex++;
+    }
+    function setPulse(on){ fab.classList.toggle('pulse', !!on); }
+    function wave(){
+      fab.classList.remove('pharaoh-waving');
+      void fab.offsetWidth;
+      fab.classList.add('pharaoh-waving');
+      setTimeout(()=>fab.classList.remove('pharaoh-waving'), 1100);
+    }
+    function createParticles(type){
+      const host = document.createElement('div');
+      host.className = type === 'dust' ? 'pharaoh-dust' : 'pharaoh-particles';
+      const count = type === 'dust' ? 7 : 9;
+      for(let i=0;i<count;i++){
+        const p = document.createElement('span');
+        p.className = type === 'dust' ? 'pharaoh-dust-particle' : 'pharaoh-particle';
+        const dx = (Math.random()*80 - 40).toFixed(1) + 'px';
+        const dy = (type === 'dust' ? -(Math.random()*10) : (Math.random()*-50 - 8)).toFixed(1) + 'px';
+        p.style.setProperty('--dx', dx);
+        p.style.setProperty('--dy', dy);
+        p.style.left = (type === 'dust' ? 44 + Math.random()*20 : 28 + Math.random()*40) + 'px';
+        p.style.top = (type === 'dust' ? 102 + Math.random()*12 : 28 + Math.random()*60) + 'px';
+        host.appendChild(p);
+      }
+      fab.appendChild(host);
+      setTimeout(()=>host.remove(), 760);
+    }
+
+    // welcome
+    setTimeout(()=>{ setPulse(true); if(!openedOnce){ wave(); showHint('محتاج مساعدة؟ اضغط عليا 👑'); }}, 1000);
+    setInterval(()=>{ if(!openedOnce && !panel.classList.contains('show')) cycleHint(); }, 16000);
+
+    // track panel open/close
+    const panelObserver = new MutationObserver(()=>{
+      if(panel.classList.contains('show')){
+        openedOnce = true;
+        localStorage.setItem('pharaoh_opened_once', '1');
+        setPulse(false);
+        fab.classList.remove('show-hint');
+      } else {
+        setPulse(true);
+      }
+    });
+    panelObserver.observe(panel, {attributes:true, attributeFilter:['class']});
+
+    // watch drag/drop classes
+    const fabObserver = new MutationObserver(()=>{
+      const cls = fab.className;
+      if(cls.includes('dragging')) createParticles('spark');
+      if(cls.includes('drop-bounce')) createParticles('dust');
+    });
+    fabObserver.observe(fab, {attributes:true, attributeFilter:['class']});
+
+    // contextual hints
+    const sectionMap = [
+      {id:'productsSection', text:'اختار الباقة واكتب الـ ID واسم الحساب', tag:'قسم المنتجات'},
+      {id:'trackOrder', text:'اكتب رقم الموبايل هنا عشان أجيب آخر طلباتك', tag:'سجل الطلبات'},
+      {id:'customerReviews', text:'تقدر تكتب تقييمك هنا بعد ما الطلب يكتمل', tag:'آراء العملاء'}
+    ];
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting && entry.intersectionRatio > .45){
+          const match = sectionMap.find(x=>x.id === entry.target.id);
+          if(match && lastContext !== match.id && !panel.classList.contains('show')){
+            lastContext = match.id;
+            showHint(match.text, match.tag);
+          }
+        }
+      });
+    }, {threshold:[.45,.6]});
+    sectionMap.forEach(x=>{ const el = document.getElementById(x.id); if(el) io.observe(el); });
+
+    // prettier message add animation already via CSS; add wave when replying
+    const bodyObserver = new MutationObserver((mutations)=>{
+      const hasNewMsg = mutations.some(m=>Array.from(m.addedNodes).some(n=>n.nodeType===1 && n.classList && n.classList.contains('pharaoh-msg')));
+      if(hasNewMsg && panel.classList.contains('show')) wave();
+    });
+    if(body) bodyObserver.observe(body, {childList:true, subtree:true});
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
