@@ -2624,6 +2624,20 @@ button.disabled-checkout{
   pointer-events:auto!important;
 }
 
+
+/* V46 real final screenshot fix */
+.checkout.disabled-checkout,
+button.disabled-checkout{
+  opacity:.48!important;
+  cursor:not-allowed!important;
+}
+#trackOrder button,
+#trackOrder input,
+#trackOrder input[type="submit"],
+#historyList button{
+  pointer-events:auto!important;
+}
+
 </style>
 </head>
 <body>
@@ -5532,70 +5546,9 @@ const ok = screenshotSelected();
 </script>
 
 
-<script id="moba-v40-security-front">
-(function(){
-  const MAX_SIZE = 5 * 1024 * 1024;
-  const ALLOWED = ['image/jpeg','image/png','image/webp'];
-  const EXT = ['.jpg','.jpeg','.png','.webp'];
 
-  function fileNameOk(name){
-    name = String(name||'').toLowerCase();
-    return EXT.some(e => name.endsWith(e));
-  }
-  function showSecurityMsg(input, type, msg){
-    let box = document.getElementById('securityUploadMessage');
-    if(!box){
-      box = document.createElement('div');
-      box.id = 'securityUploadMessage';
-      input.insertAdjacentElement('afterend', box);
-    }
-    box.className = type === 'ok' ? 'security-ok-box' : 'security-error-box';
-    box.innerHTML = msg;
-  }
-  function validateScreenshot(input){
-    if(!input || input.type !== 'file') return true;
-    const files = Array.from(input.files || []);
-    if(files.length !== 1){
-      input.value = '';
-      showSecurityMsg(input,'err','⚠️ لازم ترفع صورة واحدة فقط للسكرين.');
-      return false;
-    }
-    const f = files[0];
-    if(!ALLOWED.includes(String(f.type||'').toLowerCase()) || !fileNameOk(f.name)){
-      input.value = '';
-      showSecurityMsg(input,'err','⚠️ السكرين لازم يكون صورة فقط: JPG أو PNG أو WEBP. ممنوع PDF أو فيديو أو أي ملف تاني.');
-      return false;
-    }
-    if(f.size > MAX_SIZE){
-      input.value = '';
-      showSecurityMsg(input,'err','⚠️ حجم الصورة كبير. الحد الأقصى 5MB.');
-      return false;
-    }
-    showSecurityMsg(input,'ok','✅ الصورة مناسبة وجاهزة للإرسال.');
-    return true;
-  }
-  document.addEventListener('change', function(e){
-    if(e.target && e.target.type === 'file') validateScreenshot(e.target);
-  }, true);
+<!-- V46 removed old screenshot validation script #1 -->
 
-  document.addEventListener('submit', function(e){
-    const files = Array.from(document.querySelectorAll('input[type="file"]')).filter(i => i.files && i.files.length);
-    if(files.length !== 1 || !validateScreenshot(files[0])){
-      e.preventDefault(); e.stopPropagation();
-      alert('لازم ترفع صورة واحدة فقط للسكرين بصيغة JPG أو PNG أو WEBP وبحجم أقل من 5MB.');
-      return false;
-    }
-  }, true);
-
-  // enforce accept/multiple attrs
-  setInterval(()=>{
-    document.querySelectorAll('input[type="file"]').forEach(i=>{
-      i.setAttribute('accept','image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp');
-      i.removeAttribute('multiple');
-    });
-  },1000);
-})();
-</script>
 
 
 <script id="moba-v41-sync-status-badges">
@@ -5742,28 +5695,30 @@ const ok = screenshotSelected();
 </script>
 
 
-<script id="moba-v45-final-screenshot-alert-fix">
+
+<!-- V46 removed old screenshot validation script #2 -->
+
+
+
+<script id="moba-v46-real-final-screenshot-fix">
 (function(){
   const MAX_SIZE = 5 * 1024 * 1024;
   const TYPES = ['image/jpeg','image/png','image/webp'];
   const EXT = /\.(jpg|jpeg|png|webp)$/i;
 
-  function isTrackArea(el){
+  function inTrack(el){
     return !!(el && (
       el.closest('#trackOrder') ||
       el.closest('#historyList') ||
       el.closest('.history-section') ||
-      el.closest('[data-history]') ||
-      el.id === 'trackOrder' ||
-      el.id === 'trackForm' ||
-      el.id === 'statusForm'
+      el.closest('[data-history]')
     ));
   }
 
   function isCheckoutButton(el){
     if(!el) return false;
     const txt = String(el.textContent || el.value || '').trim();
-    if(/متابعة|بحث|سجل|حالة الطلب|عرض الطلب/i.test(txt)) return false;
+    if(/متابعة|بحث|سجل|حالة|عرض|تفاصيل/i.test(txt)) return false;
     return /checkout|تنفيذ الشراء|تنفيذ الطلب|شراء/i.test(txt);
   }
 
@@ -5774,42 +5729,32 @@ const ok = screenshotSelected();
            document;
   }
 
-  function getScreenInput(){
+  function fileInput(){
     const area = checkoutArea();
-    const inputs = Array.from(area.querySelectorAll('input[type="file"]'))
-      .filter(i => !isTrackArea(i));
-    return inputs.find(i => /screen|screenshot|photo|image|file|سكرين|صورة/i.test(i.name || i.id || '')) || inputs[0] || null;
+    const inputs = Array.from(area.querySelectorAll('input[type="file"]')).filter(i => !inTrack(i));
+    return inputs[0] || null;
   }
 
-  function checkScreen(){
-    const input = getScreenInput();
+  function validate(){
+    const input = fileInput();
     const file = input && input.files && input.files[0];
-
     if(!file) return 'لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
     const type = String(file.type || '').toLowerCase();
     const name = String(file.name || '');
-
-    if(!TYPES.includes(type) || !EXT.test(name)){
-      return 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
-    }
-    if(Number(file.size || 0) > MAX_SIZE){
-      return 'حجم الصورة كبير. الحد الأقصى 5MB.';
-    }
+    if(!TYPES.includes(type) || !EXT.test(name)) return 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
+    if(Number(file.size || 0) > MAX_SIZE) return 'حجم الصورة كبير. الحد الأقصى 5MB.';
     return '';
   }
 
-  function setCheckoutState(){
+  function updateCheckout(){
     const area = checkoutArea();
-    const buttons = Array.from(area.querySelectorAll('button,input[type="submit"]'))
-      .filter(isCheckoutButton);
-
-    const err = checkScreen();
+    const buttons = Array.from(area.querySelectorAll('button,input[type="submit"]')).filter(isCheckoutButton);
+    const err = validate();
     buttons.forEach(btn => {
       btn.disabled = !!err;
       btn.classList.toggle('disabled-checkout', !!err);
       btn.title = err || '';
     });
-
     const warning = document.getElementById('smartCheckoutWarning');
     if(warning){
       warning.style.display = err ? 'block' : 'none';
@@ -5817,77 +5762,51 @@ const ok = screenshotSelected();
     }
   }
 
-  // نهائي: أي حاجة داخل سجل الطلبات لا يتم فحص السكرين عليها أبدا.
+  // Never touch tracking/search buttons.
   document.addEventListener('click', function(e){
     const btn = e.target.closest('button,input[type="submit"],a');
-    if(isTrackArea(btn)){
-      return true;
-    }
+    if(!btn) return;
+    if(inTrack(btn)) return true;
 
     if(isCheckoutButton(btn)){
-      const err = checkScreen();
+      const err = validate();
       if(err){
         e.preventDefault();
         e.stopImmediatePropagation();
         alert(err);
-        setCheckoutState();
+        updateCheckout();
         return false;
       }
     }
   }, true);
 
-  document.addEventListener('submit', function(e){
-    const form = e.target;
-    if(isTrackArea(form)){
-      return true;
-    }
-
-    const submitter = e.submitter || document.activeElement;
-    if(isCheckoutButton(submitter) || form.id === 'orderForm'){
-      const err = checkScreen();
-      if(err){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        alert(err);
-        setCheckoutState();
-        return false;
-      }
-    }
-  }, true);
-
+  // No submit listener here on purpose. This prevents blocking order tracking/search forms.
   document.addEventListener('change', function(e){
-    if(!e.target || e.target.type !== 'file') return;
-    if(isTrackArea(e.target)) return;
-
-    const file = e.target.files && e.target.files[0];
-    if(!file){
-      setCheckoutState();
-      return;
+    if(e.target && e.target.type === 'file' && !inTrack(e.target)){
+      const input = e.target;
+      const file = input.files && input.files[0];
+      if(file){
+        const type = String(file.type || '').toLowerCase();
+        const name = String(file.name || '');
+        let err = '';
+        if(!TYPES.includes(type) || !EXT.test(name)) err = 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
+        else if(Number(file.size || 0) > MAX_SIZE) err = 'حجم الصورة كبير. الحد الأقصى 5MB.';
+        if(err){
+          alert(err);
+          input.value = '';
+        }
+      }
+      updateCheckout();
     }
-
-    const type = String(file.type || '').toLowerCase();
-    const name = String(file.name || '');
-    let err = '';
-
-    if(!TYPES.includes(type) || !EXT.test(name)) err = 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
-    else if(Number(file.size || 0) > MAX_SIZE) err = 'حجم الصورة كبير. الحد الأقصى 5MB.';
-
-    if(err){
-      alert(err);
-      e.target.value = '';
-    }
-
-    setCheckoutState();
   }, true);
 
-  // لا نعرف الدالة العامة بشكل يطلع alert في سجل الطلبات.
   window.mobaValidateScreenshot = function(){
-    const err = checkScreen();
-    return err ? {ok:false,error:err} : {ok:true,file:getScreenInput()?.files?.[0]};
+    const err = validate();
+    return err ? {ok:false,error:err} : {ok:true,file:fileInput()?.files?.[0]};
   };
 
-  setTimeout(setCheckoutState, 700);
-  setInterval(setCheckoutState, 1500);
+  setTimeout(updateCheckout, 700);
+  setInterval(updateCheckout, 1800);
 })();
 </script>
 

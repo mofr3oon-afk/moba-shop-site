@@ -438,3 +438,11 @@ These commands control the top status pill on the website with green / yellow / 
 - حذف سكريبتات فحص السكرين القديمة التي كانت تعمل على سجل الطلبات.
 - فحص السكرين يعمل فقط عند زر Checkout / تنفيذ الشراء.
 - البحث برقم الموبايل في سجل الطلبات لا يظهر Alert السكرين نهائيًا.
+
+
+## V46 Real Final Screenshot Fix
+- تم حذف كل سكريبت قديم يحتوي على رسائل فحص السكرين.
+- فحص السكرين يعمل فقط عند الضغط على زر Checkout / تنفيذ الشراء.
+- لا يوجد أي Submit listener لفحص السكرين، عشان متابعة الطلب لا تتأثر.
+- Removed old scripts count: 2
+- Remaining phrase counts after cleanup: {'لازم ترفع صورة واحدة فقط للسكرين': 0, 'لازم ترفع صورة سكرين التحويل': 1, 'مسموح برفع صورة فقط': 2, 'حجم الصورة كبير': 2}
