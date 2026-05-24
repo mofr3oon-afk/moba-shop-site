@@ -1,7 +1,12 @@
 {
-  "functions": {
-    "api/*.js": {
-      "maxDuration": 30
-    }
-  }
+  "name": "moba-shop-order-page",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MOBA SHOP gamer digital store order system with Telegram admin actions and phone-only order status",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "dependencies": {}
 }
