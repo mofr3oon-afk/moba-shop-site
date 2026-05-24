@@ -304,6 +304,7 @@ async function handleCommand(msg){
 /stats - إحصائيات بدون أرباح
 /busy - تفعيل وضع ضغط الطلبات
 /normal - إلغاء وضع ضغط الطلبات
+/check_late - فحص الطلبات المتأخرة يدويًا
 /coupon CODE AMOUNT - إضافة أو تشغيل كوبون خصم بالجنيه
 /coupon_off CODE - إيقاف كوبون
 /coupons - عرض الكوبونات
@@ -348,6 +349,17 @@ async function handleCommand(msg){
     const rows = await supa(`coupons?select=*&order=created_at.desc&limit=20`);
     if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد كوبونات حاليا.'});
     return tg('sendMessage',{chat_id:chatId,text:'🎟️ الكوبونات:\n' + rows.map(c=>`${c.is_active?'✅':'⛔'} ${c.code} | خصم ${c.discount_amount}ج | حد أدنى ${c.min_order_amount||0}ج`).join('\n')});
+  }
+
+
+  if(cmd==='/check_late'){
+    const cutoff = new Date(Date.now() - 30*60*1000).toISOString();
+    const rows = await supa(`orders?created_at=lte.${encodeURIComponent(cutoff)}&status=in.(pending,claimed,processing,on_hold,needs_fix)&select=*&order=created_at.asc&limit=20`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'✅ لا يوجد طلبات متأخرة حاليا.',reply_to_message_id:msg.message_id});
+    return tg('sendMessage',{chat_id:chatId,text:'⏰ الطلبات المتأخرة:\n' + rows.map(o=>{
+      const mins = Math.floor((Date.now() - new Date(o.created_at).getTime())/60000);
+      return `${o.order_code || o.id} | ${o.phone || '-'} | ${o.status || '-'} | ${mins} دقيقة`;
+    }).join('\n')});
   }
 
   if(cmd==='/busy'){

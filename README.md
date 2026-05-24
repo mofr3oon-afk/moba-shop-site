@@ -316,3 +316,11 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
 - تصغير حجم فرعون في الموقع.
 - تصغير البادج والفقاعة الخاصة بفرعون.
 - تحسين حجمه على الموبايل عشان ميبقاش مغطي على الصفحة.
+
+
+## V33 Vercel Free Deploy Fix
+- حذف Vercel Cron من vercel.json لأن الحساب Free/Hobby لا يسمح بتشغيل Cron كل 10 دقائق.
+- تم الإبقاء على API الخاص بفحص الطلبات المتأخرة: /api/check-late
+- إضافة أمر تليجرام يدوي: /check_late لفحص الطلبات المتأخرة بدون Cron.
+- لتشغيل الفحص تلقائيًا كل 10 دقائق استخدم خدمة خارجية مثل cron-job.org تستدعي:
+  https://YOUR-DOMAIN.vercel.app/api/check-late
