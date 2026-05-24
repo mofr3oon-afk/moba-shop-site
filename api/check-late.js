@@ -1,3 +1,5 @@
+import { requireInternalSecret, rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ORDER_GROUP_ID = process.env.ORDER_GROUP_ID;
@@ -32,6 +34,7 @@ function minutesAgo(date){
   return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'check-late',20,60_000); if(process.env.INTERNAL_API_SECRET || process.env.SETUP_SECRET) requireInternalSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     const cutoff = new Date(Date.now() - 30*60*1000).toISOString();
     const rows = await supa(`orders?created_at=lte.${encodeURIComponent(cutoff)}&status=in.(pending,claimed,processing,on_hold,needs_fix)&late_alerted_at=is.null&select=*&order=created_at.asc&limit=10`);
@@ -50,6 +53,6 @@ export default async function handler(req,res){
     }
     return json(res,200,{ok:true,checked:(rows||[]).length,sent});
   }catch(e){
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return safeError(res,e,e.statusCode||500);
   }
 }

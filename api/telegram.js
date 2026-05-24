@@ -1,3 +1,5 @@
+import { requireTelegramSecret, rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -302,14 +304,18 @@ async function handleCommand(msg){
 /today_pending - طلبات النهارده المفتوحة
 /done_today - طلبات اتشحنت النهارده
 /stats - إحصائيات بدون أرباح
-/busy - تفعيل وضع ضغط الطلبات
-/normal - إلغاء وضع ضغط الطلبات
+/available - تشغيل حالة متاح الآن
+/busy [رسالة] - تشغيل حالة الضغط
+/closed [رسالة] - تشغيل حالة مغلق حاليا
+/status_now - عرض الحالة الحالية
+/normal - نفس available
 /check_late - فحص الطلبات المتأخرة يدويًا
 /coupon CODE fixed 10 - كوبون خصم بالجنيه
 /coupon CODE percent 10 - كوبون خصم بنسبة
 /coupon CODE fixed 10 product:325 - كوبون على منتج معين
 /coupon_off CODE - إيقاف كوبون
 /coupons - عرض الكوبونات
+/review_reply ID الرد - رد المتجر على تقييم
 /reviews - تقييمات العملاء الجديدة
 /pinned - الطلبات المهمة
 
@@ -399,6 +405,16 @@ async function handleCommand(msg){
     await supa(`coupons?code=eq.${encodeURIComponent(code)}`,{method:'PATCH',body:JSON.stringify({is_active:true,updated_at:new Date().toISOString()})});
     return tg('sendMessage',{chat_id:chatId,text:`✅ تم تشغيل الكوبون: ${code}`});
   }
+
+  if(cmd==='/review_reply'){
+    const parts = arg.split(/\s+/);
+    const id = parts.shift();
+    const reply = parts.join(' ').trim();
+    if(!id || !reply) return tg('sendMessage',{chat_id:chatId,text:'استخدم الأمر كده:\n/review_reply REVIEW_ID شكرا لتقييمك',reply_to_message_id:msg.message_id});
+    await supa(`reviews?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify({store_reply:reply})});
+    return tg('sendMessage',{chat_id:chatId,text:'✅ تم إضافة رد المتجر على التقييم'});
+  }
+
   if(cmd==='/coupons'){
     const rows = await supa(`coupons?select=*&order=created_at.desc&limit=20`);
     if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد كوبونات حاليا.'});
@@ -409,21 +425,43 @@ async function handleCommand(msg){
     }).join('\n')});
   }
 
-  if(cmd==='/busy'){
-    const msgTxt = arg || 'يوجد ضغط طلبات حاليا، التنفيذ قد يستغرق وقت أطول';
-    await setSetting('busy_mode','true');
-    await setSetting('busy_message',msgTxt);
-    return tg('sendMessage',{chat_id:chatId,text:`🟡 تم تفعيل Busy Mode\n${msgTxt}`});
-  }
-  if(cmd==='/normal'){
+
+  if(cmd==='/available' || cmd==='/normal'){
+    const msgTxt = arg || 'التنفيذ شغال حاليا بشكل طبيعي.';
+    await setSetting('store_status','available');
+    await setSetting('store_status_message',msgTxt);
     await setSetting('busy_mode','false');
     await setSetting('busy_message','');
-    return tg('sendMessage',{chat_id:chatId,text:'🟢 تم إلغاء Busy Mode ورجوع حالة الشحن للوضع الطبيعي'});
+    return tg('sendMessage',{chat_id:chatId,text:`🟢 تم تفعيل حالة: متاح الآن
+${msgTxt}`});
   }
-  if(cmd==='/reset_late_alerts'){
-    const rows = await supa(`orders?select=id&late_alerted_at=not.is.null&status=in.(pending,claimed,processing,on_hold,needs_fix)`);
-    for(const r of rows) await supa(`orders?id=eq.${encodeURIComponent(r.id)}`,{method:'PATCH',body:JSON.stringify({late_alerted_at:null})});
-    return tg('sendMessage',{chat_id:chatId,text:`تم تصفير تنبيهات التأخير لعدد ${rows.length} طلب`});
+  if(cmd==='/busy'){
+    const msgTxt = arg || 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.';
+    await setSetting('store_status','busy');
+    await setSetting('store_status_message',msgTxt);
+    await setSetting('busy_mode','true');
+    await setSetting('busy_message',msgTxt);
+    return tg('sendMessage',{chat_id:chatId,text:`🟡 تم تفعيل حالة: متاح ولكن فيه ضغط
+${msgTxt}`});
+  }
+  if(cmd==='/closed'){
+    const msgTxt = arg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.';
+    await setSetting('store_status','closed');
+    await setSetting('store_status_message',msgTxt);
+    await setSetting('busy_mode','false');
+    await setSetting('busy_message','');
+    return tg('sendMessage',{chat_id:chatId,text:`🔴 تم تفعيل حالة: مغلق حاليا
+${msgTxt}`});
+  }
+  if(cmd==='/status_now'){
+    const rows = await supa('settings?select=key,value&key=in.(store_status,store_status_message,busy_mode,busy_message)');
+    const m={}; (rows||[]).forEach(r=>m[r.key]=r.value);
+    const mode = String(m.store_status || (String(m.busy_mode)==='true' ? 'busy' : 'available'));
+    const msgTxt = m.store_status_message || m.busy_message || '';
+    const label = mode==='closed' ? '🔴 مغلق حاليا' : mode==='busy' ? '🟡 متاح ولكن فيه ضغط' : '🟢 متاح الآن';
+    return tg('sendMessage',{chat_id:chatId,text:`حالة الموقع الحالية:
+${label}
+${msgTxt || '-'}`});
   }
 
   if(cmd==='/today') return tg('sendMessage',{chat_id:chatId,text:await reportText(1,'تقرير اليوم')});
@@ -631,6 +669,7 @@ async function handleCallback(cb){
   }
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'telegram',120,60_000); requireTelegramSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     if(req.method!=='POST') return json(res,200,{ok:true});
     const qSecret=req.query?.secret || '';
@@ -643,6 +682,6 @@ export default async function handler(req,res){
     try{
       if(req.body?.callback_query?.id) await tg('answerCallbackQuery',{callback_query_id:req.body.callback_query.id,text:'Error: '+String(e.message).slice(0,120),show_alert:true});
     }catch(_){}
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return safeError(res,e,e.statusCode||500);
   }
 }

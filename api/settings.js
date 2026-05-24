@@ -1,3 +1,5 @@
+import { rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -21,6 +23,7 @@ async function supa(path,opts={}){
 }
 export default async function handler(req,res){
   try{
+    rateLimit(req,'settings',60,60_000);
     if(req.method !== 'GET') return json(res,405,{ok:false,error:'Method not allowed'});
     const rows = await supa('settings?select=key,value');
     const settings = {};
@@ -32,6 +35,6 @@ export default async function handler(req,res){
     }
     return json(res,200,{ok:true,settings});
   }catch(e){
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return safeError(res,e,e.statusCode||500);
   }
 }

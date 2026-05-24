@@ -1,3 +1,5 @@
+import { rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -38,6 +40,7 @@ function publicOrder(o){
   };
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'status.js',40,60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   try{
     if(req.method !== 'GET') return json(res,405,{ok:false,error:'Method not allowed'});
     const phone=String(req.query.phone || '').trim();
@@ -48,6 +51,6 @@ export default async function handler(req,res){
     if(history) return json(res,200,{ok:true,orders:rows.map(publicOrder)});
     return json(res,200,{ok:true,order:publicOrder(rows[0])});
   }catch(e){
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return safeError(res,e,e.statusCode||500);
   }
 }

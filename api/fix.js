@@ -1,3 +1,5 @@
+import { rateLimit, safeError } from './_security.js';
+// moba-v40-security
 export const config = { api: { bodyParser: false } };
 import { json, supabaseRequest, telegramForm, telegramJson, buildTelegramText, telegramKeyboard, STATUS_LABELS, supportUrl } from './_utils.js';
 
@@ -18,6 +20,7 @@ async function getLatestFixOrder(phone){
   return rows?.[0]||null;
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'fix.js',40,60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
     const raw=await readRawBody(req); const {fields,files}=parseMultipart(raw,req.headers['content-type']);

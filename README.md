@@ -357,3 +357,50 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
 - تصغير نافذة شات فرعون على الموبايل.
 - تحسين خانة الكتابة وقت ظهور كيبورد الموبايل.
 - إضافة Handler مستقل لأزرار data-pharaoh-q و data-pharaoh-action.
+
+
+## V37 Pharaoh Send Fix
+- إصلاح زر إرسال في شات فرعون.
+- منع فورم الشات من عمل Reload أو قفل الشات.
+- دعم الإرسال بزر إرسال أو Enter.
+- الشات يفضل مفتوح بعد إرسال الرسالة.
+
+
+## V38 Full Site UX Upgrade
+- زر الشراء يقفل تلقائيًا لو مفيش سكرين تحويل.
+- تأكيد نهائي أقوى قبل الطلب: المنتجات، ID، الاسم، الدفع، الإجمالي، الكوبون.
+- حفظ طريقة الدفع المفضلة للعميل.
+- حالة الكوبون أوضح وتعرض المنتجات التي ينطبق عليها.
+- Timeline أوضح داخل تفاصيل الطلب.
+- آخر تحديث بصيغة منذ كام دقيقة.
+- فلاتر للتقييمات ومتوسط تقييم.
+- Badge عميل موثق ودعم رد المتجر على التقييم.
+- منع التقييم قبل الشراء بشكل إرشادي.
+- فرعون يصغر وقت الكتابة ويظهر تلميحات حسب مكان العميل.
+- منع سبام الطلبات المفتوحة لنفس الرقم من السيرفر.
+- أمر تليجرام: /review_reply ID الرد.
+
+
+## Store status control from Telegram
+- /available [optional message]
+- /busy [optional message]
+- /closed [optional message]
+- /status_now
+
+These commands control the top status pill on the website with green / yellow / red styles.
+
+
+## V40 Security Hardening
+- Added shared API security helpers.
+- Protected setup-webhook with SETUP_SECRET.
+- Protected internal/debug endpoints with INTERNAL_API_SECRET or SETUP_SECRET.
+- Added rate limits to public APIs.
+- Added single-image screenshot validation:
+  - JPG / JPEG / PNG / WEBP only
+  - One file only
+  - 5MB default limit
+  - No videos, PDFs, or other files
+- Added frontend upload validation.
+- Added phone / PUBG ID / transfer validation helpers.
+- Added RLS enable statements in Supabase SQL.
+- Added SECURITY_CHECKLIST.md.

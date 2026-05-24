@@ -1,5 +1,8 @@
+import { requireSetupSecret, rateLimit, safeError } from './_security.js';
+// moba-v40-security
 import { json } from './_utils.js';
 export default async function handler(req,res){
+  try{ rateLimit(req,'setup',5,60_000); requireSetupSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     if(String(req.query.key||'') !== String(process.env.SETUP_SECRET||'')) return json(res,403,{ok:false,error:'wrong setup key'});
     const host=req.headers['x-forwarded-host'] || req.headers.host;

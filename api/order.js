@@ -1,3 +1,5 @@
+import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, validatePubgId, validateTransferInfo } from './_security.js';
+// moba-v40-security
 export const config = { api: { bodyParser: false } };
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
 
@@ -76,7 +78,15 @@ async function validateCouponServer(code,total,cart=[]){
 }
 
 
+
+async function hasOpenOrderForPhone(phone){
+  if(!phone) return false;
+  const rows = await supa(`orders?phone=eq.${encodeURIComponent(phone)}&status=in.(pending,claimed,processing,on_hold,needs_fix)&select=id,order_code,status&limit=1`);
+  return rows && rows[0] ? rows[0] : null;
+}
+
 export default async function handler(req,res){
+  try{ rateLimit(req,'order',10,60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
     const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw new Error('ORDER_GROUP_ID missing');

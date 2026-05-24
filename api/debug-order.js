@@ -1,3 +1,5 @@
+import { requireInternalSecret, rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,6 +14,7 @@ async function supa(path,opts={}){
   return data;
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'debug',10,60_000); requireInternalSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     const key=String(req.query.key||'').trim();
     const phone=String(req.query.phone||'').trim();
@@ -25,5 +28,5 @@ export default async function handler(req,res){
       rows = await supa(`orders?select=id,order_code,daily_number,phone,status,created_at&order=created_at.desc&limit=10`);
     }
     return json(res,200,{ok:true,rows});
-  }catch(e){return json(res,500,{ok:false,error:String(e.message||e)});}
+  }catch(e){return safeError(res,e,e.statusCode||500);}
 }

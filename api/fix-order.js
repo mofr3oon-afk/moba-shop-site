@@ -1,3 +1,5 @@
+import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, validatePubgId } from './_security.js';
+// moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -41,9 +43,11 @@ function history(order,label){
   return h.slice(-20);
 }
 export default async function handler(req,res){
+  try{ rateLimit(req,'fix-order',20,60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   try{
     if(req.method !== 'POST') return json(res,405,{ok:false,error:'Method not allowed'});
     const form = await req.formData();
+    if(String(form.get('fixType')||'')==='bad_screen') validateSingleImageFromForm(form);
     const orderId = String(form.get('orderId')||'').trim();
     const phone = String(form.get('phone')||'').trim();
     const fixValue = String(form.get('fixValue')||'').trim();
@@ -58,6 +62,7 @@ export default async function handler(req,res){
     const fixType = order.fix_type || 'general';
     if(fixType === 'bad_screen' && (!fixFile || !fixFile.name)) return json(res,400,{ok:false,error:'ارفع صورة السكرين الجديدة'});
     // V16 server validation
+    // V40 fix validation
     if(fixType === 'bad_phone' && !/^01[0-9]{9}$/.test(fixValue)) return json(res,400,{ok:false,error:'رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01'});
     if(fixType === 'bad_id' && !/ID:\s*[0-9]{5,15}\s*-\s*Name:\s*.{2,}/i.test(fixValue)) return json(res,400,{ok:false,error:'اكتب ID صحيح واسم الحساب'});
     if(fixType !== 'bad_screen' && fixValue.length < 2) return json(res,400,{ok:false,error:'اكتب التعديل المطلوب'});
@@ -97,6 +102,6 @@ ${escapeHtml(fixType === 'bad_screen' ? 'تم رفع سكرين جديد: '+file
     }
     return json(res,200,{ok:true,order:updated});
   }catch(e){
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return json(res,e.statusCode||400,{ok:false,error:String(e.message||e)});
   }
 }

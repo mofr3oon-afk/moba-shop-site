@@ -251,3 +251,31 @@ set discount_type = coalesce(discount_type,'fixed'),
 where true;
 
 notify pgrst, 'reload schema';
+
+
+
+-- V38 site UX fields
+alter table public.reviews add column if not exists verified_customer boolean default false;
+alter table public.reviews add column if not exists store_reply text;
+
+-- Optional: store customer visible cancel reason / richer status
+alter table public.orders add column if not exists cancel_reason text;
+
+notify pgrst, 'reload schema';
+
+
+
+-- V40 security hardening
+alter table public.orders enable row level security;
+alter table public.reviews enable row level security;
+alter table public.coupons enable row level security;
+alter table public.settings enable row level security;
+
+-- No public anon policies are added here. Server APIs use service role.
+-- If you already created public policies before, review and remove unsafe ones.
+
+alter table public.orders add column if not exists security_note text;
+create index if not exists orders_phone_status_idx on public.orders(phone,status);
+create index if not exists orders_created_status_idx on public.orders(created_at,status);
+
+notify pgrst, 'reload schema';

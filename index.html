@@ -1975,24 +1975,24 @@ html{scroll-behavior:smooth}
 /* V30 Pharaoh helper + busy mode + smart UX */
 .work-status-mini{
   margin:10px 0 0;
-  padding:10px 12px;
-  border-radius:16px;
-  border:1px solid rgba(56,224,139,.28);
-  background:rgba(56,224,139,.10);
-  color:#e8fff1;
+  padding:12px 14px;
+  border-radius:18px;
+  border:1px solid rgba(56,224,139,.30);
+  background:linear-gradient(135deg, rgba(56,224,139,.16), rgba(56,224,139,.06));
+  color:#effff6;
   font-size:12px;
-  line-height:1.7;
+  line-height:1.75;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 10px 28px rgba(0,0,0,.18), 0 0 24px rgba(56,224,139,.08);
 }
-.work-status-mini.busy{
-  border-color:rgba(255,207,92,.35);
-  background:rgba(255,207,92,.10);
-  color:#fff5cc;
-}
-.work-status-mini.closed{
-  border-color:rgba(255,154,47,.35);
-  background:rgba(255,154,47,.10);
-  color:#ffe0bf;
-}
+.work-status-mini .status-head{display:flex;align-items:center;gap:8px;font-weight:900;font-size:13px;margin-bottom:4px}
+.work-status-mini .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;box-shadow:0 0 10px currentColor}
+.work-status-mini .status-desc{font-size:11px;opacity:.95}
+.work-status-mini.available{border-color:rgba(56,224,139,.35);background:linear-gradient(135deg, rgba(56,224,139,.16), rgba(56,224,139,.06));color:#eafff2;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.18),0 0 28px rgba(56,224,139,.12)}
+.work-status-mini.available .status-dot{background:#35e07d;color:#35e07d}
+.work-status-mini.busy{border-color:rgba(255,207,92,.45);background:linear-gradient(135deg, rgba(255,207,92,.16), rgba(255,207,92,.06));color:#fff6d8;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.18),0 0 28px rgba(255,207,92,.13)}
+.work-status-mini.busy .status-dot{background:#ffd35c;color:#ffd35c}
+.work-status-mini.closed{border-color:rgba(255,97,97,.45);background:linear-gradient(135deg, rgba(255,97,97,.16), rgba(255,97,97,.06));color:#ffe2e2;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 10px 28px rgba(0,0,0,.18),0 0 28px rgba(255,97,97,.13)}
+.work-status-mini.closed .status-dot{background:#ff6c6c;color:#ff6c6c}
 .pharaoh-mini-question{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -2299,6 +2299,158 @@ html{scroll-behavior:smooth}
     height:min(390px, calc(100dvh - 90px)) !important;
     max-height:390px !important;
   }
+}
+
+
+/* V37 Pharaoh send fix */
+#pharaohChatForm{
+  flex-shrink:0 !important;
+}
+#pharaohChatForm button,
+#pharaohSendBtn{
+  pointer-events:auto !important;
+}
+
+
+/* V38 full site UX upgrade */
+.checkout.disabled-checkout,
+.checkout:disabled,
+button[type="submit"].disabled-checkout{
+  opacity:.45!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.4);
+}
+.smart-checkout-warning{
+  margin:10px 0;
+  padding:10px 12px;
+  border-radius:15px;
+  background:rgba(255,207,92,.10);
+  border:1px solid rgba(255,207,92,.28);
+  color:#fff3ce;
+  font-size:12px;
+  line-height:1.7;
+}
+.v38-confirm-list{
+  display:grid;
+  gap:8px;
+  margin:10px 0;
+}
+.v38-confirm-item{
+  padding:10px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.045);
+  line-height:1.7;
+}
+.v38-timeline{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin:12px 0;
+}
+.v38-step{
+  text-align:center;
+  padding:9px 5px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:var(--muted,#aab3c5);
+  font-size:11px;
+  line-height:1.5;
+}
+.v38-step.active{
+  color:#e8fff1;
+  border-color:rgba(56,224,139,.32);
+  background:rgba(56,224,139,.10);
+}
+.v38-step.warn{
+  color:#fff3ce;
+  border-color:rgba(255,207,92,.32);
+  background:rgba(255,207,92,.10);
+}
+.review-stats-box{
+  margin:12px 0;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,207,92,.22);
+  background:rgba(255,207,92,.07);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.review-stats-box b{font-size:22px;color:#fff}
+.review-filter-bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0;
+}
+.review-filter-bar button{
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border-radius:999px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-weight:800;
+}
+.review-filter-bar button.active{
+  border-color:rgba(39,216,255,.38);
+  background:rgba(39,216,255,.14);
+}
+.verified-badge{
+  display:inline-flex;
+  margin-inline-start:6px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:rgba(56,224,139,.12);
+  border:1px solid rgba(56,224,139,.28);
+  color:#e8fff1;
+  font-size:10px;
+  font-weight:900;
+}
+.store-reply-box{
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:14px;
+  background:rgba(39,216,255,.08);
+  border:1px solid rgba(39,216,255,.20);
+  color:#dff8ff;
+  line-height:1.7;
+  font-size:12px;
+}
+.pharaoh-assistant-fab.pharaoh-smart-hide{
+  opacity:.52!important;
+  transform:translate3d(var(--ph-x,0px),var(--ph-y,0px),0) scale(.62)!important;
+}
+@media(max-width:900px){
+  .v38-timeline{grid-template-columns:repeat(2,1fr)}
+  .review-stats-box{align-items:flex-start}
+}
+
+
+/* V40 security UX */
+.security-error-box{
+  margin:10px 0;
+  padding:10px 12px;
+  border-radius:15px;
+  background:rgba(255,77,104,.12);
+  border:1px solid rgba(255,77,104,.28);
+  color:#ffe4e8;
+  font-size:12px;
+  line-height:1.7;
+}
+.security-ok-box{
+  margin:10px 0;
+  padding:10px 12px;
+  border-radius:15px;
+  background:rgba(56,224,139,.12);
+  border:1px solid rgba(56,224,139,.28);
+  color:#e8fff1;
+  font-size:12px;
+  line-height:1.7;
 }
 
 </style>
@@ -3652,7 +3804,7 @@ html{scroll-behavior:smooth}
     </div>
     <form class="pharaoh-chat-foot" id="pharaohChatForm">
       <input id="pharaohChatInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
-      <button type="submit">إرسال</button>
+      <button type="button" id="pharaohSendBtn">إرسال</button>
     </form>
   </div>
 
@@ -3828,7 +3980,9 @@ html{scroll-behavior:smooth}
     const raw = String(q||'');
     const t = raw.toLowerCase();
 
-    const busy = window.mobaBusyMode === true;
+    const mode = window.mobaStoreMode || (window.mobaBusyMode ? 'busy' : 'available');
+    const busy = mode === 'busy';
+    const closed = mode === 'closed';
     const supportLink = `<a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>`;
 
     if(/عايز اشحن|ازاي اشحن|اشحن|اطلب|طلب جديد/.test(t) && !/متابعة|قديم|قديمة|مشكلة/.test(t)){
@@ -3876,7 +4030,9 @@ html{scroll-behavior:smooth}
     }
 
     if(/اتأخر|اتأخر|لسه متشحنش|متشحنش|واقف|تأخير|تاخير/.test(t)){
-      return busy
+      return closed
+        ? `المتجر مغلق حاليا 👑<br>تقدر تعمل طلبك عادي، وأول ما مواعيد العمل تبدأ هنبدأ تنفيذ الطلبات بالترتيب.`
+        : busy
         ? `فيه ضغط طلبات حاليًا 👑<br>طلبك ممكن ياخد وقت أطول شوية. تابع الحالة من سجل الطلبات بنفس رقم الموبايل.`
         : `ممكن الطلب تحت المراجعة أو قيد التنفيذ. افتح سجل الطلبات برقمك وشوف آخر تحديث. لو محتاج تعديل، هتلاقي زر واضح داخل التفاصيل.`;
     }
@@ -3939,7 +4095,9 @@ html{scroll-behavior:smooth}
     }
 
     if(/busy|ضغط|زحمة|زحمه/.test(t)){
-      return busy
+      return closed
+        ? `المتجر مغلق حاليا 🔴<br>ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.`
+        : busy
         ? `فيه ضغط طلبات حاليًا 👑<br>تقدر تعمل طلبك عادي، بس التنفيذ ممكن ياخد وقت أطول من المعتاد.`
         : `الشحن متاح حاليًا ✅<br>نفذ طلبك وارفع السكرين وهنتابع معاك بسرعة.`;
     }
@@ -4518,16 +4676,22 @@ html{scroll-behavior:smooth}
       const res = await fetch('/api/settings');
       const data = await res.json();
       if(!data.ok) return;
-      const busy = data.settings?.busy_mode === true || data.settings?.busy_mode === 'true';
-      const msg = data.settings?.busy_message || '';
+      const rawMode = String(data.settings?.store_status || '').toLowerCase();
+      const legacyBusy = data.settings?.busy_mode === true || data.settings?.busy_mode === 'true';
+      const mode = rawMode || (legacyBusy ? 'busy' : 'available');
+      const customMsg = data.settings?.store_status_message || data.settings?.busy_message || '';
+      const config = {
+        available:{title:'متاح الآن', desc: customMsg || 'التنفيذ شغال حاليا بشكل طبيعي.', cls:'available'},
+        busy:{title:'متاح ولكن فيه ضغط', desc: customMsg || 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.', cls:'busy'},
+        closed:{title:'مغلق حاليا', desc: customMsg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.', cls:'closed'}
+      };
+      const current = config[mode] || config.available;
       if(statusBox){
-        statusBox.classList.toggle('busy', busy);
-        statusBox.classList.remove('closed');
-        statusBox.innerHTML = busy
-          ? `🟡 يوجد ضغط طلبات حاليا — ${msg || 'التنفيذ قد يستغرق وقت أطول'}`
-          : '🟢 الشحن متاح الآن — متوسط التنفيذ حسب ضغط الطلبات';
+        statusBox.className = `work-status-mini ${current.cls}`;
+        statusBox.innerHTML = `<div class="status-head"><span class="status-dot"></span><span>${current.title}</span></div><div class="status-desc">${current.desc}</div>`;
       }
-      window.mobaBusyMode = busy;
+      window.mobaStoreMode = mode;
+      window.mobaBusyMode = mode === 'busy';
     }catch(e){}
   }
   loadWorkStatus();
@@ -4760,7 +4924,9 @@ html{scroll-behavior:smooth}
     const txt = document.body.innerText || '';
     if(!window.__pharaohOrderDone && /تم استلام طلبك|تم إرسال الطلب|طلبك اتسجل|تم تنفيذ الطلب/.test(txt)){
       window.__pharaohOrderDone = true;
-      const busy = window.mobaBusyMode === true;
+      const mode = window.mobaStoreMode || (window.mobaBusyMode ? 'busy' : 'available');
+    const busy = mode === 'busy';
+    const closed = mode === 'closed';
       openAndSay(busy
         ? 'تم استلام طلبك ✅<br>فيه ضغط طلبات حاليًا، تابع الحالة من سجل الطلبات وهيوصلك التحديث هناك.'
         : 'تم استلام طلبك ✅<br>تابع الحالة من سجل الطلبات بنفس رقم الموبايل اللي كتبته.');
@@ -4886,6 +5052,419 @@ html{scroll-behavior:smooth}
       if(panel) panel.style.height = '';
     }
   });
+})();
+</script>
+
+
+<script id="moba-v37-pharaoh-send-fix">
+(function(){
+  const replies = {
+    'ازاي اشحن': 'تمام يا بطل 👑<br>اختار الباقة، اكتب PUBG ID واسم الحساب، ضيف للسلة، وبعد التحويل ارفع السكرين.',
+    'طرق الدفع': 'طرق الدفع المتاحة:<br>🟢 InstaPay<br>📱 Wallet<br><br>بعد التحويل ارفع السكرين، ولو التحويل من رقم تاني اكتب آخر 3 أرقام في الملاحظات.',
+    'متابعة الطلب': 'اكتب نفس رقم الموبايل في سجل الطلبات، وهظهرلك آخر طلباتك كلها 📦<br><br><span class="mini-action" data-pharaoh-action="track">افتح سجل الطلبات</span>',
+    'الطلبات القديمة': 'اكتب رقم الموبايل في سجل الطلبات، وبعدها اختار: الجميع / معلق / مكتمل / ملغي.',
+    'الازدهار': '<div class="pharaoh-warning-note">تنبيه مهم 👑<br>لازم تتأكد إن الازدهار متاح على حسابك قبل الطلب، لأن بعض الأنواع بتكون مرة واحدة فقط على الحساب.</div>',
+    'اكتر من ID': 'ينفع تعمل كذا شحنة بـ IDs مختلفة ✅<br>كل باقة اكتب لها ID واسم الحساب بتوعها، وبعدها ضيفها للسلة وكرر لأي ID تاني.',
+    'كوبون': 'لو معاك كوبون، اكتبه في خانة الكوبون داخل السلة واضغط تطبيق 🎟️<br>لو مش شغال ممكن يكون خاص بمنتج معين أو محتاج حد أدنى.',
+    'مشكلة': 'ايه نوع المشكلة؟ 👑<div class="pharaoh-problem-grid"><button type="button" data-pharaoh-q="ID غلط">ID غلط</button><button type="button" data-pharaoh-q="سكرين غير واضح">سكرين غير واضح</button><button type="button" data-pharaoh-q="رقم التحويل غلط">رقم التحويل</button><button type="button" data-pharaoh-q="الطلب اتأخر">الطلب اتأخر</button><button type="button" data-pharaoh-q="عايز دعم">عايز دعم</button></div>',
+    'حل مشكلة': 'ايه نوع المشكلة؟ 👑<div class="pharaoh-problem-grid"><button type="button" data-pharaoh-q="ID غلط">ID غلط</button><button type="button" data-pharaoh-q="سكرين غير واضح">سكرين غير واضح</button><button type="button" data-pharaoh-q="رقم التحويل غلط">رقم التحويل</button><button type="button" data-pharaoh-q="الطلب اتأخر">الطلب اتأخر</button><button type="button" data-pharaoh-q="عايز دعم">عايز دعم</button></div>',
+    'ID غلط': 'افتح سجل الطلبات برقمك، ولو الطلب محتاج تعديل هتلاقي خانة تكتب فيها ID الصحيح واسم الحساب.',
+    'سكرين غير واضح': 'ارفع سكرين جديد واضح من تفاصيل الطلب 📸<br>لازم يظهر الرقم أو الاسم والمبلغ ووقت التحويل.',
+    'رقم التحويل غلط': 'افتح الطلب من سجل الطلبات واكتب الرقم الصحيح أو آخر 3 أرقام من رقم التحويل.',
+    'الطلب اتأخر': 'افتح سجل الطلبات وشوف آخر تحديث. لو فيه ضغط طلبات، التنفيذ ممكن ياخد وقت أطول شوية.',
+    'الدعم': '<a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>'
+  };
+
+  function esc(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function body(){ return document.getElementById('pharaohChatBody'); }
+  function typing(){ return document.getElementById('pharaohTyping'); }
+  function addMsg(type, html){
+    const b = body();
+    const t = typing();
+    if(!b || !t) return;
+    const msg = document.createElement('div');
+    msg.className = 'pharaoh-msg ' + type;
+    msg.innerHTML = html;
+    b.insertBefore(msg, t);
+    b.scrollTop = b.scrollHeight;
+  }
+  function getReply(text){
+    const q = String(text || '').trim();
+    const low = q.toLowerCase();
+
+    if(/فين طلبي|الاوردر فين|متابعة|حالة|طلبي/.test(low)) return replies['متابعة الطلب'];
+    if(/قديم|قديمة|طلباتي|سجل/.test(low)) return replies['الطلبات القديمة'];
+    if(/ازدهار/.test(low)) return replies['الازدهار'];
+    if(/كوبون|خصم|coupon/.test(low)) return replies['كوبون'];
+    if(/مشكلة|غلط|تعديل|عدل|مش واضح/.test(low)) return replies['مشكلة'];
+    if(/سكرين|screen|صورة/.test(low)) return replies['سكرين غير واضح'];
+    if(/id|ايدي/.test(low) && /غلط|تعديل|عدل/.test(low)) return replies['ID غلط'];
+    if(/اتأخر|متشحنش|واقف|تاخير|تأخير/.test(low)) return replies['الطلب اتأخر'];
+    if(/دعم|كلم|تواصل/.test(low)) return replies['الدعم'];
+    if(/دفع|انستا|فودافون|wallet|محفظ/.test(low)) return replies['طرق الدفع'];
+    if(/اشحن|اطلب|طلب/.test(low)) return replies['ازاي اشحن'];
+
+    const key = Object.keys(replies).find(k => q.includes(k) || k.includes(q));
+    return key ? replies[key] : 'أنا فرعون 👑 أقدر أساعدك في الشحن، متابعة الطلب، المشاكل، الكوبونات، والدعم. جرّب تكتب: فين طلبي أو كوبون أو مشكلة.';
+  }
+  function sendPharaohMessage(){
+    const input = document.getElementById('pharaohChatInput');
+    const panel = document.getElementById('pharaohChatPanel');
+    if(!input) return;
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    if(panel) panel.classList.add('show');
+
+    addMsg('user', esc(text));
+    const t = typing();
+    if(t) t.classList.add('show');
+    setTimeout(()=>{
+      if(t) t.classList.remove('show');
+      addMsg('bot', getReply(text));
+      setTimeout(()=>input.focus(), 50);
+    }, 250);
+  }
+
+  document.addEventListener('submit', function(e){
+    if(e.target && e.target.id === 'pharaohChatForm'){
+      e.preventDefault();
+      e.stopPropagation();
+      sendPharaohMessage();
+      return false;
+    }
+  }, true);
+
+  document.addEventListener('click', function(e){
+    const send = e.target.closest('#pharaohSendBtn, #pharaohChatForm button');
+    if(send && send.closest('#pharaohChatForm')){
+      e.preventDefault();
+      e.stopPropagation();
+      sendPharaohMessage();
+      return false;
+    }
+  }, true);
+
+  document.addEventListener('keydown', function(e){
+    if(e.target && e.target.id === 'pharaohChatInput' && e.key === 'Enter'){
+      e.preventDefault();
+      e.stopPropagation();
+      sendPharaohMessage();
+      return false;
+    }
+  }, true);
+})();
+</script>
+
+
+<script id="moba-v38-full-site-upgrade">
+(function(){
+  function qs(sel){ return document.querySelector(sel); }
+  function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
+  function money(n){ try{return Number(n||0).toLocaleString('en-US')}catch(e){return n||0} }
+  function cartTotal(){
+    return (window.cart||[]).reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+  }
+  function couponInfo(){
+    if(window.mobaCouponFinalTotal) return window.mobaCouponFinalTotal();
+    const total = cartTotal();
+    const disc = window.appliedCoupon ? Math.min(Number(window.appliedCoupon.discount_amount||0),total) : 0;
+    return {total,discount:disc,final:Math.max(0,total-disc),code:window.appliedCoupon?.code||''};
+  }
+  function getPaymentMethod(){
+    const checked = qs('input[name="paymentMethod"]:checked');
+    return checked ? checked.value : (qs('[name="paymentMethod"]')?.value || localStorage.getItem('moba_preferred_payment') || '');
+  }
+  function screenshotSelected(){
+    const file = qsa('input[type="file"]').find(i => /screen|screenshot|photo|image|file/i.test(i.name || i.id || '') || true);
+    return !!(file && file.files && file.files.length);
+  }
+  function updateCheckoutLock(){
+    const btns = qsa('.checkout, button[type="submit"]').filter(b => /checkout|شراء|تنفيذ|طلب/i.test(b.textContent||''));
+    let warning = qs('#smartCheckoutWarning');
+    if(!warning && btns[0]){
+      warning = document.createElement('div');
+      warning.id = 'smartCheckoutWarning';
+      warning.className = 'smart-checkout-warning';
+      btns[0].insertAdjacentElement('beforebegin', warning);
+    }
+    const ok = screenshotSelected();
+    btns.forEach(btn=>{
+      btn.disabled = !ok;
+      btn.classList.toggle('disabled-checkout', !ok);
+      if(!ok) btn.title = 'لازم ترفع سكرين التحويل الأول';
+      else btn.title = '';
+    });
+    if(warning){
+      warning.style.display = ok ? 'none' : 'block';
+      warning.innerHTML = '⚠️ لازم ترفع سكرين التحويل قبل تنفيذ الطلب.';
+    }
+  }
+
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.type === 'file') updateCheckoutLock();
+    if(e.target && e.target.name === 'paymentMethod'){
+      localStorage.setItem('moba_preferred_payment', e.target.value);
+    }
+  }, true);
+  setInterval(updateCheckoutLock, 1500);
+  setTimeout(updateCheckoutLock, 800);
+
+  // restore preferred payment
+  setTimeout(()=>{
+    const pref = localStorage.getItem('moba_preferred_payment');
+    if(pref){
+      const input = qsa('input[name="paymentMethod"]').find(i=>i.value===pref);
+      if(input){ input.checked = true; input.dispatchEvent(new Event('change',{bubbles:true})); }
+      const select = qs('select[name="paymentMethod"]');
+      if(select){ select.value = pref; select.dispatchEvent(new Event('change',{bubbles:true})); }
+    }
+  }, 1000);
+
+  // Strong final confirmation guard
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(!form || !(form.id === 'orderForm' || form.classList.contains('checkout-form'))) return;
+    if(form.dataset.v38Confirmed === '1') return;
+    if(!screenshotSelected()){
+      e.preventDefault(); e.stopPropagation();
+      alert('لازم ترفع سكرين التحويل الأول');
+      updateCheckoutLock();
+      return false;
+    }
+    const cpn = couponInfo();
+    const items = (window.cart||[]).map((it,idx)=>`${idx+1}) ${it.product||''}<br>ID: ${it.pubgId||it.id||'-'}<br>Name: ${it.pubgName||it.name||'-'}<br>Qty: ${it.qty||1}<br>Price: ${money((Number(it.price||0)*Number(it.qty||1)))} جنيه`).join('</div><div class="v38-confirm-item">');
+    const html = `<div class="v38-confirm-list">
+      <div class="v38-confirm-item"><b>المنتجات</b><br>${items || 'لا يوجد'}</div>
+      <div class="v38-confirm-item"><b>طريقة الدفع:</b> ${getPaymentMethod() || 'غير محدد'}</div>
+      ${cpn.discount ? `<div class="v38-confirm-item"><b>الكوبون:</b> ${cpn.code} | خصم ${money(cpn.discount)} جنيه</div>` : ''}
+      <div class="v38-confirm-item"><b>الإجمالي النهائي:</b> ${money(cpn.final)} جنيه</div>
+    </div>`;
+    if(!confirm(('راجع الطلب قبل الإرسال:\n\n' + (window.cart||[]).map((it,idx)=>`${idx+1}) ${it.product||''} | ID: ${it.pubgId||it.id||'-'} | Name: ${it.pubgName||it.name||'-'} | Qty: ${it.qty||1}`).join('\n') + `\n\nالدفع: ${getPaymentMethod()||'-'}\nالإجمالي: ${money(cpn.final)} جنيه\n\nهل تأكدت من البيانات؟`))){
+      e.preventDefault(); e.stopPropagation(); return false;
+    }
+    form.dataset.v38Confirmed = '1';
+  }, true);
+
+  // clearer coupon state
+  const cObs = new MutationObserver(()=>{
+    const st = qs('#couponStatus');
+    if(st && window.appliedCoupon && !st.dataset.v38){
+      st.dataset.v38 = '1';
+      const scope = window.appliedCoupon.product_scope_text || 'كل المنتجات';
+      st.insertAdjacentHTML('beforeend', `<div style="margin-top:6px">ينطبق على: <b>${scope}</b></div>`);
+    }
+  });
+  cObs.observe(document.body,{childList:true,subtree:true});
+
+  function relativeTime(date){
+    const d = new Date(date);
+    if(!date || isNaN(d)) return '';
+    const diff = Math.max(0, Math.floor((Date.now()-d.getTime())/60000));
+    if(diff < 1) return 'الآن';
+    if(diff < 60) return `منذ ${diff} دقيقة`;
+    const h = Math.floor(diff/60);
+    if(h < 24) return `منذ ${h} ساعة`;
+    return `منذ ${Math.floor(h/24)} يوم`;
+  }
+  function statusIndex(status){
+    if(['pending','claimed'].includes(status)) return 1;
+    if(['processing','on_hold','needs_fix'].includes(status)) return 2;
+    if(['delivered','archived'].includes(status)) return 4;
+    if(['rejected','cancelled'].includes(status)) return 0;
+    return 1;
+  }
+  function timelineHtml(order){
+    const idx = statusIndex(order.status);
+    const warn = order.status === 'needs_fix' || order.status === 'on_hold';
+    return `<div class="v38-timeline">
+      <div class="v38-step ${idx>=1?'active':''}">✅ استلام الطلب</div>
+      <div class="v38-step ${idx>=2?'active':''} ${warn?'warn':''}">🔍 مراجعة الدفع</div>
+      <div class="v38-step ${idx>=3?'active':''}">🔄 جاري الشحن</div>
+      <div class="v38-step ${idx>=4?'active':''}">✅ تم الشحن</div>
+    </div>`;
+  }
+  const oldOpen = window.openOrderDetailsByIndex;
+  if(typeof oldOpen === 'function'){
+    window.openOrderDetailsByIndex = function(orderId){
+      oldOpen.apply(this,arguments);
+      setTimeout(()=>{
+        const order = (window.allHistoryOrders||[]).find(o=>String(o.id)===String(orderId));
+        const content = qs('#orderDetailsContent');
+        if(order && content && !content.querySelector('.v38-timeline')){
+          content.insertAdjacentHTML('afterbegin', timelineHtml(order));
+        }
+      },120);
+    };
+  }
+  setInterval(()=>{
+    qsa('.history-card').forEach((card,idx)=>{
+      const order = (window.allHistoryOrders||[])[idx];
+      if(order && order.updated_at && !card.querySelector('.v38-relative-time')){
+        card.insertAdjacentHTML('beforeend', `<div class="v38-relative-time" style="font-size:11px;color:var(--muted,#aab3c5);margin-top:6px">آخر تحديث ${relativeTime(order.updated_at || order.created_at)}</div>`);
+      }
+    });
+  }, 1200);
+
+  // Reviews filters/stats/verified/replies UI
+  function enhanceReviews(){
+    const section = qs('#customerReviews') || qs('.reviews-panel');
+    if(!section) return;
+    if(!qs('#reviewStatsBox')){
+      section.insertAdjacentHTML('afterbegin', `<div id="reviewStatsBox" class="review-stats-box"><div><b id="reviewAvg">⭐ 0.0</b><div>متوسط التقييم</div></div><div id="reviewCount">0 تقييم</div></div>
+      <div class="review-filter-bar" id="reviewFilterBar"><button data-review-filter="all" class="active">كل التقييمات</button><button data-review-filter="5">5 نجوم</button><button data-review-filter="latest">الأحدث</button></div>`);
+    }
+    const cards = qsa('.review-card');
+    let sum=0,count=0;
+    cards.forEach(card=>{
+      const text = card.textContent || '';
+      const stars = (text.match(/★|⭐/g)||[]).length || Number((text.match(/([1-5])\s*\/\s*5/)||[])[1]||0);
+      if(stars){sum+=stars;count++;}
+      if(/موثق|verified|طلب مكتمل/i.test(text) && !card.querySelector('.verified-badge')){
+        const title = card.querySelector('b,strong,.review-name') || card.firstElementChild;
+        if(title) title.insertAdjacentHTML('beforeend',' <span class="verified-badge">عميل موثق</span>');
+      }
+      if(/رد المتجر[:：]/.test(text) && !card.querySelector('.store-reply-box')){
+        const reply = text.split(/رد المتجر[:：]/)[1]?.trim();
+        if(reply) card.insertAdjacentHTML('beforeend', `<div class="store-reply-box"><b>رد MOBA SHOP:</b><br>${reply}</div>`);
+      }
+    });
+    const avg = count ? (sum/count).toFixed(1) : '0.0';
+    const avgEl = qs('#reviewAvg'), countEl=qs('#reviewCount');
+    if(avgEl) avgEl.textContent = `⭐ ${avg} من 5`;
+    if(countEl) countEl.textContent = `${count} تقييم`;
+  }
+  document.addEventListener('click',function(e){
+    const btn = e.target.closest('[data-review-filter]');
+    if(!btn) return;
+    qsa('[data-review-filter]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.reviewFilter;
+    let cards = qsa('.review-card');
+    if(f==='latest') cards.reverse().forEach(c=>c.parentElement?.appendChild(c));
+    cards.forEach(card=>{
+      const stars = (card.textContent.match(/★|⭐/g)||[]).length || Number((card.textContent.match(/([1-5])\s*\/\s*5/)||[])[1]||0);
+      card.style.display = (f==='all'||f==='latest'||(f==='5'&&stars>=5)) ? '' : 'none';
+    });
+  });
+  setInterval(enhanceReviews,1600);
+
+  // Review only after completed order: if no completed local history, show note
+  document.addEventListener('focusin', function(e){
+    const form = e.target.closest && e.target.closest('form');
+    if(form && /review|rating|تقييم/i.test(form.textContent||'')){
+      const hasDone = (window.allHistoryOrders||[]).some(o=>['delivered','archived'].includes(o.status));
+      if(!hasDone){
+        const noteId='reviewNeedPurchaseNote';
+        if(!qs('#'+noteId)){
+          form.insertAdjacentHTML('afterbegin', `<div id="${noteId}" class="smart-checkout-warning">⭐ التقييمات للعملاء بعد الطلب المكتمل. اكتب رقمك في سجل الطلبات الأول لو حابب توثق تقييمك.</div>`);
+        }
+      }
+    }
+  });
+
+  // Smart hide Pharaoh during any form input
+  document.addEventListener('focusin', function(e){
+    if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){
+      document.getElementById('pharaohAssistantFab')?.classList.add('pharaoh-smart-hide');
+    }
+  });
+  document.addEventListener('focusout', function(e){
+    setTimeout(()=>document.getElementById('pharaohAssistantFab')?.classList.remove('pharaoh-smart-hide'), 250);
+  });
+
+  // Pharaoh contextual smarter replies/hints
+  function showPharaohHint(text){
+    const hint = qs('#pharaohHintBubble');
+    const fab = qs('#pharaohAssistantFab');
+    if(hint && fab){
+      hint.innerHTML = text;
+      fab.classList.add('show-hint');
+      setTimeout(()=>fab.classList.remove('show-hint'),3600);
+    }
+  }
+  const contexts = [
+    ['productsSection','تقدر تضيف أكتر من ID في نفس السلة 👑'],
+    ['cartSection','راجع البيانات والسكرين قبل تنفيذ الطلب 👑'],
+    ['trackOrder','اكتب رقمك هنا عشان أجيب طلباتك 📦']
+  ];
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting && en.intersectionRatio>.55){
+        const c = contexts.find(x=>x[0]===en.target.id);
+        if(c) showPharaohHint(c[1]);
+      }
+    });
+  },{threshold:[.55]});
+  contexts.forEach(c=>{const el=qs('#'+c[0]); if(el) io.observe(el);});
+})();
+</script>
+
+
+<script id="moba-v40-security-front">
+(function(){
+  const MAX_SIZE = 5 * 1024 * 1024;
+  const ALLOWED = ['image/jpeg','image/png','image/webp'];
+  const EXT = ['.jpg','.jpeg','.png','.webp'];
+
+  function fileNameOk(name){
+    name = String(name||'').toLowerCase();
+    return EXT.some(e => name.endsWith(e));
+  }
+  function showSecurityMsg(input, type, msg){
+    let box = document.getElementById('securityUploadMessage');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'securityUploadMessage';
+      input.insertAdjacentElement('afterend', box);
+    }
+    box.className = type === 'ok' ? 'security-ok-box' : 'security-error-box';
+    box.innerHTML = msg;
+  }
+  function validateScreenshot(input){
+    if(!input || input.type !== 'file') return true;
+    const files = Array.from(input.files || []);
+    if(files.length !== 1){
+      input.value = '';
+      showSecurityMsg(input,'err','⚠️ لازم ترفع صورة واحدة فقط للسكرين.');
+      return false;
+    }
+    const f = files[0];
+    if(!ALLOWED.includes(String(f.type||'').toLowerCase()) || !fileNameOk(f.name)){
+      input.value = '';
+      showSecurityMsg(input,'err','⚠️ السكرين لازم يكون صورة فقط: JPG أو PNG أو WEBP. ممنوع PDF أو فيديو أو أي ملف تاني.');
+      return false;
+    }
+    if(f.size > MAX_SIZE){
+      input.value = '';
+      showSecurityMsg(input,'err','⚠️ حجم الصورة كبير. الحد الأقصى 5MB.');
+      return false;
+    }
+    showSecurityMsg(input,'ok','✅ الصورة مناسبة وجاهزة للإرسال.');
+    return true;
+  }
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.type === 'file') validateScreenshot(e.target);
+  }, true);
+
+  document.addEventListener('submit', function(e){
+    const files = Array.from(document.querySelectorAll('input[type="file"]')).filter(i => i.files && i.files.length);
+    if(files.length !== 1 || !validateScreenshot(files[0])){
+      e.preventDefault(); e.stopPropagation();
+      alert('لازم ترفع صورة واحدة فقط للسكرين بصيغة JPG أو PNG أو WEBP وبحجم أقل من 5MB.');
+      return false;
+    }
+  }, true);
+
+  // enforce accept/multiple attrs
+  setInterval(()=>{
+    document.querySelectorAll('input[type="file"]').forEach(i=>{
+      i.setAttribute('accept','image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp');
+      i.removeAttribute('multiple');
+    });
+  },1000);
 })();
 </script>
 

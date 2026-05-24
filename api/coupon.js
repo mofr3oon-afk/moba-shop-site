@@ -1,3 +1,5 @@
+import { rateLimit, safeError } from './_security.js';
+// moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -58,6 +60,7 @@ function calcDiscount(coupon,total,cart){
 }
 export default async function handler(req,res){
   try{
+    rateLimit(req,'coupon',40,60_000);
     if(req.method !== 'GET') return json(res,405,{ok:false,error:'Method not allowed'});
     const code = String(req.query.code || '').trim().toUpperCase();
     const total = Number(req.query.total || 0);
@@ -80,6 +83,6 @@ export default async function handler(req,res){
       product_scope_text:result.scopes.length ? result.scopes.join(' / ') : 'كل المنتجات'
     }});
   }catch(e){
-    return json(res,500,{ok:false,error:String(e.message||e)});
+    return safeError(res,e,e.statusCode||500);
   }
 }
