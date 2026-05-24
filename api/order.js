@@ -37,7 +37,19 @@ async function findOpenOrderByPubgId(cart){
 }
 
 
-async function validateCouponServer(code,total){
+
+function normalizeCouponProduct(p){ return String(p || '').toLowerCase().replace(/\s+/g,' ').trim(); }
+function couponItemQty(item){ return Math.max(1, Number(item.qty || 1)); }
+function couponItemLineTotal(item){ return Number(item.price || 0) * couponItemQty(item); }
+function couponScopeMatches(item, productScopes){
+  if(!productScopes || !Array.isArray(productScopes) || !productScopes.length) return true;
+  const product = normalizeCouponProduct(item.product);
+  return productScopes.some(scope => {
+    const s = normalizeCouponProduct(scope);
+    return s && (product.includes(s) || s.includes(product));
+  });
+}
+async function validateCouponServer(code,total,cart=[]){
   code = String(code || '').trim().toUpperCase();
   if(!code) return null;
   const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`);
@@ -46,8 +58,23 @@ async function validateCouponServer(code,total){
   if(!c.is_active) throw new Error('كود الخصم متوقف حاليا');
   if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) throw new Error('كود الخصم منتهي');
   if(Number(c.min_order_amount || 0) > total) throw new Error(`الكوبون يحتاج طلب بقيمة ${c.min_order_amount} جنيه على الأقل`);
-  return {code:c.code, discount_amount:Math.min(Number(c.discount_amount||0), total)};
+  const scopes = Array.isArray(c.product_scopes) ? c.product_scopes : [];
+  const eligibleItems = (Array.isArray(cart) ? cart : []).filter(item => couponScopeMatches(item, scopes));
+  const eligibleTotal = Array.isArray(cart) && cart.length ? eligibleItems.reduce((s,item)=>s+couponItemLineTotal(item),0) : total;
+  if(scopes.length && eligibleTotal <= 0) throw new Error('الكوبون لا ينطبق على المنتجات الموجودة في السلة');
+  const base = scopes.length ? eligibleTotal : total;
+  let discount = 0;
+  if(c.discount_type === 'percent'){
+    discount = Math.floor(base * Number(c.discount_value || 0) / 100);
+    if(Number(c.max_discount_amount || 0) > 0) discount = Math.min(discount, Number(c.max_discount_amount));
+  }else{
+    discount = Number(c.discount_amount || c.discount_value || 0);
+  }
+  discount = Math.min(discount, base, total);
+  if(discount <= 0) throw new Error('قيمة الخصم غير صحيحة');
+  return {code:c.code, discount_amount:discount};
 }
+
 
 export default async function handler(req,res){
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
@@ -73,7 +100,7 @@ export default async function handler(req,res){
     const coupon_code = String(body.coupon_code || form?.get?.('coupon_code') || '').trim().toUpperCase();
     let coupon_discount = 0;
     if(coupon_code){
-      const validCoupon = await validateCouponServer(coupon_code,total);
+      const validCoupon = await validateCouponServer(coupon_code,total,cart);
       coupon_discount = Number(validCoupon.discount_amount || 0);
       total = Math.max(0, total - coupon_discount);
     }

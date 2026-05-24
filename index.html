@@ -2167,6 +2167,52 @@ html{scroll-behavior:smooth}
   }
 }
 
+
+/* V35 Pharaoh smart replies */
+.pharaoh-problem-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.pharaoh-problem-grid button,
+.pharaoh-choice-btn{
+  border:1px solid rgba(255,207,92,.25);
+  background:rgba(255,207,92,.08);
+  color:#fff3ce;
+  border-radius:14px;
+  padding:8px 9px;
+  cursor:pointer;
+  font-weight:800;
+  line-height:1.4;
+}
+.pharaoh-choice-btn{
+  display:inline-flex;
+  margin-top:8px;
+  margin-inline-end:6px;
+}
+.pharaoh-small-note{
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:14px;
+  background:rgba(39,216,255,.08);
+  border:1px solid rgba(39,216,255,.18);
+  color:#dff8ff;
+  line-height:1.7;
+}
+.pharaoh-warning-note{
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:14px;
+  background:rgba(255,207,92,.10);
+  border:1px solid rgba(255,207,92,.25);
+  color:#fff3ce;
+  line-height:1.7;
+}
+@media(max-width:900px){
+  .pharaoh-problem-grid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -3509,6 +3555,10 @@ html{scroll-behavior:smooth}
         <button type="button" data-pharaoh-q="الاكثر طلبا">الأكثر طلبًا</button>
         <button type="button" data-pharaoh-q="مواعيد العمل">مواعيد العمل</button>
         <button type="button" data-pharaoh-q="الدعم">الدعم</button>
+        <button type="button" data-pharaoh-q="مشكلة في الطلب">حل مشكلة</button>
+        <button type="button" data-pharaoh-q="كوبون">كوبون</button>
+        <button type="button" data-pharaoh-q="ازدهار">ازدهار</button>
+        <button type="button" data-pharaoh-q="كريستالة">كريستالة</button>
       </div>
       <div class="pharaoh-typing" id="pharaohTyping">فرعون بيكتب...</div>
     </div>
@@ -3687,81 +3737,123 @@ html{scroll-behavior:smooth}
   }
 
   function replyFor(q){
-    const t = String(q||'').toLowerCase();
+    const raw = String(q||'');
+    const t = raw.toLowerCase();
 
-    if(/ازاي|اشحن|اطلب|طلب/.test(t) && !/متابعة|قديم|قديمة/.test(t)){
-      return `طريقة الطلب سهلة:<br>
-      1) اختار الباقة أو المنتج<br>
-      2) اكتب PUBG ID واسم الحساب<br>
-      3) ضيفه للسلة<br>
-      4) اختار طريقة الدفع وارفع السكرين<br>
-      5) نفذ الطلب بعد المراجعة<br><br>
-      <span class="mini-action" data-pharaoh-action="products">افتح المنتجات 🎮</span>`;
+    const busy = window.mobaBusyMode === true;
+    const supportLink = `<a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>`;
+
+    if(/عايز اشحن|ازاي اشحن|اشحن|اطلب|طلب جديد/.test(t) && !/متابعة|قديم|قديمة|مشكلة/.test(t)){
+      return `تمام يا بطل 👑<br>هتشحن لنفس ID ولا أكتر من ID؟
+      <div class="pharaoh-mini-question">
+        <button type="button" data-pharaoh-action="products">نفس ID 🎮</button>
+        <button type="button" data-pharaoh-q="اكتر من ID">أكتر من ID</button>
+      </div>
+      <div class="pharaoh-small-note">اختار الباقة، اكتب ID واسم الحساب، ضيف للسلة، وبعد التحويل ارفع السكرين.</div>`;
     }
 
-    if(/دفع|فودافون|انستا|insta|wallet|محفظ/.test(t)){
+    if(/اكتر من id|اكثر من id|ids|ايدي مختلف|ايديات|اكتر من ايدي|اكتر من شحنة/.test(t)){
+      return `ينفع تعمل كذا شحنة بـ IDs مختلفة في نفس الطلب ✅<br>
+      كل باقة اكتب لها ID واسم الحساب بتوعها، وبعدها ضيفها للسلة.<br>
+      كرر نفس الخطوة لأي ID تاني.`;
+    }
+
+    if(/نفس id|نفس الايدي|كمية|مرتين|كرر|تكرار/.test(t)){
+      return `لو هتشحن لنفس ID أكتر من مرة، استخدم عداد الكمية أو ضيف نفس الباقة للسلة حسب المتاح.<br>
+      راجع إجمالي UC والسعر قبل الدفع 👑`;
+    }
+
+    if(/دفع|فودافون|انستا|insta|wallet|محفظ|حولت|تحويل/.test(t)){
       return `طرق الدفع المتاحة داخل الموقع:<br>
-      🟢 InstaPay<br>
-      📱 Wallet<br><br>
-      بعد التحويل ارفع السكرين، ولو التحويل من محل أو رقم تاني اكتب آخر 3 أرقام في الملاحظات.`;
+      🟢 InstaPay<br>📱 Wallet<br><br>
+      بعد التحويل ارفع السكرين. لو التحويل من محل أو رقم تاني، اكتب آخر 3 أرقام في الملاحظات.`;
     }
 
     if(/ميعاد|مواعيد|وقت|امتى|متاح/.test(t)){
       return `مواعيد العمل:<br>
       يوميًا من 12 صباحًا حتى 5 الفجر.<br>
       الاثنين والأربعاء والخميس والجمعة من 3 العصر حتى 5 الفجر.<br><br>
-      تقدر تعمل الطلب في أي وقت، والتنفيذ بيكون داخل مواعيد العمل.`;
+      تقدر تعمل الطلب في أي وقت، والتنفيذ داخل مواعيد العمل.`;
     }
 
-    if(/متابعة|حالة|طلبي|اوردر|order/.test(t)){
-      return `لمتابعة الطلب:<br>
-      افتح قسم <b>سجل الطلبات / حالة الطلب</b> واكتب رقم الموبايل اللي عملت بيه الطلب.<br>
-      هيظهرلك آخر طلب، وكمان تقدر تشوف باقي الطلبات القديمة من نفس الرقم.<br><br>
-      <span class="mini-action" data-pharaoh-action="track">افتح سجل الطلبات 📦</span>`;
+    if(/فين طلبي|الاوردر فين|اوردر فين|متابعة|حالة|طلبي|order/.test(t)){
+      return `اكتب نفس رقم الموبايل اللي عملت بيه الطلب في سجل الطلبات، وهظهرلك آخر طلباتك كلها 📦<br><br>
+      <span class="mini-action" data-pharaoh-action="track">افتح سجل الطلبات</span>`;
     }
 
-    if(/الطلبات القديمة|سجل|قديمة|قديم/.test(t)){
-      return `عشان تشوف الطلبات القديمة:<br>
-      اكتب رقم الموبايل في قسم <b>سجل الطلبات</b>، وبعدها تقدر تتنقل بين:<br>
-      • الجميع<br>
-      • معلق<br>
-      • مكتمل<br>
-      • ملغي<br><br>
-      وكمان تفتح تفاصيل كل طلب لوحده.<br><br>
+    if(/الطلبات القديمة|سجل|قديمة|قديم|طلباتي/.test(t)){
+      return `عشان تشوف الطلبات القديمة، اكتب رقم الموبايل في سجل الطلبات.<br>
+      بعد كده تقدر تختار: الجميع / معلق / مكتمل / ملغي.<br><br>
       <span class="mini-action" data-pharaoh-action="track">روح لسجل الطلبات 📦</span>`;
     }
 
+    if(/اتأخر|اتأخر|لسه متشحنش|متشحنش|واقف|تأخير|تاخير/.test(t)){
+      return busy
+        ? `فيه ضغط طلبات حاليًا 👑<br>طلبك ممكن ياخد وقت أطول شوية. تابع الحالة من سجل الطلبات بنفس رقم الموبايل.`
+        : `ممكن الطلب تحت المراجعة أو قيد التنفيذ. افتح سجل الطلبات برقمك وشوف آخر تحديث. لو محتاج تعديل، هتلاقي زر واضح داخل التفاصيل.`;
+    }
+
+    if(/مشكلة|غلط|عدل|تعديل|مش واضح|سكرين|screen|id|ايدي|رقم/.test(t)){
+      return `ايه نوع المشكلة؟ 👑
+      <div class="pharaoh-problem-grid">
+        <button type="button" data-pharaoh-q="ID غلط">ID غلط</button>
+        <button type="button" data-pharaoh-q="سكرين غير واضح">سكرين غير واضح</button>
+        <button type="button" data-pharaoh-q="رقم التحويل غلط">رقم التحويل</button>
+        <button type="button" data-pharaoh-q="الطلب اتأخر">الطلب اتأخر</button>
+        <button type="button" data-pharaoh-q="عايز دعم">عايز دعم</button>
+      </div>`;
+    }
+
+    if(/سكرين|screen|مش واضح|الصورة/.test(t)){
+      return `ارفع سكرين جديد واضح من تفاصيل الطلب 📸<br>
+      لازم يظهر فيه الرقم أو الاسم، المبلغ، ووقت التحويل.<br>
+      افتح سجل الطلبات برقمك واضغط على الطلب، هتلاقي زر رفع السكرين الجديد.`;
+    }
+
+    if(/id غلط|ايدي غلط|ال id غلط|كتبت id|كتبت الايدي/.test(t)){
+      return `افتح سجل الطلبات برقمك، ولو الطلب لسه محتاج تعديل هتلاقي خانة تكتب فيها ID الصحيح واسم الحساب.<br>
+      لو الطلب اتشحن بالفعل، تواصل مع الدعم.`;
+    }
+
+    if(/رقم التحويل|رقم غلط|آخر 3|اخر 3|رقم الموبايل/.test(t)){
+      return `لو رقم التحويل ناقص أو غلط، افتح الطلب من سجل الطلبات واكتب الرقم الصحيح.<br>
+      لو التحويل من محل أو رقم تاني، اكتب آخر 3 أرقام من رقم التحويل.`;
+    }
+
     if(/ازدهار/.test(t)){
-      return `الازدهار متاح لو موجود ضمن المنتجات بالموقع أو حسب الباقة المتاحة.<br>
-      مهم جدًا:<br>
-      • لازم تتأكد إن الازدهار ده ينفع على الحساب<br>
-      • وبعض أنواع الازدهار بتكون مرة واحدة فقط على الحساب طول العمر<br><br>
-      لو مش لاقيه في المنتجات، تواصل مع الدعم وهنوضحلك المتاح.`;
+      return `<div class="pharaoh-warning-note">
+        تنبيه مهم عن الازدهار 👑<br>
+        لازم تتأكد الأول إنه متاح على حسابك قبل الطلب، لأن بعض أنواع الازدهار بتكون مرة واحدة فقط على الحساب طول العمر.
+      </div>
+      لو الازدهار اتشحن قبل كده ومش متاح عندك في اللعبة، الطلب ممكن ماينفعش يتنفذ.`;
     }
 
-    if(/اكتر من id|اكثر من id|ids|ايدي مختلف|ايديات|اكتر من ايدي|اكتر من شحنة/.test(t)){
-      return `أيوه ينفع تعمل كذا شحنة بـ IDs مختلفة في نفس الوقت ✅<br><br>
-      الطريقة:<br>
-      • اختار أول باقة واكتب الـ ID واسم الحساب الخاص بيها<br>
-      • ضيفها للسلة<br>
-      • اختار باقة تانية واكتب ID مختلف واسم مختلف لو حابب<br>
-      • ضيفها للسلة برضه<br><br>
-      السلة بتقبل أكتر من منتج، وكل منتج ممكن يكون ليه ID مختلف.`;
+    if(/كريستالة|جوهرة|الكريستالة|الجوهرة/.test(t)){
+      return `<div class="pharaoh-warning-note">
+        الكريستالة أو الجوهرة ليها عدد محدود حسب حسابك ووقت التجديد في اللعبة.
+      </div>
+      اتأكد من المتاح عندك الأول، وبعدها نفذ الطلب عادي.`;
     }
 
-    if(/كمية|مرتين|مرهين|مرةين|نفس الايدي|نفس id/.test(t)){
-      return `لو عايز نفس الباقة أكتر من مرة لنفس الـ ID:<br>
-      استخدم عداد الكمية داخل المنتج أو ضيف نفس المنتج أكتر من مرة حسب المتاح.<br>
-      ولو عايز كل باقة على ID مختلف، اكتب لكل منتج بياناته الخاصة قبل إضافته للسلة.`;
+    if(/كوبون|كود خصم|خصم|coupon/.test(t)){
+      return `لو معاك كوبون خصم، اكتبه في خانة الكوبون داخل السلة واضغط تطبيق 🎟️<br>
+      لو مش شغال، ممكن يكون:<br>
+      • متوقف<br>
+      • خاص بمنتج معين<br>
+      • محتاج حد أدنى للطلب<br>
+      • منتهي<br><br>
+      <span class="mini-action" data-pharaoh-action="cart">افتح السلة</span>`;
     }
 
-    if(/مشكلة|غلط|سكرين|screen|id|ايدي|رقم/.test(t)){
-      return `لو في مشكلة في الطلب، افتح سجل الطلبات برقم موبايلك.<br>
-      لو مطلوب تعديل هتلاقي فورم تعديل حسب المشكلة:<br>
-      📸 سكرين جديد لو الصورة مش واضحة<br>
-      🆔 ID واسم الحساب لو الـ ID غلط<br>
-      📱 رقم صحيح لو الرقم غلط<br><br>
-      عندك فرصتين تعديل قبل تحويل الطلب للدعم.`;
+    if(/مضمون|امان|آمن|خايف|قلقان/.test(t)){
+      return `اطمن 👑<br>
+      طلبك بيتسجل برقم موبايلك، وتقدر تتابع حالته من سجل الطلبات. ولو في أي مشكلة هيظهرلك تعديل أو دعم مباشر.`;
+    }
+
+    if(/busy|ضغط|زحمة|زحمه/.test(t)){
+      return busy
+        ? `فيه ضغط طلبات حاليًا 👑<br>تقدر تعمل طلبك عادي، بس التنفيذ ممكن ياخد وقت أطول من المعتاد.`
+        : `الشحن متاح حاليًا ✅<br>نفذ طلبك وارفع السكرين وهنتابع معاك بسرعة.`;
     }
 
     if(/تقييم|رأي|راي|نجوم/.test(t)){
@@ -3770,8 +3862,7 @@ html{scroll-behavior:smooth}
     }
 
     if(/دعم|كلم|تواصل|مساعدة/.test(t)){
-      return `تقدر تتواصل مع الدعم مباشرة من هنا:<br><br>
-      <a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>`;
+      return `لو محتاج تكلم الدعم مباشرة:<br><br>${supportLink}`;
     }
 
     if(/ضمان|قواعد|سياسة|الشحن/.test(t)){
@@ -3779,8 +3870,8 @@ html{scroll-behavior:smooth}
         <b>🛡️ قواعد الشحن والضمان</b>
         <ul>
           <li>راجع PUBG ID واسم الحساب قبل الدفع.</li>
-          <li>ارفع سكرين تحويل واضح فيه بيانات التحويل.</li>
-          <li>لو التحويل من رقم تاني أو محل اكتب آخر 3 أرقام في الملاحظات.</li>
+          <li>ارفع سكرين تحويل واضح.</li>
+          <li>لو التحويل من رقم تاني أو محل اكتب آخر 3 أرقام.</li>
           <li>لو في مشكلة عندك فرصتين تعديل قبل تحويل الطلب للدعم.</li>
           <li>التنفيذ حسب ضغط الطلبات ومواعيد العمل.</li>
         </ul>
@@ -3800,15 +3891,16 @@ html{scroll-behavior:smooth}
     }
 
     return `أنا <b>فرعون</b> 👑 أقدر أساعدك في:<br>
-    • الشحن والطلب<br>
-    • الدفع ورفع السكرين<br>
-    • متابعة الطلبات والطلبات القديمة<br>
-    • الازدهار<br>
-    • كذا شحنة بـ IDs مختلفة<br>
+    • طريقة الشحن<br>
+    • متابعة الطلبات القديمة والجديدة<br>
+    • مشاكل ID أو السكرين أو الرقم<br>
+    • الازدهار والكريستالة<br>
+    • الكوبونات والخصومات<br>
     • الدعم والمواعيد<br><br>
-    جرب تكتب: <b>متابعة الطلب</b> أو <b>الطلبات القديمة</b> أو <b>الازدهار</b>.`;
+    جرب تكتب: <b>فين طلبي</b> أو <b>مشكلة في الطلب</b> أو <b>كوبون</b>.`;
   }
 
+  function botReply
   function botReply(q){
     addMsg('user', esc(q));
     typing && typing.classList.add('show');
@@ -3828,6 +3920,7 @@ html{scroll-behavior:smooth}
       if(a==='track') goTo('#trackOrder');
       if(a==='reviews') goTo('#customerReviews');
       if(a==='rules') botReply('قواعد الشحن');
+      if(a==='cart') goTo('#cartSection');
     }
   });
 
@@ -4469,7 +4562,7 @@ html{scroll-behavior:smooth}
     const total = cartTotal();
     if(total <= 0) return showCouponStatus('err','ضيف منتجات للسلة الأول');
     try{
-      const res = await fetch('/api/coupon?code=' + encodeURIComponent(code) + '&total=' + encodeURIComponent(total));
+      const res = await fetch('/api/coupon?code=' + encodeURIComponent(code) + '&total=' + encodeURIComponent(total) + '&cart=' + encodeURIComponent(JSON.stringify(window.cart || [])));
       const data = await res.json();
       if(!data.ok) throw new Error(data.error || 'الكوبون غير صالح');
       window.appliedCoupon = data.coupon;
@@ -4528,6 +4621,80 @@ html{scroll-behavior:smooth}
     const disc = window.appliedCoupon ? Math.min(Number(window.appliedCoupon.discount_amount||0), total) : 0;
     return {total, discount:disc, final:Math.max(0,total-disc), code:window.appliedCoupon?.code||''};
   };
+})();
+</script>
+
+
+<script id="moba-v34-advanced-coupon-ui">
+(function(){
+  function patchCouponDisplay(){
+    const oldApply = window.applyAdvancedCouponPatched;
+    if(oldApply) return;
+    window.applyAdvancedCouponPatched = true;
+
+    const observer = new MutationObserver(()=>{
+      const applied = window.appliedCoupon;
+      const view = document.getElementById('couponAppliedView');
+      if(applied && view && !view.dataset.v34){
+        view.dataset.v34 = '1';
+        const type = applied.discount_type === 'percent' ? `${applied.discount_value}%` : `${applied.discount_amount} جنيه`;
+        const scope = applied.product_scope_text ? `<div class="fix-small">ينطبق على: ${applied.product_scope_text}</div>` : '';
+        view.insertAdjacentHTML('beforeend', scope);
+      }
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+  patchCouponDisplay();
+})();
+</script>
+
+
+<script id="moba-v35-pharaoh-extra">
+(function(){
+  function openAndSay(html){
+    const panel = document.getElementById('pharaohChatPanel');
+    const fab = document.getElementById('pharaohAssistantFab');
+    const body = document.getElementById('pharaohChatBody');
+    const typing = document.getElementById('pharaohTyping');
+    if(!body || !typing) return;
+    if(panel && !panel.classList.contains('show')) fab?.click();
+    setTimeout(()=>{
+      const msg = document.createElement('div');
+      msg.className = 'pharaoh-msg bot';
+      msg.innerHTML = html;
+      body.insertBefore(msg, typing);
+      body.scrollTop = body.scrollHeight;
+    },250);
+  }
+
+  // If checkout success text appears, Pharaoh gives follow-up
+  const obs = new MutationObserver(()=>{
+    const txt = document.body.innerText || '';
+    if(!window.__pharaohOrderDone && /تم استلام طلبك|تم إرسال الطلب|طلبك اتسجل|تم تنفيذ الطلب/.test(txt)){
+      window.__pharaohOrderDone = true;
+      const busy = window.mobaBusyMode === true;
+      openAndSay(busy
+        ? 'تم استلام طلبك ✅<br>فيه ضغط طلبات حاليًا، تابع الحالة من سجل الطلبات وهيوصلك التحديث هناك.'
+        : 'تم استلام طلبك ✅<br>تابع الحالة من سجل الطلبات بنفس رقم الموبايل اللي كتبته.');
+    }
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+
+  // Welcome messages rotate
+  const welcomes = [
+    'أهلا بيك في MOBA SHOP 👑 محتاج مساعدة في الشحن؟',
+    'أنا فرعون، أقدر أساعدك تتابع طلبك أو تعرف طريقة الشحن.',
+    'لو هتشحن لأكتر من ID، ضيف كل باقة للسلة لوحدها.'
+  ];
+  setTimeout(()=>{
+    const hint = document.getElementById('pharaohHintBubble');
+    const fab = document.getElementById('pharaohAssistantFab');
+    if(hint && fab && !localStorage.getItem('pharaoh_opened_once')){
+      hint.innerHTML = welcomes[Math.floor(Math.random()*welcomes.length)];
+      fab.classList.add('show-hint');
+      setTimeout(()=>fab.classList.remove('show-hint'),4200);
+    }
+  },1600);
 })();
 </script>
 

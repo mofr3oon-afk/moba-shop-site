@@ -324,3 +324,29 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
 - إضافة أمر تليجرام يدوي: /check_late لفحص الطلبات المتأخرة بدون Cron.
 - لتشغيل الفحص تلقائيًا كل 10 دقائق استخدم خدمة خارجية مثل cron-job.org تستدعي:
   https://YOUR-DOMAIN.vercel.app/api/check-late
+
+
+## V34 Advanced Coupons
+- دعم كوبونات خصم بالجنيه ونسبة مئوية.
+- دعم كوبونات على منتجات معينة.
+- أوامر تليجرام:
+  - /coupon MOBA10 fixed 10
+  - /coupon SALE10 percent 10
+  - /coupon UC325 fixed 15 product:325
+  - /coupon UC percent 5 product:660,325
+  - /coupon MOBA10 fixed 10 min:100
+  - /coupon SALE10 percent 10 max:50
+  - /coupon_off CODE
+  - /coupon_on CODE
+  - /coupons
+
+
+## V35 Pharaoh Smart Replies
+- تطوير ردود فرعون بالكامل.
+- إضافة أزرار حل المشكلة: ID غلط / سكرين غير واضح / رقم التحويل / الطلب اتأخر / دعم.
+- ردود خاصة للزدهار والكريستالة.
+- ردود للكوبونات وأسباب عدم عملها.
+- ردود حسب Busy Mode.
+- رسائل ترحيب متغيرة.
+- رد بعد تنفيذ الطلب.
+- دعم كلمات مصرية مثل: فين طلبي، الاوردر فين، لسه متشحنش، عايز اعدل.

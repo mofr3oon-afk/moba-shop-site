@@ -236,3 +236,18 @@ create index if not exists coupons_code_idx on public.coupons(code);
 create index if not exists coupons_active_idx on public.coupons(is_active);
 
 notify pgrst, 'reload schema';
+
+
+
+-- V34 advanced coupons
+alter table public.coupons add column if not exists discount_type text default 'fixed';
+alter table public.coupons add column if not exists discount_value numeric default 0;
+alter table public.coupons add column if not exists max_discount_amount numeric default 0;
+alter table public.coupons add column if not exists product_scopes jsonb default '[]'::jsonb;
+
+update public.coupons
+set discount_type = coalesce(discount_type,'fixed'),
+    discount_value = case when coalesce(discount_value,0)=0 then coalesce(discount_amount,0) else discount_value end
+where true;
+
+notify pgrst, 'reload schema';

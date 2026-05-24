@@ -305,7 +305,9 @@ async function handleCommand(msg){
 /busy - تفعيل وضع ضغط الطلبات
 /normal - إلغاء وضع ضغط الطلبات
 /check_late - فحص الطلبات المتأخرة يدويًا
-/coupon CODE AMOUNT - إضافة أو تشغيل كوبون خصم بالجنيه
+/coupon CODE fixed 10 - كوبون خصم بالجنيه
+/coupon CODE percent 10 - كوبون خصم بنسبة
+/coupon CODE fixed 10 product:325 - كوبون على منتج معين
 /coupon_off CODE - إيقاف كوبون
 /coupons - عرض الكوبونات
 /reviews - تقييمات العملاء الجديدة
@@ -318,20 +320,72 @@ async function handleCommand(msg){
   }
 
 
+
   if(cmd==='/coupon'){
     const parts = arg.split(/\s+/).filter(Boolean);
     const code = String(parts[0] || '').trim().toUpperCase();
-    const amount = Number(parts[1] || 0);
-    const minAmount = Number(parts[2] || 0);
-    if(!code || !amount) return tg('sendMessage',{chat_id:chatId,text:'استخدم الأمر كده:\n/coupon MOBA10 10\nأو بحد أدنى:\n/coupon MOBA10 10 100',reply_to_message_id:msg.message_id});
+    const type = String(parts[1] || '').trim().toLowerCase();
+    const value = Number(parts[2] || 0);
+    let minAmount = 0;
+    let maxDiscount = 0;
+    let products = [];
+
+    if(!code || !type || !value || !['fixed','percent','جنيه','نسبة'].includes(type)){
+      return tg('sendMessage',{chat_id:chatId,text:
+`استخدم الأمر كده:
+
+خصم بالجنيه:
+/coupon MOBA10 fixed 10
+
+خصم بنسبة:
+/coupon SALE10 percent 10
+
+على منتج معين:
+/coupon UC325 fixed 15 product:325
+/coupon UC percent 5 product:660,325
+
+حد أدنى:
+/coupon MOBA10 fixed 10 min:100
+
+حد أقصى لخصم النسبة:
+/coupon SALE10 percent 10 max:50`,reply_to_message_id:msg.message_id});
+    }
+
+    for(const p of parts.slice(3)){
+      if(p.startsWith('min:')) minAmount = Number(p.replace('min:','') || 0);
+      else if(p.startsWith('max:')) maxDiscount = Number(p.replace('max:','') || 0);
+      else if(p.startsWith('product:')) products = p.replace('product:','').split(',').map(x=>x.trim()).filter(Boolean);
+    }
+
+    const discountType = (type === 'percent' || type === 'نسبة') ? 'percent' : 'fixed';
+    const row = {
+      code,
+      discount_type: discountType,
+      discount_value: value,
+      discount_amount: discountType === 'fixed' ? value : 0,
+      max_discount_amount: maxDiscount,
+      min_order_amount: minAmount,
+      product_scopes: products,
+      is_active:true,
+      updated_at:new Date().toISOString()
+    };
+
     const exists = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*`);
-    const row = {code,discount_amount:amount,min_order_amount:minAmount,is_active:true,updated_at:new Date().toISOString()};
     if(exists && exists[0]){
       await supa(`coupons?code=eq.${encodeURIComponent(code)}`,{method:'PATCH',body:JSON.stringify(row)});
     }else{
       await supa('coupons',{method:'POST',body:JSON.stringify({...row,created_at:new Date().toISOString()})});
     }
-    return tg('sendMessage',{chat_id:chatId,text:`🎟️ تم حفظ الكوبون\nالكود: ${code}\nالخصم: ${amount} جنيه\nالحد الأدنى: ${minAmount || 'لا يوجد'}\nالحالة: شغال ✅`});
+
+    const typeText = discountType === 'percent' ? `${value}%` : `${value} جنيه`;
+    return tg('sendMessage',{chat_id:chatId,text:
+`🎟️ تم حفظ الكوبون
+الكود: ${code}
+الخصم: ${typeText}
+المنتجات: ${products.length ? products.join(' / ') : 'كل المنتجات'}
+الحد الأدنى: ${minAmount || 'لا يوجد'}
+حد أقصى للنسبة: ${maxDiscount || 'لا يوجد'}
+الحالة: شغال ✅`});
   }
   if(cmd==='/coupon_off'){
     const code = String(arg || '').trim().toUpperCase();
@@ -348,17 +402,10 @@ async function handleCommand(msg){
   if(cmd==='/coupons'){
     const rows = await supa(`coupons?select=*&order=created_at.desc&limit=20`);
     if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد كوبونات حاليا.'});
-    return tg('sendMessage',{chat_id:chatId,text:'🎟️ الكوبونات:\n' + rows.map(c=>`${c.is_active?'✅':'⛔'} ${c.code} | خصم ${c.discount_amount}ج | حد أدنى ${c.min_order_amount||0}ج`).join('\n')});
-  }
-
-
-  if(cmd==='/check_late'){
-    const cutoff = new Date(Date.now() - 30*60*1000).toISOString();
-    const rows = await supa(`orders?created_at=lte.${encodeURIComponent(cutoff)}&status=in.(pending,claimed,processing,on_hold,needs_fix)&select=*&order=created_at.asc&limit=20`);
-    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'✅ لا يوجد طلبات متأخرة حاليا.',reply_to_message_id:msg.message_id});
-    return tg('sendMessage',{chat_id:chatId,text:'⏰ الطلبات المتأخرة:\n' + rows.map(o=>{
-      const mins = Math.floor((Date.now() - new Date(o.created_at).getTime())/60000);
-      return `${o.order_code || o.id} | ${o.phone || '-'} | ${o.status || '-'} | ${mins} دقيقة`;
+    return tg('sendMessage',{chat_id:chatId,text:'🎟️ الكوبونات:\n' + rows.map(c=>{
+      const typeText = c.discount_type === 'percent' ? `${c.discount_value}%` : `${c.discount_amount || c.discount_value}ج`;
+      const products = Array.isArray(c.product_scopes) && c.product_scopes.length ? c.product_scopes.join('/') : 'كل المنتجات';
+      return `${c.is_active?'✅':'⛔'} ${c.code} | ${typeText} | ${products} | حد أدنى ${c.min_order_amount||0}ج`;
     }).join('\n')});
   }
 
