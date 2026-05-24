@@ -445,12 +445,12 @@ ${msgTxt}`});
 ${msgTxt}`});
   }
   if(cmd==='/closed'){
-    const msgTxt = arg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.';
+    const msgTxt = arg || 'ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.';
     await setSetting('store_status','closed');
     await setSetting('store_status_message',msgTxt);
     await setSetting('busy_mode','false');
     await setSetting('busy_message','');
-    return tg('sendMessage',{chat_id:chatId,text:`🔴 تم تفعيل حالة: مغلق حاليا
+    return tg('sendMessage',{chat_id:chatId,text:`🔴 تم تفعيل حالة: خارج مواعيد التنفيذ
 ${msgTxt}`});
   }
   if(cmd==='/status_now'){

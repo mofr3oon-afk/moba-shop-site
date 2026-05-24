@@ -2540,6 +2540,77 @@ button[type="submit"].disabled-checkout{
   box-shadow:0 0 10px #ff6c6c;
 }
 
+
+/* V43 hard screenshot checkout-only fix */
+#trackOrder button,
+#trackOrder input[type="submit"],
+#trackOrder .follow-btn{
+  pointer-events:auto !important;
+}
+
+
+/* V44 closed status upsell */
+.closed-hours-btn{
+  margin-top:9px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 0 14px rgba(255,97,97,.10);
+}
+.closed-hours-btn:hover{
+  background:rgba(255,255,255,.13);
+}
+.work-hours-popup{
+  position:fixed;
+  inset:auto 18px 18px auto;
+  width:min(360px, calc(100vw - 30px));
+  z-index:99999;
+  border-radius:20px;
+  padding:16px;
+  color:#fff;
+  background:linear-gradient(135deg, rgba(18,24,40,.98), rgba(9,13,23,.98));
+  border:1px solid rgba(255,207,92,.28);
+  box-shadow:0 20px 50px rgba(0,0,0,.42),0 0 28px rgba(255,207,92,.10);
+  display:none;
+}
+.work-hours-popup.show{display:block;animation:hoursIn .22s ease both}
+.work-hours-popup h3{
+  margin:0 0 10px;
+  font-size:16px;
+}
+.work-hours-popup p{
+  margin:7px 0;
+  color:#d7ddea;
+  line-height:1.8;
+  font-size:13px;
+}
+.work-hours-popup button{
+  margin-top:10px;
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:10px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,#ffcf5c,#ff9a2f);
+  color:#1d1200;
+}
+@keyframes hoursIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:900px){
+  .work-hours-popup{
+    inset:auto 12px 12px 12px;
+    width:auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -4118,7 +4189,7 @@ button[type="submit"].disabled-checkout{
 
     if(/اتأخر|اتأخر|لسه متشحنش|متشحنش|واقف|تأخير|تاخير/.test(t)){
       return closed
-        ? `المتجر مغلق حاليا 👑<br>تقدر تعمل طلبك عادي، وأول ما مواعيد العمل تبدأ هنبدأ تنفيذ الطلبات بالترتيب.`
+        ? `المتجر خارج مواعيد التنفيذ 👑<br>تقدر تعمل طلبك عادي، وأول ما مواعيد العمل تبدأ هنبدأ تنفيذ الطلبات بالترتيب.`
         : busy
         ? `فيه ضغط طلبات حاليًا 👑<br>طلبك ممكن ياخد وقت أطول شوية. تابع الحالة من سجل الطلبات بنفس رقم الموبايل.`
         : `ممكن الطلب تحت المراجعة أو قيد التنفيذ. افتح سجل الطلبات برقمك وشوف آخر تحديث. لو محتاج تعديل، هتلاقي زر واضح داخل التفاصيل.`;
@@ -4183,7 +4254,7 @@ button[type="submit"].disabled-checkout{
 
     if(/busy|ضغط|زحمة|زحمه/.test(t)){
       return closed
-        ? `المتجر مغلق حاليا 🔴<br>ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.`
+        ? `المتجر خارج مواعيد التنفيذ 🔴<br>ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.`
         : busy
         ? `فيه ضغط طلبات حاليًا 👑<br>تقدر تعمل طلبك عادي، بس التنفيذ ممكن ياخد وقت أطول من المعتاد.`
         : `الشحن متاح حاليًا ✅<br>نفذ طلبك وارفع السكرين وهنتابع معاك بسرعة.`;
@@ -4770,7 +4841,7 @@ button[type="submit"].disabled-checkout{
       const config = {
         available:{title:'متاح الآن', desc: customMsg || 'التنفيذ شغال حاليا بشكل طبيعي.', cls:'available'},
         busy:{title:'متاح ولكن فيه ضغط', desc: customMsg || 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.', cls:'busy'},
-        closed:{title:'مغلق حاليا', desc: customMsg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.', cls:'closed'}
+        closed:{title:'خارج مواعيد التنفيذ', desc: customMsg || 'ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.', cls:'closed'}
       };
       const current = config[mode] || config.available;
       if(statusBox){
@@ -5309,31 +5380,7 @@ button[type="submit"].disabled-checkout{
       if(select){ select.value = pref; select.dispatchEvent(new Event('change',{bubbles:true})); }
     }
   }, 1000);
-
-  // Strong final confirmation guard
-  document.addEventListener('submit', function(e){
-    const form = e.target;
-    if(!form || !(form.id === 'orderForm' || form.classList.contains('checkout-form'))) return;
-    if(form.dataset.v38Confirmed === '1') return;
-    if(!screenshotSelected()){
-      e.preventDefault(); e.stopPropagation();
-      alert('لازم ترفع سكرين التحويل الأول');
-      updateCheckoutLock();
-      return false;
-    }
-    const cpn = couponInfo();
-    const items = (window.cart||[]).map((it,idx)=>`${idx+1}) ${it.product||''}<br>ID: ${it.pubgId||it.id||'-'}<br>Name: ${it.pubgName||it.name||'-'}<br>Qty: ${it.qty||1}<br>Price: ${money((Number(it.price||0)*Number(it.qty||1)))} جنيه`).join('</div><div class="v38-confirm-item">');
-    const html = `<div class="v38-confirm-list">
-      <div class="v38-confirm-item"><b>المنتجات</b><br>${items || 'لا يوجد'}</div>
-      <div class="v38-confirm-item"><b>طريقة الدفع:</b> ${getPaymentMethod() || 'غير محدد'}</div>
-      ${cpn.discount ? `<div class="v38-confirm-item"><b>الكوبون:</b> ${cpn.code} | خصم ${money(cpn.discount)} جنيه</div>` : ''}
-      <div class="v38-confirm-item"><b>الإجمالي النهائي:</b> ${money(cpn.final)} جنيه</div>
-    </div>`;
-    if(!confirm(('راجع الطلب قبل الإرسال:\n\n' + (window.cart||[]).map((it,idx)=>`${idx+1}) ${it.product||''} | ID: ${it.pubgId||it.id||'-'} | Name: ${it.pubgName||it.name||'-'} | Qty: ${it.qty||1}`).join('\n') + `\n\nالدفع: ${getPaymentMethod()||'-'}\nالإجمالي: ${money(cpn.final)} جنيه\n\nهل تأكدت من البيانات؟`))){
-      e.preventDefault(); e.stopPropagation(); return false;
-    }
-    form.dataset.v38Confirmed = '1';
-  }, true);
+  // V43: old broad final confirmation guard disabled. Checkout-only guard is added below.
 
   // clearer coupon state
   const cObs = new MutationObserver(()=>{
@@ -5564,7 +5611,7 @@ button[type="submit"].disabled-checkout{
       if(el.closest('#workStatusMini')) return false;
       if(el.children.length > 3) return false;
       const t = (el.textContent || '').trim();
-      return /متاح الآن|متاح ولكن فيه ضغط|مغلق حاليا|مغلق حاليًا/.test(t) && !/التنفيذ|مواعيد|الأول قبل الجميع/.test(t);
+      return /متاح الآن|متاح ولكن فيه ضغط|خارج مواعيد التنفيذ|مغلق حاليًا/.test(t) && !/التنفيذ|مواعيد|الأول قبل الجميع/.test(t);
     });
     const all = [...direct, ...byText];
     return Array.from(new Set(all)).slice(0,4);
@@ -5595,8 +5642,8 @@ button[type="submit"].disabled-checkout{
         desc: customMsg || 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.'
       },
       closed:{
-        title:'مغلق حاليا',
-        desc: customMsg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.'
+        title:'خارج مواعيد التنفيذ',
+        desc: customMsg || 'ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.'
       }
     };
     const c = config[mode] || config.available;
@@ -5659,15 +5706,206 @@ button[type="submit"].disabled-checkout{
   document.addEventListener('change', function(e){
     if(e.target && e.target.type === 'file') setTimeout(updateOnlyCheckout, 60);
   }, true);
+  // V43: track form bypass handled by early capture guard.
+})();
+</script>
 
-  // حماية إضافية: أي فورم متابعة طلب لا يتأثر بالسكرين
+
+<script id="moba-v43-hard-screenshot-fix">
+(function(){
+  const MAX_IMG_SIZE = 5 * 1024 * 1024;
+  const ALLOWED_TYPES = ['image/jpeg','image/png','image/webp'];
+  const ALLOWED_EXT = /\.(jpg|jpeg|png|webp)$/i;
+
+  function isInsideTrack(el){
+    return !!(el && (el.closest('#trackOrder') || el.closest('#historyList') || el.closest('.history-section') || el.closest('[data-history]')));
+  }
+  function isCheckoutBtn(el){
+    if(!el) return false;
+    const txt = String(el.textContent || el.value || '').trim();
+    return /checkout|تنفيذ الشراء|تنفيذ الطلب|شراء/i.test(txt) && !/متابعة|بحث|سجل/i.test(txt);
+  }
+  function checkoutArea(){
+    return document.querySelector('#cartSection') || document.querySelector('#orderForm') || document.querySelector('#couponBox')?.closest('section,div') || document;
+  }
+  function screenshotInput(){
+    const area = checkoutArea();
+    const inputs = Array.from(area.querySelectorAll('input[type="file"]')).filter(i => !isInsideTrack(i));
+    return inputs.find(i => /screen|screenshot|photo|image|file|سكرين|صورة/i.test(i.name || i.id || '')) || inputs[0] || null;
+  }
+  function screenshotError(){
+    const input = screenshotInput();
+    const file = input && input.files && input.files[0];
+    if(!file) return 'لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
+    const type = String(file.type || '').toLowerCase();
+    const name = String(file.name || '');
+    if(!ALLOWED_TYPES.includes(type) || !ALLOWED_EXT.test(name)) return 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
+    if(Number(file.size || 0) > MAX_IMG_SIZE) return 'حجم الصورة كبير. الحد الأقصى 5MB.';
+    return '';
+  }
+  function updateCheckoutButtonOnly(){
+    const area = checkoutArea();
+    const btns = Array.from(area.querySelectorAll('button,input[type="submit"]')).filter(isCheckoutBtn);
+    const err = screenshotError();
+    btns.forEach(btn=>{
+      btn.disabled = !!err;
+      btn.classList.toggle('disabled-checkout', !!err);
+      btn.title = err || '';
+    });
+
+    let warning = document.getElementById('smartCheckoutWarning');
+    if(warning){
+      warning.style.display = err ? 'block' : 'none';
+      warning.innerHTML = err ? '⚠️ ' + err : '';
+    }
+  }
+
+  // أهم جزء: أي فورم أو زر داخل سجل الطلبات يشتغل عادي وممنوع أي كود سكرين يمسكه
   document.addEventListener('submit', function(e){
-    const form = e.target;
-    if(form && (form.closest('#trackOrder') || form.id === 'trackForm' || form.id === 'statusForm')){
-      e.stopImmediatePropagation();
+    if(isInsideTrack(e.target)){
       return true;
     }
-  }, false);
+  }, true);
+
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('button,input[type="submit"],a');
+    if(!btn) return;
+
+    // لو ده زر متابعة الطلب، سيبه يعدي عادي
+    if(isInsideTrack(btn)){
+      return true;
+    }
+
+    // لو ده Checkout بس، افحص السكرين
+    if(isCheckoutBtn(btn)){
+      const err = screenshotError();
+      if(err){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        alert(err);
+        updateCheckoutButtonOnly();
+        return false;
+      }
+    }
+  }, true);
+
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(isInsideTrack(form)) return true;
+
+    const submitter = e.submitter || document.activeElement;
+    if(submitter && isCheckoutBtn(submitter)){
+      const err = screenshotError();
+      if(err){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        alert(err);
+        updateCheckoutButtonOnly();
+        return false;
+      }
+    }
+  }, true);
+
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.type === 'file' && !isInsideTrack(e.target)){
+      const err = screenshotError();
+      if(err && e.target.files && e.target.files.length){
+        alert(err);
+        e.target.value = '';
+      }
+      updateCheckoutButtonOnly();
+    }
+  }, true);
+
+  setInterval(updateCheckoutButtonOnly, 1200);
+  setTimeout(updateCheckoutButtonOnly, 500);
+
+  // Patch old global function so any older code calling it won't affect track search
+  window.mobaValidateScreenshot = function(){
+    const err = screenshotError();
+    return err ? {ok:false,error:err} : {ok:true,file:screenshotInput()?.files?.[0]};
+  };
+})();
+</script>
+
+
+<script id="moba-v44-closed-status-upsell">
+(function(){
+  const HOURS_HTML = `
+    <h3>🕒 مواعيد العمل</h3>
+    <p>تقدر تعمل طلبك في أي وقت حتى لو خارج مواعيد التنفيذ.</p>
+    <p><b>التنفيذ:</b> يوميا من 12 صباحا حتى 5 الفجر.</p>
+    <p><b>الاثنين والأربعاء والخميس والجمعة:</b> من 3 العصر حتى 5 الفجر.</p>
+    <p>أي طلب خارج المواعيد هيتسجل، وأول ما نبدأ الشغل هيكون من أوائل الطلبات اللي تتنفذ ✅</p>
+    <button type="button" id="closeWorkHoursPopup">تمام</button>
+  `;
+
+  function ensurePopup(){
+    let p = document.getElementById('workHoursPopup');
+    if(!p){
+      p = document.createElement('div');
+      p.id = 'workHoursPopup';
+      p.className = 'work-hours-popup';
+      p.innerHTML = HOURS_HTML;
+      document.body.appendChild(p);
+      p.querySelector('#closeWorkHoursPopup').onclick = () => p.classList.remove('show');
+    }
+    return p;
+  }
+
+  window.showWorkHoursPopup = function(){
+    const p = ensurePopup();
+    p.classList.add('show');
+  };
+
+  function addHoursButton(box){
+    if(!box || box.querySelector('.closed-hours-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'closed-hours-btn';
+    btn.innerHTML = '🕒 عرض مواعيد العمل';
+    btn.onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      window.showWorkHoursPopup();
+    };
+    box.appendChild(btn);
+  }
+
+  function enhanceClosedStatus(){
+    const main = document.getElementById('workStatusMini');
+    if(main && main.classList.contains('closed')){
+      const desc = main.querySelector('.status-desc');
+      if(desc && !desc.dataset.v44){
+        desc.dataset.v44 = '1';
+        desc.innerHTML = 'ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.';
+      }
+      addHoursButton(main);
+    }
+
+    document.querySelectorAll('.store-status-pill.closed,.status-pill.closed,.live-status.closed,#topStatusBadge.closed,#headerStatusBadge.closed').forEach(el=>{
+      const label = el.querySelector('.status-label');
+      if(label) label.textContent = 'خارج مواعيد التنفيذ';
+    });
+  }
+
+  // Patch V41 function if it exists by re-running after every status refresh
+  const oldRefresh = window.refreshStoreStatusV41;
+  if(typeof oldRefresh === 'function'){
+    window.refreshStoreStatusV41 = async function(){
+      await oldRefresh();
+      setTimeout(enhanceClosedStatus, 100);
+    };
+  }
+
+  setInterval(enhanceClosedStatus, 1000);
+  setTimeout(enhanceClosedStatus, 600);
+
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.id === 'closeWorkHoursPopup'){
+      ensurePopup().classList.remove('show');
+    }
+  });
 })();
 </script>
 
