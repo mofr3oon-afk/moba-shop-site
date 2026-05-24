@@ -2213,6 +2213,94 @@ html{scroll-behavior:smooth}
   .pharaoh-problem-grid{grid-template-columns:1fr}
 }
 
+
+/* V36 Pharaoh buttons + mobile chat size fix */
+#pharaohChatPanel{
+  width:min(390px, calc(100vw - 18px)) !important;
+  height:min(560px, calc(100vh - 115px)) !important;
+  max-height:560px !important;
+}
+.pharaoh-chat-body{
+  padding:11px !important;
+  gap:8px !important;
+}
+.pharaoh-msg{
+  font-size:12px !important;
+  line-height:1.65 !important;
+  padding:10px 11px !important;
+}
+.pharaoh-quick{
+  gap:6px !important;
+}
+.pharaoh-quick button{
+  padding:7px 9px !important;
+  font-size:11px !important;
+  border-radius:999px !important;
+}
+.pharaoh-chat-head{
+  padding:10px 12px !important;
+}
+.pharaoh-chat-title b{
+  font-size:15px !important;
+}
+.pharaoh-chat-title span{
+  font-size:10px !important;
+}
+.pharaoh-chat-foot{
+  padding:9px !important;
+  gap:7px !important;
+}
+.pharaoh-chat-foot input{
+  padding:10px !important;
+  font-size:12px !important;
+}
+.pharaoh-chat-foot button{
+  padding:0 12px !important;
+  font-size:12px !important;
+}
+.pharaoh-problem-grid{
+  grid-template-columns:1fr 1fr !important;
+  gap:6px !important;
+}
+.pharaoh-problem-grid button,
+.pharaoh-choice-btn,
+.pharaoh-mini-question button,
+.mini-action{
+  pointer-events:auto !important;
+}
+@media(max-width:900px){
+  #pharaohChatPanel{
+    left:8px !important;
+    right:8px !important;
+    width:auto !important;
+    height:min(455px, calc(100dvh - 115px)) !important;
+    max-height:455px !important;
+    border-radius:18px !important;
+  }
+  .pharaoh-chat-body{
+    padding:9px !important;
+  }
+  .pharaoh-msg{
+    max-width:92% !important;
+    font-size:11.5px !important;
+  }
+  .pharaoh-quick button{
+    font-size:10.5px !important;
+    padding:6px 8px !important;
+  }
+  .pharaoh-chat-foot{
+    position:sticky !important;
+    bottom:0 !important;
+    background:rgba(13,18,34,.98) !important;
+  }
+}
+@media(max-height:650px){
+  #pharaohChatPanel{
+    height:min(390px, calc(100dvh - 90px)) !important;
+    max-height:390px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -4695,6 +4783,109 @@ html{scroll-behavior:smooth}
       setTimeout(()=>fab.classList.remove('show-hint'),4200);
     }
   },1600);
+})();
+</script>
+
+
+<script id="moba-v36-pharaoh-buttons-fix">
+(function(){
+  const replies = {
+    'ازاي اشحن': 'تمام يا بطل 👑<br>اختار الباقة، اكتب PUBG ID واسم الحساب، ضيف للسلة، وبعد التحويل ارفع السكرين.',
+    'طرق الدفع': 'طرق الدفع المتاحة:<br>🟢 InstaPay<br>📱 Wallet<br><br>بعد التحويل ارفع السكرين، ولو التحويل من رقم تاني اكتب آخر 3 أرقام في الملاحظات.',
+    'متابعة الطلب': 'اكتب نفس رقم الموبايل في سجل الطلبات، وهظهرلك آخر طلباتك كلها 📦<br><br><span class="mini-action" data-pharaoh-action="track">افتح سجل الطلبات</span>',
+    'الطلبات القديمة': 'اكتب رقم الموبايل في سجل الطلبات، وبعدها اختار: الجميع / معلق / مكتمل / ملغي.',
+    'الازدهار': '<div class="pharaoh-warning-note">تنبيه مهم 👑<br>لازم تتأكد إن الازدهار متاح على حسابك قبل الطلب، لأن بعض الأنواع بتكون مرة واحدة فقط على الحساب.</div>',
+    'اكتر من ID': 'ينفع تعمل كذا شحنة بـ IDs مختلفة ✅<br>كل باقة اكتب لها ID واسم الحساب بتوعها، وبعدها ضيفها للسلة وكرر لأي ID تاني.',
+    'عايز أشحن': 'تمام 👑<br>هتشحن لنفس ID ولا أكتر من ID؟<div class="pharaoh-mini-question"><button type="button" data-pharaoh-action="products">نفس ID 🎮</button><button type="button" data-pharaoh-q="اكتر من ID">أكتر من ID</button></div>',
+    'عايز اشحن': 'تمام 👑<br>هتشحن لنفس ID ولا أكتر من ID؟<div class="pharaoh-mini-question"><button type="button" data-pharaoh-action="products">نفس ID 🎮</button><button type="button" data-pharaoh-q="اكتر من ID">أكتر من ID</button></div>',
+    'قواعد الشحن': '<div class="pharaoh-info-card"><b>🛡️ قواعد الشحن</b><ul><li>راجع ID واسم الحساب قبل الدفع.</li><li>ارفع سكرين واضح.</li><li>لو التحويل من رقم تاني اكتب آخر 3 أرقام.</li><li>عندك فرصتين تعديل لو فيه مشكلة.</li></ul></div>',
+    'الأكثر طلبًا': '<div class="pharaoh-info-card"><b>🔥 الأكثر طلبًا</b><ul><li>60 UC باقة سريعة</li><li>325 UC الأكثر طلبًا</li><li>660 UC قيمة أعلى</li></ul></div><span class="mini-action gold" data-pharaoh-action="products">افتح المنتجات 🎮</span>',
+    'مواعيد العمل': 'مواعيد العمل:<br>يوميًا من 12 صباحًا حتى 5 الفجر.<br>الاثنين والأربعاء والخميس والجمعة من 3 العصر حتى 5 الفجر.',
+    'الدعم': 'لو محتاج تكلم الدعم مباشرة:<br><br><a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>',
+    'حل مشكلة': 'ايه نوع المشكلة؟ 👑<div class="pharaoh-problem-grid"><button type="button" data-pharaoh-q="ID غلط">ID غلط</button><button type="button" data-pharaoh-q="سكرين غير واضح">سكرين غير واضح</button><button type="button" data-pharaoh-q="رقم التحويل غلط">رقم التحويل</button><button type="button" data-pharaoh-q="الطلب اتأخر">الطلب اتأخر</button><button type="button" data-pharaoh-q="عايز دعم">عايز دعم</button></div>',
+    'مشكلة في الطلب': 'ايه نوع المشكلة؟ 👑<div class="pharaoh-problem-grid"><button type="button" data-pharaoh-q="ID غلط">ID غلط</button><button type="button" data-pharaoh-q="سكرين غير واضح">سكرين غير واضح</button><button type="button" data-pharaoh-q="رقم التحويل غلط">رقم التحويل</button><button type="button" data-pharaoh-q="الطلب اتأخر">الطلب اتأخر</button><button type="button" data-pharaoh-q="عايز دعم">عايز دعم</button></div>',
+    'ID غلط': 'افتح سجل الطلبات برقمك، ولو الطلب محتاج تعديل هتلاقي خانة تكتب فيها ID الصحيح واسم الحساب.',
+    'سكرين غير واضح': 'ارفع سكرين جديد واضح من تفاصيل الطلب 📸<br>لازم يظهر الرقم أو الاسم والمبلغ ووقت التحويل.',
+    'رقم التحويل غلط': 'افتح الطلب من سجل الطلبات واكتب الرقم الصحيح أو آخر 3 أرقام من رقم التحويل.',
+    'الطلب اتأخر': 'افتح سجل الطلبات وشوف آخر تحديث. لو فيه ضغط طلبات، التنفيذ ممكن ياخد وقت أطول شوية.',
+    'عايز دعم': 'تقدر تكلم الدعم مباشرة من هنا:<br><br><a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>',
+    'كوبون': 'لو معاك كوبون، اكتبه في خانة الكوبون داخل السلة واضغط تطبيق 🎟️<br>لو مش شغال ممكن يكون خاص بمنتج معين أو محتاج حد أدنى.',
+    'كريستالة': '<div class="pharaoh-warning-note">الكريستالة أو الجوهرة ليها عدد محدود حسب حسابك ووقت التجديد في اللعبة.</div>اتأكد من المتاح عندك الأول وبعدها نفذ الطلب.'
+  };
+
+  function body(){ return document.getElementById('pharaohChatBody'); }
+  function typing(){ return document.getElementById('pharaohTyping'); }
+
+  function addMsg(type, html){
+    const b = body();
+    const t = typing();
+    if(!b || !t) return;
+    const msg = document.createElement('div');
+    msg.className = 'pharaoh-msg ' + type;
+    msg.innerHTML = html;
+    b.insertBefore(msg, t);
+    b.scrollTop = b.scrollHeight;
+  }
+
+  function answer(q){
+    const text = String(q || '').trim();
+    if(!text) return;
+    addMsg('user', text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+    const t = typing();
+    if(t) t.classList.add('show');
+    setTimeout(()=>{
+      if(t) t.classList.remove('show');
+      let reply = replies[text];
+      if(!reply){
+        const key = Object.keys(replies).find(k => text.includes(k) || k.includes(text));
+        reply = key ? replies[key] : 'أنا فرعون 👑 أقدر أساعدك في الشحن، متابعة الطلب، المشاكل، الكوبونات، والدعم.';
+      }
+      addMsg('bot', reply);
+    }, 250);
+  }
+
+  function goTo(sel){
+    const el = document.querySelector(sel);
+    const panel = document.getElementById('pharaohChatPanel');
+    if(panel) panel.classList.remove('show');
+    if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+  }
+
+  document.addEventListener('click', function(e){
+    const qBtn = e.target.closest('[data-pharaoh-q]');
+    if(qBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      answer(qBtn.dataset.pharaohQ || qBtn.textContent);
+      return;
+    }
+    const action = e.target.closest('[data-pharaoh-action]');
+    if(action){
+      e.preventDefault();
+      e.stopPropagation();
+      const a = action.dataset.pharaohAction;
+      if(a === 'products') goTo('#productsSection');
+      if(a === 'track') goTo('#trackOrder');
+      if(a === 'reviews') goTo('#customerReviews');
+      if(a === 'cart') goTo('#cartSection');
+      if(a === 'rules') answer('قواعد الشحن');
+      return;
+    }
+  }, true);
+
+  // make mobile keyboard nicer: shrink panel when input focused
+  document.addEventListener('focusin', function(e){
+    if(e.target && e.target.id === 'pharaohChatInput'){
+      const panel = document.getElementById('pharaohChatPanel');
+      if(panel) panel.style.height = 'min(360px, calc(100dvh - 95px))';
+    }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target && e.target.id === 'pharaohChatInput'){
+      const panel = document.getElementById('pharaohChatPanel');
+      if(panel) panel.style.height = '';
+    }
+  });
 })();
 </script>
 
