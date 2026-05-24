@@ -1696,6 +1696,60 @@ html{scroll-behavior:smooth}
   .pharaoh-name-badge{font-size:12px !important;padding:3px 10px !important;}
 }
 
+
+/* V25 full-screen draggable Pharaoh */
+.pharaoh-assistant-fab{
+  position:fixed !important;
+  z-index:9999 !important;
+  touch-action:none !important;
+  user-select:none !important;
+  -webkit-user-select:none !important;
+  cursor:grab !important;
+}
+.pharaoh-assistant-fab.dragging{cursor:grabbing !important; transition:none !important;}
+.pharaoh-character,.pharaoh-name-badge{pointer-events:none;}
+
+
+/* V26 drag pickup + drop bounce */
+.pharaoh-assistant-fab.dragging .pharaoh-figure{
+  animation:phPickUp .45s ease forwards, phDragWiggle 1.15s ease-in-out infinite .45s !important;
+}
+.pharaoh-assistant-fab.dragging .shadow{
+  animation:shadowGrab .45s ease forwards !important;
+}
+.pharaoh-assistant-fab.drop-bounce .pharaoh-figure{
+  animation:phDropBounce .75s cubic-bezier(.2,.8,.22,1.15) forwards !important;
+}
+.pharaoh-assistant-fab.drop-bounce .shadow{
+  animation:shadowDrop .75s ease forwards !important;
+}
+@keyframes phPickUp{
+  0%{transform:translateY(0) scale(1) rotate(0deg)}
+  100%{transform:translateY(-18px) scale(1.06) rotate(4deg)}
+}
+@keyframes phDragWiggle{
+  0%,100%{transform:translateY(-18px) scale(1.06) rotate(4deg)}
+  25%{transform:translateY(-20px) scale(1.065) rotate(7deg)}
+  50%{transform:translateY(-17px) scale(1.055) rotate(2deg)}
+  75%{transform:translateY(-20px) scale(1.065) rotate(6deg)}
+}
+@keyframes phDropBounce{
+  0%{transform:translateY(-18px) scale(1.06) rotate(4deg)}
+  35%{transform:translateY(10px) scale(.95,1.07) rotate(-2deg)}
+  55%{transform:translateY(-8px) scale(1.02,.98) rotate(1deg)}
+  72%{transform:translateY(4px) scale(.98,1.02) rotate(-1deg)}
+  100%{transform:translateY(0) scale(1) rotate(0deg)}
+}
+@keyframes shadowGrab{
+  0%{opacity:.35; transform:translateX(-50%) scale(1)}
+  100%{opacity:.18; transform:translateX(-50%) scale(.72)}
+}
+@keyframes shadowDrop{
+  0%{opacity:.18; transform:translateX(-50%) scale(.72)}
+  30%{opacity:.46; transform:translateX(-50%) scale(1.18)}
+  100%{opacity:.35; transform:translateX(-50%) scale(1)}
+}
+
 </style>
 </head>
 <body>
@@ -3047,8 +3101,7 @@ html{scroll-behavior:smooth}
   const input = document.getElementById('pharaohChatInput');
   const typing = document.getElementById('pharaohTyping');
   if(!fab || !panel) return;
-
-  let drag = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+  let drag = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0, activePointerId = null;
 
   function loadPos(){
     try{
@@ -3058,14 +3111,30 @@ html{scroll-behavior:smooth}
         fab.style.top = p.y + 'px';
         fab.style.right = 'auto';
         fab.style.bottom = 'auto';
+        return;
       }
     }catch(e){}
+    fab.style.right = '12px';
+    fab.style.bottom = '86px';
+    fab.style.left = 'auto';
+    fab.style.top = 'auto';
   }
   function savePos(){
     const rect = fab.getBoundingClientRect();
     localStorage.setItem('pharaoh_assistant_pos', JSON.stringify({x:rect.left,y:rect.top}));
   }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function clampFab(){
+    const rect = fab.getBoundingClientRect();
+    const maxX = Math.max(0, window.innerWidth - fab.offsetWidth);
+    const maxY = Math.max(0, window.innerHeight - fab.offsetHeight);
+    const x = clamp(rect.left, 0, maxX);
+    const y = clamp(rect.top, 0, maxY);
+    fab.style.left = x + 'px';
+    fab.style.top = y + 'px';
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+  }
   function positionPanel(){
     const r = fab.getBoundingClientRect();
     const pw = Math.min(430, window.innerWidth - 24);
@@ -3093,37 +3162,59 @@ html{scroll-behavior:smooth}
       panel.classList.remove('show');
     }
   }
-
-  fab.addEventListener('pointerdown', function(e){
-    drag = true; moved = false;
-    fab.classList.add('dragging');
-    fab.setPointerCapture(e.pointerId);
-    const r = fab.getBoundingClientRect();
-    startX = e.clientX; startY = e.clientY;
-    baseX = r.left; baseY = r.top;
-  });
-  fab.addEventListener('pointermove', function(e){
+  function onMove(e){
     if(!drag) return;
+    if(activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    if(Math.abs(dx) + Math.abs(dy) > 5) moved = true;
-    const x = clamp(baseX + dx, 0, window.innerWidth - fab.offsetWidth);
-    const y = clamp(baseY + dy, 0, window.innerHeight - fab.offsetHeight);
+    if(Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    const maxX = Math.max(0, window.innerWidth - fab.offsetWidth);
+    const maxY = Math.max(0, window.innerHeight - fab.offsetHeight);
+    const x = clamp(baseX + dx, 0, maxX);
+    const y = clamp(baseY + dy, 0, maxY);
     fab.style.left = x + 'px';
     fab.style.top = y + 'px';
     fab.style.right = 'auto';
     fab.style.bottom = 'auto';
     if(panel.classList.contains('show')) positionPanel();
-  });
-  fab.addEventListener('pointerup', function(e){
+  }
+  function endDrag(e){
+    if(!drag) return;
+    if(activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
     drag = false;
+    activePointerId = null;
     fab.classList.remove('dragging');
+    if(moved){
+      fab.classList.add('drop-bounce');
+      setTimeout(()=>fab.classList.remove('drop-bounce'), 760);
+    }
     savePos();
     if(!moved) togglePanel();
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
+  }
+  fab.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    drag = true; moved = false;
+    activePointerId = e.pointerId;
+    fab.classList.remove('drop-bounce');
+    fab.classList.add('dragging');
+    const r = fab.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    baseX = r.left; baseY = r.top;
+    fab.style.left = baseX + 'px';
+    fab.style.top = baseY + 'px';
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+    if(fab.setPointerCapture){ try{ fab.setPointerCapture(e.pointerId); }catch(err){} }
+    window.addEventListener('pointermove', onMove, {passive:false});
+    window.addEventListener('pointerup', endDrag, {passive:false});
+    window.addEventListener('pointercancel', endDrag, {passive:false});
   });
 
   closeBtn && closeBtn.addEventListener('click', ()=>togglePanel(false));
-  window.addEventListener('resize', ()=>{ if(panel.classList.contains('show')) positionPanel(); });
+  window.addEventListener('resize', ()=>{ clampFab(); savePos(); if(panel.classList.contains('show')) positionPanel(); });
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -3298,6 +3389,7 @@ html{scroll-behavior:smooth}
   });
 
   loadPos();
+  setTimeout(()=>{ clampFab(); savePos(); }, 50);
 })();
 </script>
 
