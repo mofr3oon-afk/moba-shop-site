@@ -310,3 +310,9 @@ https://YOUR_SITE.vercel.app/api/setup-webhook?key=moba_setup_2026
   - /coupons لعرض الكوبونات.
 - إضافة جدول coupons في Supabase.
 - حفظ coupon_code و coupon_discount في orders.
+
+
+## V32 Smaller Pharaoh
+- تصغير حجم فرعون في الموقع.
+- تصغير البادج والفقاعة الخاصة بفرعون.
+- تحسين حجمه على الموبايل عشان ميبقاش مغطي على الصفحة.

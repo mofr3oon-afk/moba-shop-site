@@ -2110,6 +2110,63 @@ html{scroll-behavior:smooth}
   .coupon-row{grid-template-columns:1fr}
 }
 
+
+/* V32 smaller Pharaoh assistant */
+#pharaohAssistantFab{
+  width:88px !important;
+  height:118px !important;
+}
+#pharaohAssistantFab .pharaoh-character{
+  width:78px !important;
+  height:94px !important;
+}
+#pharaohAssistantFab .pharaoh-figure{
+  width:72px !important;
+}
+#pharaohAssistantFab .pharaoh-name-badge{
+  font-size:10px !important;
+  padding:3px 9px !important;
+  margin-top:-4px !important;
+}
+.pharaoh-hint-bubble{
+  right:74px !important;
+  max-width:190px !important;
+  font-size:11px !important;
+}
+#pharaohChatPanel{
+  max-width:420px;
+}
+.pharaoh-chat-title .pharaoh-mini{
+  width:40px !important;
+  height:40px !important;
+}
+.pharaoh-chat-title .pharaoh-mini .pharaoh-figure,
+.pharaoh-mini .pharaoh-figure.small{
+  width:34px !important;
+}
+@media(max-width:900px){
+  #pharaohAssistantFab{
+    width:76px !important;
+    height:104px !important;
+  }
+  #pharaohAssistantFab .pharaoh-character{
+    width:68px !important;
+    height:82px !important;
+  }
+  #pharaohAssistantFab .pharaoh-figure{
+    width:62px !important;
+  }
+  #pharaohAssistantFab .pharaoh-name-badge{
+    font-size:9px !important;
+    padding:2px 8px !important;
+  }
+  .pharaoh-hint-bubble{
+    right:62px !important;
+    max-width:160px !important;
+    font-size:10px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -4035,7 +4092,7 @@ html{scroll-behavior:smooth}
     document.body.appendChild(fab);
     document.body.appendChild(panel);
 
-    let pos = {x: window.innerWidth - 110, y: window.innerHeight - 170};
+    let pos = {x: window.innerWidth - fab.offsetWidth, y: window.innerHeight - fab.offsetHeight};
     try{
       const saved = JSON.parse(localStorage.getItem('pharaoh_assistant_pos_v28') || 'null');
       if(saved && typeof saved.x === 'number' && typeof saved.y === 'number') pos = saved;
