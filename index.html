@@ -1556,6 +1556,66 @@ html{scroll-behavior:smooth}
   color:#fff3c4;
 }
 
+
+/* V23 realistic free-floating Pharaoh */
+.pharaoh-assistant-fab{
+  width:118px !important;
+  height:170px !important;
+  right:16px !important;
+  bottom:82px !important;
+  filter:drop-shadow(0 18px 26px rgba(0,0,0,.45));
+}
+.pharaoh-character{
+  width:auto !important;
+  height:auto !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  animation:none !important;
+  position:relative;
+}
+.pharaoh-character:before,
+.pharaoh-character:after{display:none !important;content:none !important}
+.pharaoh-figure{
+  width:92px;
+  height:auto;
+  display:block;
+  user-select:none;
+  pointer-events:none;
+  transform-origin:center bottom;
+  animation:pharaohRealFloat 2.8s ease-in-out infinite, pharaohRealTilt 4.6s ease-in-out infinite;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));
+}
+.pharaoh-figure.small{
+  width:38px;
+  animation:pharaohRealFloat 2.8s ease-in-out infinite;
+}
+.pharaoh-name-badge{
+  margin-top:-6px !important;
+  padding:4px 12px !important;
+  background:rgba(17,21,35,.90) !important;
+  border:1px solid rgba(255,207,92,.45) !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.28), 0 0 16px rgba(255,207,92,.12) !important;
+}
+.pharaoh-chat-title .pharaoh-mini{
+  width:44px !important;
+  height:44px !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+}
+@keyframes pharaohRealFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pharaohRealTilt{0%,100%{transform:rotate(0deg)}25%{transform:rotate(1.8deg)}75%{transform:rotate(-1.8deg)}}
+@media(max-width:900px){
+  .pharaoh-assistant-fab{width:96px !important;height:148px !important;right:8px !important;bottom:92px !important;}
+  .pharaoh-figure{width:74px;}
+  .pharaoh-name-badge{font-size:12px !important;padding:3px 10px !important;}
+}
+
 </style>
 </head>
 <body>
@@ -2858,67 +2918,7 @@ html{scroll-behavior:smooth}
   <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
     <div class="pharaoh-chat-head">
       <div class="pharaoh-chat-title">
-        <div class="pharaoh-mini"><svg class="pharaoh-svg" viewBox="0 0 120 180" aria-hidden="true">
-  <defs>
-    <linearGradient id="v21Gold" x1="0" x2="1">
-      <stop offset="0%" stop-color="#ffe28a"/>
-      <stop offset="100%" stop-color="#ffaf3f"/>
-    </linearGradient>
-    <linearGradient id="v21Blue" x1="0" x2="1">
-      <stop offset="0%" stop-color="#29dbff"/>
-      <stop offset="100%" stop-color="#416bff"/>
-    </linearGradient>
-    <linearGradient id="v21Dark" x1="0" x2="1">
-      <stop offset="0%" stop-color="#0e1933"/>
-      <stop offset="100%" stop-color="#1a2350"/>
-    </linearGradient>
-  </defs>
-  <g class="ph-cape">
-    <path d="M34 70 C26 84,24 108,28 132 C40 142,52 147,60 147 C68 147,80 142,92 132 C96 108,94 84,86 70 Z" fill="#102246" opacity="0.86"/>
-  </g>
-  <g class="ph-leg-left">
-    <rect x="46" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
-    <rect x="43" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-leg-right">
-    <rect x="62" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
-    <rect x="59" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-body">
-    <rect x="39" y="58" width="42" height="62" rx="18" fill="#f2c8a6"/>
-    <path d="M38 64 h44 v56 c-8 7-16 11-22 11 s-14-4-22-11 z" fill="url(#v21Gold)" opacity="0.94"/>
-    <rect x="47" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
-    <rect x="57" y="62" width="6" height="56" rx="3" fill="url(#v21Dark)" opacity="0.85"/>
-    <rect x="67" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
-    <path d="M46 117 h28 l-7 10 h-14 z" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-arm-left">
-    <rect x="28" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
-    <rect x="26" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-arm-right">
-    <rect x="80" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
-    <rect x="78" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-head">
-    <ellipse cx="60" cy="42" rx="24" ry="25" fill="#f2c8a6"/>
-    <path d="M36 32 C39 14,81 14,84 32 L84 54 C74 63,46 63,36 54 Z" fill="url(#v21Dark)"/>
-    <path d="M42 20 h36 a10 10 0 0 1 10 10 v8 h-56 v-8 a10 10 0 0 1 10-10z" fill="url(#v21Gold)"/>
-    <path d="M37 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
-    <path d="M73 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
-    <circle class="ph-eye" cx="52" cy="43" r="2.5" fill="#1d2034"/>
-    <circle class="ph-eye" cx="68" cy="43" r="2.5" fill="#1d2034"/>
-    <path d="M54 54 q6 4 12 0" stroke="#874834" stroke-width="2" stroke-linecap="round" fill="none"/>
-    <path d="M58 48 h4" stroke="#874834" stroke-width="1.7" stroke-linecap="round"/>
-    <circle cx="60" cy="24" r="5" fill="url(#v21Gold)"/>
-    <circle class="ph-staff-gem" cx="60" cy="24" r="2.2" fill="#26dfff"/>
-  </g>
-  <g>
-    <rect x="92" y="60" width="5" height="62" rx="3" fill="url(#v21Gold)"/>
-    <circle cx="94.5" cy="55" r="7" fill="url(#v21Gold)"/>
-    <circle class="ph-staff-gem" cx="94.5" cy="55" r="3" fill="#29dbff"/>
-  </g>
-</svg></div>
+        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic.png" alt="فرعون"></div>
         <div>
           <b>فرعون Assistant</b>
           <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
@@ -2953,68 +2953,8 @@ html{scroll-behavior:smooth}
 
   <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
     <div class="pharaoh-character">
-<svg class="pharaoh-svg" viewBox="0 0 120 180" aria-hidden="true">
-  <defs>
-    <linearGradient id="v21Gold" x1="0" x2="1">
-      <stop offset="0%" stop-color="#ffe28a"/>
-      <stop offset="100%" stop-color="#ffaf3f"/>
-    </linearGradient>
-    <linearGradient id="v21Blue" x1="0" x2="1">
-      <stop offset="0%" stop-color="#29dbff"/>
-      <stop offset="100%" stop-color="#416bff"/>
-    </linearGradient>
-    <linearGradient id="v21Dark" x1="0" x2="1">
-      <stop offset="0%" stop-color="#0e1933"/>
-      <stop offset="100%" stop-color="#1a2350"/>
-    </linearGradient>
-  </defs>
-  <g class="ph-cape">
-    <path d="M34 70 C26 84,24 108,28 132 C40 142,52 147,60 147 C68 147,80 142,92 132 C96 108,94 84,86 70 Z" fill="#102246" opacity="0.86"/>
-  </g>
-  <g class="ph-leg-left">
-    <rect x="46" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
-    <rect x="43" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-leg-right">
-    <rect x="62" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
-    <rect x="59" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-body">
-    <rect x="39" y="58" width="42" height="62" rx="18" fill="#f2c8a6"/>
-    <path d="M38 64 h44 v56 c-8 7-16 11-22 11 s-14-4-22-11 z" fill="url(#v21Gold)" opacity="0.94"/>
-    <rect x="47" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
-    <rect x="57" y="62" width="6" height="56" rx="3" fill="url(#v21Dark)" opacity="0.85"/>
-    <rect x="67" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
-    <path d="M46 117 h28 l-7 10 h-14 z" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-arm-left">
-    <rect x="28" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
-    <rect x="26" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-arm-right">
-    <rect x="80" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
-    <rect x="78" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
-  </g>
-  <g class="ph-head">
-    <ellipse cx="60" cy="42" rx="24" ry="25" fill="#f2c8a6"/>
-    <path d="M36 32 C39 14,81 14,84 32 L84 54 C74 63,46 63,36 54 Z" fill="url(#v21Dark)"/>
-    <path d="M42 20 h36 a10 10 0 0 1 10 10 v8 h-56 v-8 a10 10 0 0 1 10-10z" fill="url(#v21Gold)"/>
-    <path d="M37 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
-    <path d="M73 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
-    <circle class="ph-eye" cx="52" cy="43" r="2.5" fill="#1d2034"/>
-    <circle class="ph-eye" cx="68" cy="43" r="2.5" fill="#1d2034"/>
-    <path d="M54 54 q6 4 12 0" stroke="#874834" stroke-width="2" stroke-linecap="round" fill="none"/>
-    <path d="M58 48 h4" stroke="#874834" stroke-width="1.7" stroke-linecap="round"/>
-    <circle cx="60" cy="24" r="5" fill="url(#v21Gold)"/>
-    <circle class="ph-staff-gem" cx="60" cy="24" r="2.2" fill="#26dfff"/>
-  </g>
-  <g>
-    <rect x="92" y="60" width="5" height="62" rx="3" fill="url(#v21Gold)"/>
-    <circle cx="94.5" cy="55" r="7" fill="url(#v21Gold)"/>
-    <circle class="ph-staff-gem" cx="94.5" cy="55" r="3" fill="#29dbff"/>
-  </g>
-</svg>
-</div>
+      <img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic.png" alt="فرعون">
+    </div>
     <div class="pharaoh-name-badge">فرعون</div>
   </div>
 
