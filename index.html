@@ -1774,6 +1774,78 @@ html{scroll-behavior:smooth}
 .pharaoh-character .spark.s1{animation:sparkMove1 2.1s ease-in-out infinite}
 .pharaoh-character .spark.s2{animation:sparkMove2 2.5s ease-in-out infinite}
 
+
+/* V28 hard override free roaming Pharaoh */
+#pharaohAssistantFab{
+  position:fixed !important;
+  left:0 !important;
+  top:0 !important;
+  right:auto !important;
+  bottom:auto !important;
+  z-index:999999 !important;
+  width:110px !important;
+  height:145px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  transform:translate3d(0,0,0);
+  transition:none !important;
+  touch-action:none !important;
+  cursor:grab !important;
+  user-select:none !important;
+  -webkit-user-select:none !important;
+}
+#pharaohAssistantFab.dragging{cursor:grabbing !important;}
+#pharaohAssistantFab .pharaoh-character{
+  width:96px !important;
+  height:118px !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+  animation:none !important;
+}
+#pharaohAssistantFab .pharaoh-character::before,
+#pharaohAssistantFab .pharaoh-character::after{display:none !important; content:none !important;}
+#pharaohAssistantFab .pharaoh-figure{
+  width:92px !important;
+  height:auto !important;
+  transform-origin:center bottom !important;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.35));
+  animation:ph-idle-float 2.2s ease-in-out infinite, ph-idle-sway 3.1s ease-in-out infinite, ph-hand-vibe 1.8s ease-in-out infinite !important;
+}
+#pharaohAssistantFab .pharaoh-name-badge{
+  margin-top:-6px !important;
+  padding:4px 12px !important;
+  font-size:12px !important;
+}
+#pharaohAssistantFab.dragging .pharaoh-figure{
+  animation:ph-pick-up .22s ease forwards, ph-drag-fun 1s ease-in-out infinite .22s !important;
+}
+#pharaohAssistantFab.drop-bounce .pharaoh-figure{
+  animation:ph-drop-bounce .65s cubic-bezier(.2,.9,.28,1.18) forwards !important;
+}
+#pharaohAssistantFab .shadow{
+  animation:ph-shadow-idle 2.2s ease-in-out infinite !important;
+}
+#pharaohAssistantFab.dragging .shadow{
+  animation:ph-shadow-grab .22s ease forwards !important;
+}
+#pharaohAssistantFab.drop-bounce .shadow{
+  animation:ph-shadow-drop .65s ease forwards !important;
+}
+@keyframes ph-idle-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes ph-idle-sway{0%,100%{rotate:0deg}25%{rotate:2deg}75%{rotate:-2deg}}
+@keyframes ph-hand-vibe{0%,100%{scale:1}50%{scale:1.025}}
+@keyframes ph-pick-up{0%{transform:translateY(0) scale(1) rotate(0)}100%{transform:translateY(-16px) scale(1.07) rotate(5deg)}}
+@keyframes ph-drag-fun{0%,100%{transform:translateY(-16px) scale(1.07) rotate(5deg)}25%{transform:translateY(-20px) scale(1.075) rotate(8deg)}50%{transform:translateY(-18px) scale(1.06) rotate(2deg)}75%{transform:translateY(-20px) scale(1.075) rotate(7deg)}}
+@keyframes ph-drop-bounce{0%{transform:translateY(-16px) scale(1.07) rotate(5deg)}35%{transform:translateY(9px) scale(.95,1.07) rotate(-2deg)}60%{transform:translateY(-7px) scale(1.02,.98) rotate(1deg)}100%{transform:translateY(0) scale(1) rotate(0)}}
+@keyframes ph-shadow-idle{0%,100%{opacity:.28; transform:translateX(-50%) scale(.92)}50%{opacity:.42; transform:translateX(-50%) scale(1.04)}}
+@keyframes ph-shadow-grab{0%{opacity:.35; transform:translateX(-50%) scale(1)}100%{opacity:.15; transform:translateX(-50%) scale(.68)}}
+@keyframes ph-shadow-drop{0%{opacity:.15; transform:translateX(-50%) scale(.68)}50%{opacity:.5; transform:translateX(-50%) scale(1.18)}100%{opacity:.35; transform:translateX(-50%) scale(1)}}
+
 </style>
 </head>
 <body>
@@ -3664,6 +3736,116 @@ html{scroll-behavior:smooth}
     };
   }
   setTimeout(decorateCards,1000);
+})();
+</script>
+
+
+<script id="pharaoh-v28-override">
+(function(){
+  function init(){
+    const oldFab = document.getElementById('pharaohAssistantFab');
+    const panel = document.getElementById('pharaohChatPanel');
+    const closeBtn = document.getElementById('pharaohClose');
+    const input = document.getElementById('pharaohChatInput');
+    if(!oldFab || !panel) return;
+
+    const fab = oldFab.cloneNode(true); // drop old listeners completely
+    oldFab.replaceWith(fab);
+    document.body.appendChild(fab);
+    document.body.appendChild(panel);
+
+    let pos = {x: window.innerWidth - 110, y: window.innerHeight - 170};
+    try{
+      const saved = JSON.parse(localStorage.getItem('pharaoh_assistant_pos_v28') || 'null');
+      if(saved && typeof saved.x === 'number' && typeof saved.y === 'number') pos = saved;
+    }catch(e){}
+
+    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+    function applyPos(){
+      const maxX = Math.max(0, window.innerWidth - fab.offsetWidth);
+      const maxY = Math.max(0, window.innerHeight - fab.offsetHeight);
+      pos.x = clamp(pos.x, 0, maxX);
+      pos.y = clamp(pos.y, 0, maxY);
+      fab.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+      localStorage.setItem('pharaoh_assistant_pos_v28', JSON.stringify(pos));
+      if(panel.classList.contains('show')) positionPanel();
+    }
+    function positionPanel(){
+      const pw = Math.min(430, window.innerWidth - 24);
+      const ph = Math.min(640, window.innerHeight - 120);
+      let left = pos.x - pw + fab.offsetWidth + 10;
+      let top = pos.y - ph - 10;
+      if(top < 8) top = pos.y + fab.offsetHeight + 10;
+      left = clamp(left, 8, window.innerWidth - pw - 8);
+      top = clamp(top, 8, window.innerHeight - ph - 8);
+      panel.style.left = left + 'px';
+      panel.style.top = top + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      panel.style.width = pw + 'px';
+      panel.style.height = ph + 'px';
+    }
+    function togglePanel(show){
+      const want = typeof show === 'boolean' ? show : !panel.classList.contains('show');
+      if(want){ positionPanel(); panel.classList.add('show'); setTimeout(()=>input&&input.focus(),120); }
+      else panel.classList.remove('show');
+    }
+    closeBtn && closeBtn.addEventListener('click', ()=>togglePanel(false));
+
+    let dragging=false, moved=false, startX=0, startY=0, grabX=0, grabY=0;
+    function point(e){
+      if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY};
+      if(e.changedTouches && e.changedTouches[0]) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY};
+      return {x:e.clientX, y:e.clientY};
+    }
+    function onStart(e){
+      const p = point(e);
+      dragging = true; moved = false;
+      startX = p.x; startY = p.y;
+      grabX = p.x - pos.x; grabY = p.y - pos.y;
+      fab.classList.remove('drop-bounce');
+      fab.classList.add('dragging');
+      if(e.cancelable) e.preventDefault();
+    }
+    function onMove(e){
+      if(!dragging) return;
+      const p = point(e);
+      const nx = p.x - grabX;
+      const ny = p.y - grabY;
+      if(Math.abs(p.x - startX) + Math.abs(p.y - startY) > 4) moved = true;
+      pos.x = nx; pos.y = ny;
+      applyPos();
+      if(e.cancelable) e.preventDefault();
+    }
+    function onEnd(e){
+      if(!dragging) return;
+      dragging = false;
+      fab.classList.remove('dragging');
+      if(moved){
+        fab.classList.add('drop-bounce');
+        setTimeout(()=>fab.classList.remove('drop-bounce'), 700);
+      } else {
+        togglePanel();
+      }
+      applyPos();
+      if(e && e.cancelable) e.preventDefault();
+    }
+
+    fab.addEventListener('pointerdown', onStart, {passive:false});
+    window.addEventListener('pointermove', onMove, {passive:false});
+    window.addEventListener('pointerup', onEnd, {passive:false});
+    window.addEventListener('pointercancel', onEnd, {passive:false});
+    fab.addEventListener('touchstart', onStart, {passive:false});
+    window.addEventListener('touchmove', onMove, {passive:false});
+    window.addEventListener('touchend', onEnd, {passive:false});
+    fab.addEventListener('mousedown', onStart, {passive:false});
+    window.addEventListener('mousemove', onMove, {passive:false});
+    window.addEventListener('mouseup', onEnd, {passive:false});
+    window.addEventListener('resize', applyPos);
+    applyPos();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 
