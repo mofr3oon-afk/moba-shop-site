@@ -1616,6 +1616,86 @@ html{scroll-behavior:smooth}
   .pharaoh-name-badge{font-size:12px !important;padding:3px 10px !important;}
 }
 
+
+/* V24 transparent roaming Pharaoh */
+.pharaoh-assistant-fab{
+  width:128px !important;
+  height:170px !important;
+  right:12px !important;
+  bottom:86px !important;
+  z-index:2500 !important;
+}
+.pharaoh-character{
+  width:auto !important;
+  height:auto !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  overflow:visible !important;
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+}
+.pharaoh-character::before,
+.pharaoh-character::after{display:none !important; content:none !important;}
+.pharaoh-figure{
+  width:106px;
+  height:auto;
+  display:block;
+  background:transparent !important;
+  pointer-events:none;
+  user-select:none;
+  transform-origin:center bottom;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.34));
+  animation:phFloat 2.2s ease-in-out infinite, phTurn 4.4s ease-in-out infinite, phBounce 1.5s ease-in-out infinite;
+}
+.pharaoh-figure.small{
+  width:42px;
+  animation:phFloat 2.4s ease-in-out infinite, phTurn 4.8s ease-in-out infinite;
+}
+.pharaoh-character .spark{
+  position:absolute;
+  width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle, #63eeff 0%, #27d8ff 55%, rgba(39,216,255,0) 72%);
+  box-shadow:0 0 10px rgba(39,216,255,.7);
+  opacity:.85;
+  pointer-events:none;
+}
+.pharaoh-character .spark.s1{right:18px;top:28px;animation:sparkMove1 2.8s ease-in-out infinite}
+.pharaoh-character .spark.s2{left:18px;top:52px;width:5px;height:5px;animation:sparkMove2 3.2s ease-in-out infinite}
+.pharaoh-character .shadow{
+  position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:52px;height:12px;border-radius:999px;
+  background:radial-gradient(circle, rgba(0,0,0,.32), rgba(0,0,0,0) 70%);
+  filter:blur(4px);
+  animation:shadowPulse 2.2s ease-in-out infinite;
+}
+.pharaoh-name-badge{
+  margin-top:-4px !important;
+  padding:4px 12px !important;
+  border-radius:999px !important;
+  background:rgba(16,20,36,.92) !important;
+  border:1px solid rgba(255,207,92,.45) !important;
+  box-shadow:0 10px 20px rgba(0,0,0,.25), 0 0 14px rgba(255,207,92,.13) !important;
+}
+.pharaoh-chat-title .pharaoh-mini{
+  width:46px !important;height:46px !important;
+  background:transparent !important;border:0 !important;box-shadow:none !important;overflow:visible !important;
+}
+@keyframes phFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes phTurn{0%,100%{transform:rotate(0deg)}25%{transform:rotate(2deg)}75%{transform:rotate(-2deg)}}
+@keyframes phBounce{0%,100%{scale:1}50%{scale:1.02}}
+@keyframes shadowPulse{0%,100%{opacity:.25;transform:translateX(-50%) scale(.92)}50%{opacity:.45;transform:translateX(-50%) scale(1.06)}}
+@keyframes sparkMove1{0%,100%{transform:translateY(0) translateX(0);opacity:.9}50%{transform:translateY(-7px) translateX(4px);opacity:1}}
+@keyframes sparkMove2{0%,100%{transform:translateY(0) translateX(0);opacity:.55}50%{transform:translateY(-5px) translateX(-4px);opacity:.9}}
+@media(max-width:900px){
+  .pharaoh-assistant-fab{width:104px !important;height:142px !important;right:6px !important;bottom:94px !important;}
+  .pharaoh-figure{width:82px;}
+  .pharaoh-name-badge{font-size:12px !important;padding:3px 10px !important;}
+}
+
 </style>
 </head>
 <body>
@@ -2918,7 +2998,7 @@ html{scroll-behavior:smooth}
   <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
     <div class="pharaoh-chat-head">
       <div class="pharaoh-chat-title">
-        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic.png" alt="فرعون"></div>
+        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic-transparent.png" alt="فرعون"></div>
         <div>
           <b>فرعون Assistant</b>
           <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
@@ -2952,9 +3032,7 @@ html{scroll-behavior:smooth}
   </div>
 
   <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
-    <div class="pharaoh-character">
-      <img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic.png" alt="فرعون">
-    </div>
+    <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent.png" alt="فرعون"></div>
     <div class="pharaoh-name-badge">فرعون</div>
   </div>
 
