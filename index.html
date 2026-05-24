@@ -2611,6 +2611,19 @@ button[type="submit"].disabled-checkout{
   }
 }
 
+
+/* V45 final screenshot alert fix */
+.checkout.disabled-checkout,
+button.disabled-checkout{
+  opacity:.48!important;
+  cursor:not-allowed!important;
+}
+#trackOrder button,
+#trackOrder input,
+#trackOrder input[type="submit"]{
+  pointer-events:auto!important;
+}
+
 </style>
 </head>
 <body>
@@ -5335,20 +5348,8 @@ button[type="submit"].disabled-checkout{
     const checked = qs('input[name="paymentMethod"]:checked');
     return checked ? checked.value : (qs('[name="paymentMethod"]')?.value || localStorage.getItem('moba_preferred_payment') || '');
   }
-  function screenshotSelected(){
-    const file = qsa('input[type="file"]').find(i => /screen|screenshot|photo|image|file/i.test(i.name || i.id || '') );
-    return !!(file && file.files && file.files.length);
-  }
-  function updateCheckoutLock(){
-    const btns = qsa('.checkout, button[type="submit"]').filter(b => /checkout|شراء|تنفيذ|طلب/i.test(b.textContent||''));
-    let warning = qs('#smartCheckoutWarning');
-    if(!warning && btns[0]){
-      warning = document.createElement('div');
-      warning.id = 'smartCheckoutWarning';
-      warning.className = 'smart-checkout-warning';
-      btns[0].insertAdjacentElement('beforebegin', warning);
-    }
-    const ok = screenshotSelected();
+  // V45: old broad screenshot lock removed.
+const ok = screenshotSelected();
     btns.forEach(btn=>{
       btn.disabled = !ok;
       btn.classList.toggle('disabled-checkout', !ok);
@@ -5360,15 +5361,9 @@ button[type="submit"].disabled-checkout{
       warning.innerHTML = '⚠️ لازم ترفع سكرين التحويل قبل تنفيذ الطلب.';
     }
   }
-
-  document.addEventListener('change', function(e){
-    if(e.target && e.target.type === 'file') updateCheckoutLock();
-    if(e.target && e.target.name === 'paymentMethod'){
-      localStorage.setItem('moba_preferred_payment', e.target.value);
-    }
-  }, true);
-  setInterval(updateCheckoutLock, 1500);
-  setTimeout(updateCheckoutLock, 800);
+  // V45: old broad change listener removed.
+// V45 removed old updateCheckoutLock interval
+  // V45 removed old updateCheckoutLock timeout
 
   // restore preferred payment
   setTimeout(()=>{
@@ -5666,169 +5661,6 @@ button[type="submit"].disabled-checkout{
 </script>
 
 
-<script id="moba-v42-screenshot-scope-fix">
-(function(){
-  function isCheckoutButton(btn){
-    if(!btn) return false;
-    const txt = (btn.textContent || '').trim();
-    return /checkout|شراء|تنفيذ الشراء|تنفيذ الطلب/i.test(txt);
-  }
-  function cartArea(){
-    return document.querySelector('#cartSection') || document.querySelector('#couponBox')?.closest('section,div') || document.querySelector('#orderForm') || document;
-  }
-  function screenshotInput(){
-    const area = cartArea();
-    return Array.from(area.querySelectorAll('input[type="file"]')).find(i => !i.closest('#trackOrder') && !i.closest('#historyList')) || null;
-  }
-  function validScreen(){
-    const input = screenshotInput();
-    const file = input && input.files && input.files[0];
-    if(!file) return false;
-    return ['image/jpeg','image/png','image/webp'].includes(String(file.type||'').toLowerCase()) && /\.(jpg|jpeg|png|webp)$/i.test(file.name||'') && Number(file.size||0) <= 5*1024*1024;
-  }
-  function updateOnlyCheckout(){
-    const area = cartArea();
-    const btns = Array.from(area.querySelectorAll('button,input[type="submit"]')).filter(isCheckoutButton);
-    const ok = validScreen();
-    btns.forEach(btn=>{
-      btn.disabled = !ok;
-      btn.classList.toggle('disabled-checkout', !ok);
-      btn.title = ok ? '' : 'لازم ترفع صورة سكرين التحويل الأول';
-    });
-    let warning = document.getElementById('smartCheckoutWarning');
-    if(warning){
-      warning.style.display = ok ? 'none' : 'block';
-      warning.innerHTML = '⚠️ لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
-    }
-  }
-
-  setInterval(updateOnlyCheckout, 1200);
-  document.addEventListener('change', function(e){
-    if(e.target && e.target.type === 'file') setTimeout(updateOnlyCheckout, 60);
-  }, true);
-  // V43: track form bypass handled by early capture guard.
-})();
-</script>
-
-
-<script id="moba-v43-hard-screenshot-fix">
-(function(){
-  const MAX_IMG_SIZE = 5 * 1024 * 1024;
-  const ALLOWED_TYPES = ['image/jpeg','image/png','image/webp'];
-  const ALLOWED_EXT = /\.(jpg|jpeg|png|webp)$/i;
-
-  function isInsideTrack(el){
-    return !!(el && (el.closest('#trackOrder') || el.closest('#historyList') || el.closest('.history-section') || el.closest('[data-history]')));
-  }
-  function isCheckoutBtn(el){
-    if(!el) return false;
-    const txt = String(el.textContent || el.value || '').trim();
-    return /checkout|تنفيذ الشراء|تنفيذ الطلب|شراء/i.test(txt) && !/متابعة|بحث|سجل/i.test(txt);
-  }
-  function checkoutArea(){
-    return document.querySelector('#cartSection') || document.querySelector('#orderForm') || document.querySelector('#couponBox')?.closest('section,div') || document;
-  }
-  function screenshotInput(){
-    const area = checkoutArea();
-    const inputs = Array.from(area.querySelectorAll('input[type="file"]')).filter(i => !isInsideTrack(i));
-    return inputs.find(i => /screen|screenshot|photo|image|file|سكرين|صورة/i.test(i.name || i.id || '')) || inputs[0] || null;
-  }
-  function screenshotError(){
-    const input = screenshotInput();
-    const file = input && input.files && input.files[0];
-    if(!file) return 'لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
-    const type = String(file.type || '').toLowerCase();
-    const name = String(file.name || '');
-    if(!ALLOWED_TYPES.includes(type) || !ALLOWED_EXT.test(name)) return 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
-    if(Number(file.size || 0) > MAX_IMG_SIZE) return 'حجم الصورة كبير. الحد الأقصى 5MB.';
-    return '';
-  }
-  function updateCheckoutButtonOnly(){
-    const area = checkoutArea();
-    const btns = Array.from(area.querySelectorAll('button,input[type="submit"]')).filter(isCheckoutBtn);
-    const err = screenshotError();
-    btns.forEach(btn=>{
-      btn.disabled = !!err;
-      btn.classList.toggle('disabled-checkout', !!err);
-      btn.title = err || '';
-    });
-
-    let warning = document.getElementById('smartCheckoutWarning');
-    if(warning){
-      warning.style.display = err ? 'block' : 'none';
-      warning.innerHTML = err ? '⚠️ ' + err : '';
-    }
-  }
-
-  // أهم جزء: أي فورم أو زر داخل سجل الطلبات يشتغل عادي وممنوع أي كود سكرين يمسكه
-  document.addEventListener('submit', function(e){
-    if(isInsideTrack(e.target)){
-      return true;
-    }
-  }, true);
-
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('button,input[type="submit"],a');
-    if(!btn) return;
-
-    // لو ده زر متابعة الطلب، سيبه يعدي عادي
-    if(isInsideTrack(btn)){
-      return true;
-    }
-
-    // لو ده Checkout بس، افحص السكرين
-    if(isCheckoutBtn(btn)){
-      const err = screenshotError();
-      if(err){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        alert(err);
-        updateCheckoutButtonOnly();
-        return false;
-      }
-    }
-  }, true);
-
-  document.addEventListener('submit', function(e){
-    const form = e.target;
-    if(isInsideTrack(form)) return true;
-
-    const submitter = e.submitter || document.activeElement;
-    if(submitter && isCheckoutBtn(submitter)){
-      const err = screenshotError();
-      if(err){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        alert(err);
-        updateCheckoutButtonOnly();
-        return false;
-      }
-    }
-  }, true);
-
-  document.addEventListener('change', function(e){
-    if(e.target && e.target.type === 'file' && !isInsideTrack(e.target)){
-      const err = screenshotError();
-      if(err && e.target.files && e.target.files.length){
-        alert(err);
-        e.target.value = '';
-      }
-      updateCheckoutButtonOnly();
-    }
-  }, true);
-
-  setInterval(updateCheckoutButtonOnly, 1200);
-  setTimeout(updateCheckoutButtonOnly, 500);
-
-  // Patch old global function so any older code calling it won't affect track search
-  window.mobaValidateScreenshot = function(){
-    const err = screenshotError();
-    return err ? {ok:false,error:err} : {ok:true,file:screenshotInput()?.files?.[0]};
-  };
-})();
-</script>
-
-
 <script id="moba-v44-closed-status-upsell">
 (function(){
   const HOURS_HTML = `
@@ -5906,6 +5738,156 @@ button[type="submit"].disabled-checkout{
       ensurePopup().classList.remove('show');
     }
   });
+})();
+</script>
+
+
+<script id="moba-v45-final-screenshot-alert-fix">
+(function(){
+  const MAX_SIZE = 5 * 1024 * 1024;
+  const TYPES = ['image/jpeg','image/png','image/webp'];
+  const EXT = /\.(jpg|jpeg|png|webp)$/i;
+
+  function isTrackArea(el){
+    return !!(el && (
+      el.closest('#trackOrder') ||
+      el.closest('#historyList') ||
+      el.closest('.history-section') ||
+      el.closest('[data-history]') ||
+      el.id === 'trackOrder' ||
+      el.id === 'trackForm' ||
+      el.id === 'statusForm'
+    ));
+  }
+
+  function isCheckoutButton(el){
+    if(!el) return false;
+    const txt = String(el.textContent || el.value || '').trim();
+    if(/متابعة|بحث|سجل|حالة الطلب|عرض الطلب/i.test(txt)) return false;
+    return /checkout|تنفيذ الشراء|تنفيذ الطلب|شراء/i.test(txt);
+  }
+
+  function checkoutArea(){
+    return document.querySelector('#cartSection') ||
+           document.querySelector('#orderForm') ||
+           document.querySelector('#couponBox')?.closest('section,div') ||
+           document;
+  }
+
+  function getScreenInput(){
+    const area = checkoutArea();
+    const inputs = Array.from(area.querySelectorAll('input[type="file"]'))
+      .filter(i => !isTrackArea(i));
+    return inputs.find(i => /screen|screenshot|photo|image|file|سكرين|صورة/i.test(i.name || i.id || '')) || inputs[0] || null;
+  }
+
+  function checkScreen(){
+    const input = getScreenInput();
+    const file = input && input.files && input.files[0];
+
+    if(!file) return 'لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
+    const type = String(file.type || '').toLowerCase();
+    const name = String(file.name || '');
+
+    if(!TYPES.includes(type) || !EXT.test(name)){
+      return 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
+    }
+    if(Number(file.size || 0) > MAX_SIZE){
+      return 'حجم الصورة كبير. الحد الأقصى 5MB.';
+    }
+    return '';
+  }
+
+  function setCheckoutState(){
+    const area = checkoutArea();
+    const buttons = Array.from(area.querySelectorAll('button,input[type="submit"]'))
+      .filter(isCheckoutButton);
+
+    const err = checkScreen();
+    buttons.forEach(btn => {
+      btn.disabled = !!err;
+      btn.classList.toggle('disabled-checkout', !!err);
+      btn.title = err || '';
+    });
+
+    const warning = document.getElementById('smartCheckoutWarning');
+    if(warning){
+      warning.style.display = err ? 'block' : 'none';
+      warning.innerHTML = err ? '⚠️ ' + err : '';
+    }
+  }
+
+  // نهائي: أي حاجة داخل سجل الطلبات لا يتم فحص السكرين عليها أبدا.
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('button,input[type="submit"],a');
+    if(isTrackArea(btn)){
+      return true;
+    }
+
+    if(isCheckoutButton(btn)){
+      const err = checkScreen();
+      if(err){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        alert(err);
+        setCheckoutState();
+        return false;
+      }
+    }
+  }, true);
+
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(isTrackArea(form)){
+      return true;
+    }
+
+    const submitter = e.submitter || document.activeElement;
+    if(isCheckoutButton(submitter) || form.id === 'orderForm'){
+      const err = checkScreen();
+      if(err){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        alert(err);
+        setCheckoutState();
+        return false;
+      }
+    }
+  }, true);
+
+  document.addEventListener('change', function(e){
+    if(!e.target || e.target.type !== 'file') return;
+    if(isTrackArea(e.target)) return;
+
+    const file = e.target.files && e.target.files[0];
+    if(!file){
+      setCheckoutState();
+      return;
+    }
+
+    const type = String(file.type || '').toLowerCase();
+    const name = String(file.name || '');
+    let err = '';
+
+    if(!TYPES.includes(type) || !EXT.test(name)) err = 'مسموح برفع صورة فقط بصيغة JPG أو PNG أو WEBP.';
+    else if(Number(file.size || 0) > MAX_SIZE) err = 'حجم الصورة كبير. الحد الأقصى 5MB.';
+
+    if(err){
+      alert(err);
+      e.target.value = '';
+    }
+
+    setCheckoutState();
+  }, true);
+
+  // لا نعرف الدالة العامة بشكل يطلع alert في سجل الطلبات.
+  window.mobaValidateScreenshot = function(){
+    const err = checkScreen();
+    return err ? {ok:false,error:err} : {ok:true,file:getScreenInput()?.files?.[0]};
+  };
+
+  setTimeout(setCheckoutState, 700);
+  setInterval(setCheckoutState, 1500);
 })();
 </script>
 
