@@ -446,3 +446,10 @@ These commands control the top status pill on the website with green / yellow / 
 - لا يوجد أي Submit listener لفحص السكرين، عشان متابعة الطلب لا تتأثر.
 - Removed old scripts count: 2
 - Remaining phrase counts after cleanup: {'لازم ترفع صورة واحدة فقط للسكرين': 0, 'لازم ترفع صورة سكرين التحويل': 1, 'مسموح برفع صورة فقط': 2, 'حجم الصورة كبير': 2}
+
+
+## V47 Premium Top Nav Polish
+- تحسين كامل لشكل أزرار: المنتجات / السلة / حالة الطلب / آراء العملاء / الدعم
+- شكل احترافي Glass + Glow
+- Responsive أفضل للموبايل والكمبيوتر
+- Active state تلقائي حسب القسم المفتوح
