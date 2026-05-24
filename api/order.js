@@ -36,6 +36,19 @@ async function findOpenOrderByPubgId(cart){
   return (rows||[]).find(o=>(Array.isArray(o.items)?o.items:[]).some(it=>ids.has(String(it.pubgId)))) || null;
 }
 
+
+async function validateCouponServer(code,total){
+  code = String(code || '').trim().toUpperCase();
+  if(!code) return null;
+  const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`);
+  const c = rows && rows[0];
+  if(!c) throw new Error('كود الخصم غير موجود');
+  if(!c.is_active) throw new Error('كود الخصم متوقف حاليا');
+  if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) throw new Error('كود الخصم منتهي');
+  if(Number(c.min_order_amount || 0) > total) throw new Error(`الكوبون يحتاج طلب بقيمة ${c.min_order_amount} جنيه على الأقل`);
+  return {code:c.code, discount_amount:Math.min(Number(c.discount_amount||0), total)};
+}
+
 export default async function handler(req,res){
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
@@ -57,6 +70,13 @@ export default async function handler(req,res){
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
     for(const item of cart){ item.qty = itemQty(item); if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
     total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
+    const coupon_code = String(body.coupon_code || form?.get?.('coupon_code') || '').trim().toUpperCase();
+    let coupon_discount = 0;
+    if(coupon_code){
+      const validCoupon = await validateCouponServer(coupon_code,total);
+      coupon_discount = Number(validCoupon.discount_amount || 0);
+      total = Math.max(0, total - coupon_discount);
+    }
     if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
 
     const openPhone=await findOpenOrderByPhone(customerPhone);
@@ -66,6 +86,8 @@ export default async function handler(req,res){
     const order={
       id:identity.id, order_code:identity.order_code, order_date:identity.order_date, daily_number:identity.daily_number,
       phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, total,
+      coupon_code,
+      coupon_discount,
       status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
       handler:null, items:cart, note, transfer_mode:transferMode, transfer_last3:transferMode==='other'?transferLast3:'', transfer_confirm_text:transferMode==='same'?'نفس رقم المتابعة':`آخر 3 أرقام: ${transferLast3}`, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
       raw_data:{userAgent:req.headers['user-agent']||''}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]

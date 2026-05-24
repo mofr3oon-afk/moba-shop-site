@@ -195,3 +195,44 @@ alter table public.reviews add column if not exists is_approved boolean default 
 update public.reviews set is_approved=false where is_approved is null;
 
 notify pgrst, 'reload schema';
+
+
+
+-- V30 busy mode and late order alerts
+create table if not exists public.settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz default now()
+);
+
+insert into public.settings(key,value) values
+('busy_mode','false'),
+('busy_message','')
+on conflict (key) do nothing;
+
+alter table public.orders add column if not exists late_alerted_at timestamptz;
+create index if not exists orders_late_alert_idx on public.orders(status, created_at, late_alerted_at);
+
+notify pgrst, 'reload schema';
+
+
+
+-- V31 coupons
+create table if not exists public.coupons (
+  id bigserial primary key,
+  code text unique not null,
+  discount_amount numeric not null default 0,
+  min_order_amount numeric not null default 0,
+  is_active boolean default true,
+  expires_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.orders add column if not exists coupon_code text;
+alter table public.orders add column if not exists coupon_discount numeric default 0;
+
+create index if not exists coupons_code_idx on public.coupons(code);
+create index if not exists coupons_active_idx on public.coupons(is_active);
+
+notify pgrst, 'reload schema';

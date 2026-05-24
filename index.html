@@ -1971,6 +1971,145 @@ html{scroll-behavior:smooth}
   .pharaoh-hint-bubble{right:78px; top:2px; max-width:180px; font-size:11px;}
 }
 
+
+/* V30 Pharaoh helper + busy mode + smart UX */
+.work-status-mini{
+  margin:10px 0 0;
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(56,224,139,.28);
+  background:rgba(56,224,139,.10);
+  color:#e8fff1;
+  font-size:12px;
+  line-height:1.7;
+}
+.work-status-mini.busy{
+  border-color:rgba(255,207,92,.35);
+  background:rgba(255,207,92,.10);
+  color:#fff5cc;
+}
+.work-status-mini.closed{
+  border-color:rgba(255,154,47,.35);
+  background:rgba(255,154,47,.10);
+  color:#ffe0bf;
+}
+.pharaoh-mini-question{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:8px;
+}
+.pharaoh-mini-question button{
+  border:1px solid rgba(255,207,92,.25);
+  background:rgba(255,207,92,.08);
+  color:#fff3ce;
+  border-radius:14px;
+  padding:8px 9px;
+  cursor:pointer;
+  font-weight:800;
+}
+.pharaoh-assistant-fab.pharaoh-compact{
+  transform:translate3d(var(--ph-x, 0px), var(--ph-y, 0px), 0) scale(.72) !important;
+  opacity:.74;
+}
+.ask-pharaoh-btn{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:10px;
+  border:0;
+  border-radius:14px;
+  padding:10px 12px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,#ffcf5c,#ff9a2f);
+  color:#1a1000;
+}
+@media(max-width:900px){
+  .pharaoh-mini-question{grid-template-columns:1fr}
+}
+
+
+/* V31 coupons */
+.coupon-box{
+  margin:12px 0;
+  padding:12px;
+  border:1px solid rgba(255,207,92,.28);
+  background:rgba(255,207,92,.08);
+  border-radius:18px;
+  display:grid;
+  gap:9px;
+}
+.coupon-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+}
+.coupon-row input{
+  width:100%;
+  border:1px solid rgba(255,255,255,.13);
+  background:#080d19;
+  color:#fff;
+  border-radius:14px;
+  padding:12px;
+  outline:none;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.coupon-row button{
+  border:0;
+  border-radius:14px;
+  padding:12px 14px;
+  font-weight:900;
+  cursor:pointer;
+  background:linear-gradient(135deg,#ffcf5c,#ff9a2f);
+  color:#1a1000;
+  white-space:nowrap;
+}
+.coupon-status{
+  display:none;
+  padding:9px 10px;
+  border-radius:14px;
+  line-height:1.7;
+  font-size:12px;
+}
+.coupon-status.show{display:block}
+.coupon-status.ok{
+  background:rgba(56,224,139,.12);
+  border:1px solid rgba(56,224,139,.28);
+  color:#e8fff1;
+}
+.coupon-status.err{
+  background:rgba(255,77,104,.12);
+  border:1px solid rgba(255,77,104,.28);
+  color:#ffe3e7;
+}
+.coupon-applied-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(56,224,139,.12);
+  border:1px solid rgba(56,224,139,.28);
+  color:#e8fff1;
+  font-weight:900;
+  font-size:12px;
+}
+.coupon-remove{
+  border:0;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  border-radius:999px;
+  width:22px;
+  height:22px;
+  cursor:pointer;
+}
+@media(max-width:900px){
+  .coupon-row{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1999,6 +2138,9 @@ html{scroll-behavior:smooth}
         </div></div>
     </section>
 
+    
+      <div id="workStatusMini" class="work-status-mini">🟢 الشحن متاح الآن — متوسط التنفيذ حسب ضغط الطلبات</div>
+
     <section class="grid">
       <div class="panel products" id="productsSection">
         <div class="section-title"><h2>🎮 المنتجات | Products</h2><div class="tabs"><button class="tab active" data-cat="uc">شدات | UC</button><button class="tab" data-cat="growth">ازدهار</button><button class="tab" data-cat="prime">برايم</button></div></div>
@@ -2008,7 +2150,17 @@ html{scroll-behavior:smooth}
         <h2>🛒 سلة الطلبات | Cart</h2>
         <div id="cartBox"></div>
         <div class="total"><span>الإجمالي | Total</span><span id="total">0 جنيه</span></div>
-        <form id="orderForm" class="form">
+        
+      <div class="coupon-box" id="couponBox">
+        <b>🎟️ عندك كوبون خصم؟</b>
+        <div class="coupon-row">
+          <input id="couponInput" placeholder="اكتب كود الخصم" autocomplete="off">
+          <button type="button" id="applyCouponBtn">تطبيق</button>
+        </div>
+        <div id="couponStatus" class="coupon-status"></div>
+      </div>
+
+      <form id="orderForm" class="form">
           <div><label>📱 رقم الموبايل</label><input class="input" name="customerPhone" inputmode="numeric" placeholder="010xxxxxxxx" required /></div>
           <div><label>💳 طريقة الدفع | Payment</label><select class="select" name="paymentMethod" id="paymentMethod" required><option value="">اختار طريقة الدفع</option><option value="InstaPay">🟢 InstaPay</option><option value="Wallet">📱 محفظة | Wallet</option></select></div>
           <div id="paymentDetails" class="payment-details"></div>
@@ -3213,11 +3365,13 @@ html{scroll-behavior:smooth}
     const sum = document.getElementById('checkoutConfirmSummary');
     const s = cartSummary();
     const method = form.querySelector('[name="paymentMethod"]')?.value || 'غير محدد';
+    const cpn = window.mobaCouponFinalTotal ? window.mobaCouponFinalTotal() : {discount:0, final:s.total, code:''};
     sum.innerHTML = `
       <div>🛒 عدد المنتجات: <b>${s.count}</b></div>
       <div>🎮 إجمالي الشدات: <b>${s.uc} UC</b></div>
       <div>💳 طريقة الدفع: <b>${method}</b></div>
-      <div>💰 الإجمالي: <b>${s.total} جنيه</b></div>
+      ${cpn.discount ? `<div>🎟️ الكوبون: <b>${cpn.code}</b> - خصم ${cpn.discount} جنيه</div>` : ''}
+      <div>💰 الإجمالي: <b>${cpn.final} جنيه</b></div>
     `;
     pendingCheckoutForm = form;
     box.classList.add('show');
@@ -3293,6 +3447,7 @@ html{scroll-behavior:smooth}
         <button type="button" data-pharaoh-q="الطلبات القديمة">الطلبات القديمة</button>
         <button type="button" data-pharaoh-q="الازدهار">الازدهار</button>
         <button type="button" data-pharaoh-q="اكتر من ID">اكتر من ID</button>
+        <button type="button" data-pharaoh-q="عايز اشحن">عايز أشحن</button>
         <button type="button" data-pharaoh-q="قواعد الشحن">قواعد الشحن</button>
         <button type="button" data-pharaoh-q="الاكثر طلبا">الأكثر طلبًا</button>
         <button type="button" data-pharaoh-q="مواعيد العمل">مواعيد العمل</button>
@@ -4085,6 +4240,237 @@ html{scroll-behavior:smooth}
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+})();
+</script>
+
+
+<script id="moba-v30-pharaoh-busy-late">
+(function(){
+  const fab = document.getElementById('pharaohAssistantFab');
+  const panel = document.getElementById('pharaohChatPanel');
+  const statusBox = document.getElementById('workStatusMini');
+
+  function addBotMessage(html){
+    const body = document.getElementById('pharaohChatBody');
+    const typing = document.getElementById('pharaohTyping');
+    if(!body || !typing) return;
+    const msg = document.createElement('div');
+    msg.className = 'pharaoh-msg bot';
+    msg.innerHTML = html;
+    body.insertBefore(msg, typing);
+    body.scrollTop = body.scrollHeight;
+  }
+  function openPharaohWith(text){
+    if(panel && !panel.classList.contains('show')){
+      document.getElementById('pharaohAssistantFab')?.click();
+    }
+    setTimeout(()=>addBotMessage(text), 250);
+  }
+  window.askPharaohAboutIssue = function(type){
+    const map = {
+      bad_screen:'المشكلة إن السكرين مش واضح. ارفع صورة تحويل أوضح من سجل الطلبات، لازم تكون البيانات ظاهرة.',
+      bad_id:'المشكلة في PUBG ID أو اسم الحساب. افتح الطلب واكتب ID الصحيح واسم الحساب الصحيح.',
+      bad_phone:'المشكلة في رقم المتابعة أو بيانات التحويل. اكتب رقم صحيح 11 رقم أو آخر 3 أرقام من رقم التحويل.'
+    };
+    openPharaohWith((map[type] || 'افتح الطلب من سجل الطلبات وهتلاقي زر التعديل المطلوب.') + '<br><br>لو احتجت دعم مباشر، استخدم زر الدعم بعد فرص التعديل.');
+  };
+
+  async function loadWorkStatus(){
+    try{
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if(!data.ok) return;
+      const busy = data.settings?.busy_mode === true || data.settings?.busy_mode === 'true';
+      const msg = data.settings?.busy_message || '';
+      if(statusBox){
+        statusBox.classList.toggle('busy', busy);
+        statusBox.classList.remove('closed');
+        statusBox.innerHTML = busy
+          ? `🟡 يوجد ضغط طلبات حاليا — ${msg || 'التنفيذ قد يستغرق وقت أطول'}`
+          : '🟢 الشحن متاح الآن — متوسط التنفيذ حسب ضغط الطلبات';
+      }
+      window.mobaBusyMode = busy;
+    }catch(e){}
+  }
+  loadWorkStatus();
+  setInterval(loadWorkStatus, 60000);
+
+  // Pharaoh smart Q: if user says wants to charge, ask if one ID or multiple IDs
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-pharaoh-q]');
+    if(btn && /عايز اشحن|اشحن/i.test(btn.dataset.pharaohQ || '')){
+      setTimeout(()=>{
+        addBotMessage(`تحب تشحن لنفس ID ولا أكتر من ID؟<div class="pharaoh-mini-question">
+          <button type="button" data-pharaoh-action="products">نفس ID 🎮</button>
+          <button type="button" data-pharaoh-q="اكتر من ID">أكتر من ID</button>
+        </div>`);
+      }, 650);
+    }
+  });
+
+  // shrink Pharaoh while user is typing or filling forms on mobile
+  function compact(on){
+    if(!fab) return;
+    fab.classList.toggle('pharaoh-compact', !!on);
+  }
+  document.addEventListener('focusin', function(e){
+    if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){
+      compact(true);
+    }
+  });
+  document.addEventListener('focusout', function(e){
+    setTimeout(()=>compact(false), 250);
+  });
+
+  // add ask Pharaoh buttons into fix forms/cards dynamically
+  const mo = new MutationObserver(()=>{
+    document.querySelectorAll('.fix-form').forEach(form=>{
+      if(form.querySelector('.ask-pharaoh-btn')) return;
+      const type = form.querySelector('[name="fixType"]')?.value || '';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ask-pharaoh-btn';
+      btn.textContent = '👑 اسأل فرعون عن المشكلة';
+      btn.onclick = () => window.askPharaohAboutIssue(type);
+      form.appendChild(btn);
+    });
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
+
+  // Context tips improved
+  let lastTip = '';
+  const tips = [
+    {id:'cartSection', text:'راجع ID واسم الحساب قبل تنفيذ الطلب 👑'},
+    {id:'productsSection', text:'تقدر تضيف أكتر من ID في نفس السلة'},
+    {id:'trackOrder', text:'اكتب رقمك هنا عشان أجيب طلباتك القديمة والجديدة'}
+  ];
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && entry.intersectionRatio > .5){
+        const t = tips.find(x=>x.id === entry.target.id);
+        if(t && t.id !== lastTip && !panel?.classList.contains('show')){
+          lastTip = t.id;
+          const hint = document.getElementById('pharaohHintBubble');
+          if(hint && fab){
+            hint.innerHTML = t.text;
+            fab.classList.add('show-hint');
+            setTimeout(()=>fab.classList.remove('show-hint'), 3600);
+          }
+        }
+      }
+    });
+  },{threshold:[.5]});
+  tips.forEach(t=>{ const el=document.getElementById(t.id); if(el) io.observe(el); });
+})();
+</script>
+
+
+<script id="moba-v31-coupons">
+(function(){
+  window.appliedCoupon = null;
+
+  function money(n){
+    try{return Number(n||0).toLocaleString('en-US');}catch(e){return n||0;}
+  }
+  function cartTotal(){
+    const items = window.cart || [];
+    return items.reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
+  }
+  function showCouponStatus(type,msg){
+    const st = document.getElementById('couponStatus');
+    if(!st) return;
+    st.className = 'coupon-status show ' + type;
+    st.innerHTML = msg;
+  }
+  function refreshCouponInCart(){
+    const old = document.getElementById('couponAppliedView');
+    if(old) old.remove();
+    const box = document.getElementById('couponBox');
+    if(!box || !window.appliedCoupon) return;
+    const total = cartTotal();
+    const discount = Math.min(Number(window.appliedCoupon.discount_amount||0), total);
+    const finalTotal = Math.max(0, total - discount);
+    const div = document.createElement('div');
+    div.id = 'couponAppliedView';
+    div.innerHTML = `<span class="coupon-applied-pill">✅ ${window.appliedCoupon.code} خصم ${money(discount)} جنيه <button class="coupon-remove" type="button" id="removeCouponBtn">×</button></span>
+    <div class="fix-small">الإجمالي بعد الخصم: <b>${money(finalTotal)} جنيه</b></div>`;
+    box.appendChild(div);
+    const rm = document.getElementById('removeCouponBtn');
+    if(rm) rm.onclick = function(){
+      window.appliedCoupon = null;
+      localStorage.removeItem('moba_coupon');
+      document.getElementById('couponInput').value = '';
+      div.remove();
+      showCouponStatus('err','تم حذف الكوبون');
+      if(typeof window.renderCart === 'function') window.renderCart();
+    };
+  }
+  async function applyCoupon(){
+    const input = document.getElementById('couponInput');
+    const code = String(input?.value || '').trim().toUpperCase();
+    if(!code) return showCouponStatus('err','اكتب كود الخصم الأول');
+    const total = cartTotal();
+    if(total <= 0) return showCouponStatus('err','ضيف منتجات للسلة الأول');
+    try{
+      const res = await fetch('/api/coupon?code=' + encodeURIComponent(code) + '&total=' + encodeURIComponent(total));
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'الكوبون غير صالح');
+      window.appliedCoupon = data.coupon;
+      localStorage.setItem('moba_coupon', JSON.stringify(window.appliedCoupon));
+      showCouponStatus('ok',`✅ تم تطبيق الكوبون <b>${data.coupon.code}</b> — خصم ${money(data.coupon.discount_amount)} جنيه`);
+      refreshCouponInCart();
+      if(typeof window.renderCart === 'function') window.renderCart();
+    }catch(e){
+      window.appliedCoupon = null;
+      localStorage.removeItem('moba_coupon');
+      refreshCouponInCart();
+      showCouponStatus('err','⚠️ ' + (e.message || 'الكوبون غير صالح'));
+    }
+  }
+
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.id === 'applyCouponBtn') applyCoupon();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.target && e.target.id === 'couponInput' && e.key === 'Enter'){
+      e.preventDefault(); applyCoupon();
+    }
+  });
+
+  // Restore coupon
+  setTimeout(()=>{
+    try{
+      const saved = JSON.parse(localStorage.getItem('moba_coupon') || 'null');
+      if(saved && saved.code){
+        window.appliedCoupon = saved;
+        const input = document.getElementById('couponInput');
+        if(input) input.value = saved.code;
+        refreshCouponInCart();
+      }
+    }catch(e){}
+  },700);
+
+  // Patch checkout submit payload by adding coupon hidden fields
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(!form || !(form.id === 'orderForm' || form.classList.contains('checkout-form'))) return;
+    form.querySelectorAll('[data-coupon-hidden]').forEach(x=>x.remove());
+    if(window.appliedCoupon){
+      const code = document.createElement('input');
+      code.type = 'hidden'; code.name = 'coupon_code'; code.value = window.appliedCoupon.code; code.dataset.couponHidden = '1';
+      const discount = document.createElement('input');
+      discount.type = 'hidden'; discount.name = 'coupon_discount'; discount.value = window.appliedCoupon.discount_amount; discount.dataset.couponHidden = '1';
+      form.appendChild(code); form.appendChild(discount);
+    }
+  }, true);
+
+  // Patch confirmation summary if exists
+  const oldFetch = window.fetch;
+  window.mobaCouponFinalTotal = function(){
+    const total = cartTotal();
+    const disc = window.appliedCoupon ? Math.min(Number(window.appliedCoupon.discount_amount||0), total) : 0;
+    return {total, discount:disc, final:Math.max(0,total-disc), code:window.appliedCoupon?.code||''};
+  };
 })();
 </script>
 

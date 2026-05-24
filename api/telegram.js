@@ -263,6 +263,16 @@ async function findByPubgId(chatId,id,replyTo){
     await tg('sendMessage',{chat_id:chatId,text:`${o.id}\n📱 ${o.phone||''}\n📌 ${statusLabel(o.status)}`,reply_markup:{inline_keyboard:[[{text:'👁 فتح الطلب',callback_data:`open:${realOrderId(o)}`}]]}});
   }
 }
+
+async function setSetting(key,value){
+  const rows = await supa(`settings?key=eq.${encodeURIComponent(key)}&select=*`);
+  if(rows && rows[0]){
+    await supa(`settings?key=eq.${encodeURIComponent(key)}`,{method:'PATCH',body:JSON.stringify({value:String(value),updated_at:new Date().toISOString()})});
+  }else{
+    await supa('settings',{method:'POST',body:JSON.stringify({key,value:String(value),updated_at:new Date().toISOString()})});
+  }
+}
+
 async function handleCommand(msg){
   const chatId=msg.chat.id;
   const adminId=msg.from.id;
@@ -292,6 +302,11 @@ async function handleCommand(msg){
 /today_pending - طلبات النهارده المفتوحة
 /done_today - طلبات اتشحنت النهارده
 /stats - إحصائيات بدون أرباح
+/busy - تفعيل وضع ضغط الطلبات
+/normal - إلغاء وضع ضغط الطلبات
+/coupon CODE AMOUNT - إضافة أو تشغيل كوبون خصم بالجنيه
+/coupon_off CODE - إيقاف كوبون
+/coupons - عرض الكوبونات
 /reviews - تقييمات العملاء الجديدة
 /pinned - الطلبات المهمة
 
@@ -300,6 +315,58 @@ async function handleCommand(msg){
 /week - تقرير الأسبوع
 /month - تقرير الشهر`});
   }
+
+
+  if(cmd==='/coupon'){
+    const parts = arg.split(/\s+/).filter(Boolean);
+    const code = String(parts[0] || '').trim().toUpperCase();
+    const amount = Number(parts[1] || 0);
+    const minAmount = Number(parts[2] || 0);
+    if(!code || !amount) return tg('sendMessage',{chat_id:chatId,text:'استخدم الأمر كده:\n/coupon MOBA10 10\nأو بحد أدنى:\n/coupon MOBA10 10 100',reply_to_message_id:msg.message_id});
+    const exists = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*`);
+    const row = {code,discount_amount:amount,min_order_amount:minAmount,is_active:true,updated_at:new Date().toISOString()};
+    if(exists && exists[0]){
+      await supa(`coupons?code=eq.${encodeURIComponent(code)}`,{method:'PATCH',body:JSON.stringify(row)});
+    }else{
+      await supa('coupons',{method:'POST',body:JSON.stringify({...row,created_at:new Date().toISOString()})});
+    }
+    return tg('sendMessage',{chat_id:chatId,text:`🎟️ تم حفظ الكوبون\nالكود: ${code}\nالخصم: ${amount} جنيه\nالحد الأدنى: ${minAmount || 'لا يوجد'}\nالحالة: شغال ✅`});
+  }
+  if(cmd==='/coupon_off'){
+    const code = String(arg || '').trim().toUpperCase();
+    if(!code) return tg('sendMessage',{chat_id:chatId,text:'اكتب الكود بعد الأمر\nمثال: /coupon_off MOBA10',reply_to_message_id:msg.message_id});
+    await supa(`coupons?code=eq.${encodeURIComponent(code)}`,{method:'PATCH',body:JSON.stringify({is_active:false,updated_at:new Date().toISOString()})});
+    return tg('sendMessage',{chat_id:chatId,text:`⛔ تم إيقاف الكوبون: ${code}`});
+  }
+  if(cmd==='/coupon_on'){
+    const code = String(arg || '').trim().toUpperCase();
+    if(!code) return tg('sendMessage',{chat_id:chatId,text:'اكتب الكود بعد الأمر\nمثال: /coupon_on MOBA10',reply_to_message_id:msg.message_id});
+    await supa(`coupons?code=eq.${encodeURIComponent(code)}`,{method:'PATCH',body:JSON.stringify({is_active:true,updated_at:new Date().toISOString()})});
+    return tg('sendMessage',{chat_id:chatId,text:`✅ تم تشغيل الكوبون: ${code}`});
+  }
+  if(cmd==='/coupons'){
+    const rows = await supa(`coupons?select=*&order=created_at.desc&limit=20`);
+    if(!rows.length) return tg('sendMessage',{chat_id:chatId,text:'لا يوجد كوبونات حاليا.'});
+    return tg('sendMessage',{chat_id:chatId,text:'🎟️ الكوبونات:\n' + rows.map(c=>`${c.is_active?'✅':'⛔'} ${c.code} | خصم ${c.discount_amount}ج | حد أدنى ${c.min_order_amount||0}ج`).join('\n')});
+  }
+
+  if(cmd==='/busy'){
+    const msgTxt = arg || 'يوجد ضغط طلبات حاليا، التنفيذ قد يستغرق وقت أطول';
+    await setSetting('busy_mode','true');
+    await setSetting('busy_message',msgTxt);
+    return tg('sendMessage',{chat_id:chatId,text:`🟡 تم تفعيل Busy Mode\n${msgTxt}`});
+  }
+  if(cmd==='/normal'){
+    await setSetting('busy_mode','false');
+    await setSetting('busy_message','');
+    return tg('sendMessage',{chat_id:chatId,text:'🟢 تم إلغاء Busy Mode ورجوع حالة الشحن للوضع الطبيعي'});
+  }
+  if(cmd==='/reset_late_alerts'){
+    const rows = await supa(`orders?select=id&late_alerted_at=not.is.null&status=in.(pending,claimed,processing,on_hold,needs_fix)`);
+    for(const r of rows) await supa(`orders?id=eq.${encodeURIComponent(r.id)}`,{method:'PATCH',body:JSON.stringify({late_alerted_at:null})});
+    return tg('sendMessage',{chat_id:chatId,text:`تم تصفير تنبيهات التأخير لعدد ${rows.length} طلب`});
+  }
+
   if(cmd==='/today') return tg('sendMessage',{chat_id:chatId,text:await reportText(1,'تقرير اليوم')});
   if(cmd==='/week') return tg('sendMessage',{chat_id:chatId,text:await reportText(7,'تقرير الأسبوع')});
   if(cmd==='/month') return tg('sendMessage',{chat_id:chatId,text:await reportText(30,'تقرير الشهر')});
