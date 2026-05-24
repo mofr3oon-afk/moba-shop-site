@@ -1750,6 +1750,30 @@ html{scroll-behavior:smooth}
   100%{opacity:.35; transform:translateX(-50%) scale(1)}
 }
 
+
+/* V27 free drag + stronger motion */
+.pharaoh-assistant-fab{
+  position:fixed !important;
+  z-index:9999 !important;
+  touch-action:none !important;
+  user-select:none !important;
+  -webkit-user-select:none !important;
+  cursor:grab !important;
+  will-change:left, top, transform;
+}
+.pharaoh-assistant-fab.dragging{cursor:grabbing !important;}
+.pharaoh-figure{
+  animation:phIdleFloat 2.4s ease-in-out infinite, phIdleSwing 3.6s ease-in-out infinite !important;
+}
+.pharaoh-assistant-fab:not(.dragging):not(.drop-bounce) .pharaoh-figure{
+  animation:phIdleFloat 2.4s ease-in-out infinite, phIdleSwing 3.6s ease-in-out infinite, phTinyHop 4.8s ease-in-out infinite !important;
+}
+@keyframes phIdleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes phIdleSwing{0%,100%{filter:drop-shadow(0 10px 22px rgba(0,0,0,.34));}25%{transform:translateY(-5px) rotate(2deg)}75%{transform:translateY(-6px) rotate(-2deg)}}
+@keyframes phTinyHop{0%,85%,100%{transform:translateY(0) rotate(0)}90%{transform:translateY(-10px) rotate(3deg)}95%{transform:translateY(2px) rotate(-2deg)}}
+.pharaoh-character .spark.s1{animation:sparkMove1 2.1s ease-in-out infinite}
+.pharaoh-character .spark.s2{animation:sparkMove2 2.5s ease-in-out infinite}
+
 </style>
 </head>
 <body>
@@ -3101,8 +3125,19 @@ html{scroll-behavior:smooth}
   const input = document.getElementById('pharaohChatInput');
   const typing = document.getElementById('pharaohTyping');
   if(!fab || !panel) return;
-  let drag = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0, activePointerId = null;
+  
+  // move the assistant and panel directly under body so it can roam freely above the whole site
+  if(fab.parentElement !== document.body) document.body.appendChild(fab);
+  if(panel.parentElement !== document.body) document.body.appendChild(panel);
 
+  let drag = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+
+  function getPoint(ev){
+    if(ev.touches && ev.touches[0]) return {x: ev.touches[0].clientX, y: ev.touches[0].clientY};
+    if(ev.changedTouches && ev.changedTouches[0]) return {x: ev.changedTouches[0].clientX, y: ev.changedTouches[0].clientY};
+    return {x: ev.clientX, y: ev.clientY};
+  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
   function loadPos(){
     try{
       const p = JSON.parse(localStorage.getItem('pharaoh_assistant_pos') || 'null');
@@ -3114,24 +3149,21 @@ html{scroll-behavior:smooth}
         return;
       }
     }catch(e){}
-    fab.style.right = '12px';
-    fab.style.bottom = '86px';
-    fab.style.left = 'auto';
-    fab.style.top = 'auto';
+    fab.style.left = (window.innerWidth - fab.offsetWidth - 12) + 'px';
+    fab.style.top = (window.innerHeight - fab.offsetHeight - 86) + 'px';
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
   }
   function savePos(){
     const rect = fab.getBoundingClientRect();
     localStorage.setItem('pharaoh_assistant_pos', JSON.stringify({x:rect.left,y:rect.top}));
   }
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
   function clampFab(){
-    const rect = fab.getBoundingClientRect();
     const maxX = Math.max(0, window.innerWidth - fab.offsetWidth);
     const maxY = Math.max(0, window.innerHeight - fab.offsetHeight);
-    const x = clamp(rect.left, 0, maxX);
-    const y = clamp(rect.top, 0, maxY);
-    fab.style.left = x + 'px';
-    fab.style.top = y + 'px';
+    const rect = fab.getBoundingClientRect();
+    fab.style.left = clamp(rect.left, 0, maxX) + 'px';
+    fab.style.top = clamp(rect.top, 0, maxY) + 'px';
     fab.style.right = 'auto';
     fab.style.bottom = 'auto';
   }
@@ -3139,11 +3171,11 @@ html{scroll-behavior:smooth}
     const r = fab.getBoundingClientRect();
     const pw = Math.min(430, window.innerWidth - 24);
     const ph = Math.min(640, window.innerHeight - 120);
-    let left = r.left;
-    let top = r.top - ph - 12;
-    if(top < 10) top = r.bottom + 12;
+    let left = r.left - pw + fab.offsetWidth + 8;
+    let top = r.top - ph - 10;
+    if(top < 10) top = r.bottom + 10;
     left = clamp(left, 10, window.innerWidth - pw - 10);
-    if(top + ph > window.innerHeight - 10) top = window.innerHeight - ph - 10;
+    top = clamp(top, 10, window.innerHeight - ph - 10);
     panel.style.left = left + 'px';
     panel.style.top = top + 'px';
     panel.style.right = 'auto';
@@ -3158,31 +3190,29 @@ html{scroll-behavior:smooth}
       panel.classList.add('show');
       fab.classList.remove('has-notify');
       setTimeout(()=>input && input.focus(),120);
-    }else{
+    } else {
       panel.classList.remove('show');
     }
   }
-  function onMove(e){
+  function onMove(ev){
     if(!drag) return;
-    if(activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const pt = getPoint(ev);
+    const dx = pt.x - startX;
+    const dy = pt.y - startY;
     if(Math.abs(dx) + Math.abs(dy) > 4) moved = true;
     const maxX = Math.max(0, window.innerWidth - fab.offsetWidth);
     const maxY = Math.max(0, window.innerHeight - fab.offsetHeight);
-    const x = clamp(baseX + dx, 0, maxX);
-    const y = clamp(baseY + dy, 0, maxY);
-    fab.style.left = x + 'px';
-    fab.style.top = y + 'px';
+    fab.style.left = clamp(baseX + dx, 0, maxX) + 'px';
+    fab.style.top = clamp(baseY + dy, 0, maxY) + 'px';
     fab.style.right = 'auto';
     fab.style.bottom = 'auto';
     if(panel.classList.contains('show')) positionPanel();
+    if(ev.cancelable) ev.preventDefault();
   }
-  function endDrag(e){
+  function endDrag(ev){
     if(!drag) return;
-    if(activePointerId !== null && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
     drag = false;
-    activePointerId = null;
+    document.body.classList.remove('pharaoh-is-dragging');
     fab.classList.remove('dragging');
     if(moved){
       fab.classList.add('drop-bounce');
@@ -3190,28 +3220,39 @@ html{scroll-behavior:smooth}
     }
     savePos();
     if(!moved) togglePanel();
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', endDrag);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', endDrag);
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', endDrag);
     window.removeEventListener('pointercancel', endDrag);
   }
-  fab.addEventListener('pointerdown', function(e){
-    e.preventDefault();
+  function startDrag(ev){
+    const pt = getPoint(ev);
     drag = true; moved = false;
-    activePointerId = e.pointerId;
+    document.body.classList.add('pharaoh-is-dragging');
     fab.classList.remove('drop-bounce');
     fab.classList.add('dragging');
     const r = fab.getBoundingClientRect();
-    startX = e.clientX; startY = e.clientY;
+    startX = pt.x; startY = pt.y;
     baseX = r.left; baseY = r.top;
     fab.style.left = baseX + 'px';
     fab.style.top = baseY + 'px';
     fab.style.right = 'auto';
     fab.style.bottom = 'auto';
-    if(fab.setPointerCapture){ try{ fab.setPointerCapture(e.pointerId); }catch(err){} }
+    window.addEventListener('mousemove', onMove, {passive:false});
+    window.addEventListener('mouseup', endDrag, {passive:false});
+    window.addEventListener('touchmove', onMove, {passive:false});
+    window.addEventListener('touchend', endDrag, {passive:false});
     window.addEventListener('pointermove', onMove, {passive:false});
     window.addEventListener('pointerup', endDrag, {passive:false});
     window.addEventListener('pointercancel', endDrag, {passive:false});
-  });
+    if(ev.cancelable) ev.preventDefault();
+  }
+  fab.addEventListener('mousedown', startDrag, {passive:false});
+  fab.addEventListener('touchstart', startDrag, {passive:false});
+  fab.addEventListener('pointerdown', startDrag, {passive:false});
 
   closeBtn && closeBtn.addEventListener('click', ()=>togglePanel(false));
   window.addEventListener('resize', ()=>{ clampFab(); savePos(); if(panel.classList.contains('show')) positionPanel(); });
