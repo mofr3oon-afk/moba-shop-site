@@ -1461,6 +1461,101 @@ html{scroll-behavior:smooth}
   .pharaoh-svg{width:54px!important;height:54px!important}
 }
 
+
+/* V21 premium full-body Pharaoh */
+.pharaoh-assistant-fab{
+  width:118px !important;
+  height:170px !important;
+  bottom:72px !important;
+  right:18px !important;
+}
+.pharaoh-character{
+  width:104px !important;
+  height:128px !important;
+  border-radius:32px !important;
+  display:flex;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  padding-bottom:8px;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255,238,169,.38), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(39,216,255,.10), transparent 48%),
+    linear-gradient(180deg, rgba(255,207,92,.14), rgba(39,216,255,.10) 52%, rgba(16,20,38,.98));
+  border:1px solid rgba(255,207,92,.45) !important;
+  box-shadow:0 0 38px rgba(255,207,92,.18),0 0 26px rgba(39,216,255,.16), inset 0 1px 0 rgba(255,255,255,.15) !important;
+  overflow:hidden;
+}
+.pharaoh-character:after{
+  content:'';
+  position:absolute;
+  bottom:12px;
+  width:56px;
+  height:10px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(0,0,0,.35), rgba(0,0,0,0));
+  filter:blur(4px);
+}
+.pharaoh-svg{
+  width:86px !important;
+  height:112px !important;
+  position:relative;
+  z-index:2;
+  overflow:visible;
+}
+.pharaoh-mini svg{width:30px;height:38px !important}
+.pharaoh-name-badge{
+  margin-top:-2px !important;
+  background:linear-gradient(135deg, rgba(255,207,92,.30), rgba(39,216,255,.12)), rgba(9,13,24,.96) !important;
+  border-color:rgba(255,207,92,.45) !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.32), 0 0 16px rgba(255,207,92,.12) !important;
+}
+.pharaoh-svg .ph-head{animation:phHeadBob 2.5s ease-in-out infinite; transform-origin:60px 44px;}
+.pharaoh-svg .ph-body{animation:phBodySway 2.5s ease-in-out infinite; transform-origin:60px 92px;}
+.pharaoh-svg .ph-arm-left{animation:phArmLeft 1.7s ease-in-out infinite; transform-origin:42px 88px;}
+.pharaoh-svg .ph-arm-right{animation:phArmRight 1.9s ease-in-out infinite; transform-origin:78px 88px;}
+.pharaoh-svg .ph-leg-left{animation:phLegLeft 1.5s ease-in-out infinite; transform-origin:52px 140px;}
+.pharaoh-svg .ph-leg-right{animation:phLegRight 1.5s ease-in-out infinite; transform-origin:68px 140px;}
+.pharaoh-svg .ph-cape{animation:phCape 2.2s ease-in-out infinite; transform-origin:60px 92px;}
+.pharaoh-svg .ph-staff-gem{animation:phGem 1.8s ease-in-out infinite;}
+.pharaoh-svg .ph-eye{transform-origin:center; animation:phBlink 4.5s infinite;}
+@keyframes phHeadBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes phBodySway{0%,100%{transform:rotate(0deg) translateY(0)}25%{transform:rotate(1.5deg) translateY(-1px)}75%{transform:rotate(-1.5deg) translateY(-1px)}}
+@keyframes phArmLeft{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-10deg)}}
+@keyframes phArmRight{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(12deg)}}
+@keyframes phLegLeft{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-7deg)}}
+@keyframes phLegRight{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(7deg)}}
+@keyframes phCape{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04) translateY(1px)}}
+@keyframes phGem{0%,100%{opacity:.8; filter:drop-shadow(0 0 2px rgba(39,216,255,.4))}50%{opacity:1; filter:drop-shadow(0 0 7px rgba(39,216,255,.85))}}
+@media(max-width:900px){
+  .pharaoh-assistant-fab{width:92px !important;height:140px !important;bottom:86px !important;right:10px !important;}
+  .pharaoh-character{width:82px !important;height:102px !important;border-radius:26px !important;}
+  .pharaoh-svg{width:66px !important;height:88px !important;}
+  .pharaoh-name-badge{font-size:11px !important;padding:3px 8px !important;}
+}
+
+
+/* V22 assistant-only info cleanup */
+.pharaoh-chat-panel .pharaoh-info-card{
+  border:1px solid rgba(255,207,92,.22);
+  background:rgba(255,207,92,.07);
+  border-radius:16px;
+  padding:10px;
+  margin-top:8px;
+  line-height:1.8;
+}
+.pharaoh-chat-panel .pharaoh-info-card b{
+  color:#fff3c4;
+}
+.pharaoh-chat-panel .pharaoh-info-card ul{
+  margin:7px 0 0;
+  padding-inline-start:18px;
+}
+.pharaoh-chat-panel .mini-action.gold{
+  background:rgba(255,207,92,.13);
+  border-color:rgba(255,207,92,.26);
+  color:#fff3c4;
+}
+
 </style>
 </head>
 <body>
@@ -1470,7 +1565,6 @@ html{scroll-behavior:smooth}
     <div class="topbar"><div class="brand-mini">MOBA <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
     <nav class="jump-nav" aria-label="روابط سريعة">
       <a class="primary" href="#productsSection">🎮 المنتجات</a>
-      <a href="#shippingRules">🛡️ الضمان</a>
       <a href="#cartSection">🛒 السلة</a>
       <a href="#trackOrder">📦 حالة الطلب</a>
       <a href="#customerReviews">💬 آراء العملاء</a>
@@ -1488,26 +1582,6 @@ html{scroll-behavior:smooth}
           <div class="step">2️⃣ ضيف للسلة</div>
           <div class="step">3️⃣ ادفع وارفع السكرين</div>
         </div></div>
-    </section>
-
-    
-    <section class="panel rules-panel" id="shippingRules">
-      <div class="section-title"><h2>🛡️ قواعد الشحن والضمان</h2></div>
-      <div class="rules-grid">
-        <div class="rule-card"><b>راجع بياناتك قبل الدفع</b><span>تأكد من ID واسم الحساب وطريقة الدفع قبل تنفيذ الطلب.</span></div>
-        <div class="rule-card"><b>فرصتين تعديل</b><span>لو السكرين أو الرقم أو ID فيه مشكلة، عندك فرصتين تعديل قبل تحويل الطلب للدعم.</span></div>
-        <div class="rule-card"><b>التنفيذ حسب الضغط</b><span>الطلبات بتتنفذ بأسرع وقت، وقد تزيد المدة وقت الضغط أو خارج مواعيد العمل.</span></div>
-      </div>
-    </section>
-
-    
-    <section class="panel popular-panel" id="popularProducts">
-      <div class="section-title"><h2>🔥 الأكثر طلبًا</h2></div>
-      <div class="popular-grid">
-        <div class="popular-card" data-jump-product="60"><b>60 UC</b><span>باقة سريعة ومناسبة</span></div>
-        <div class="popular-card" data-jump-product="325"><b>325 UC</b><span>الأكثر طلبًا</span></div>
-        <div class="popular-card" data-jump-product="660"><b>660 UC</b><span>قيمة أعلى وشحن أسرع</span></div>
-      </div>
     </section>
 
     <section class="grid">
@@ -2784,30 +2858,67 @@ html{scroll-behavior:smooth}
   <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
     <div class="pharaoh-chat-head">
       <div class="pharaoh-chat-title">
-        <div class="pharaoh-mini">
-<svg viewBox="0 0 64 64" aria-hidden="true">
+        <div class="pharaoh-mini"><svg class="pharaoh-svg" viewBox="0 0 120 180" aria-hidden="true">
   <defs>
-    <linearGradient id="phGold" x1="0" x2="1">
-      <stop offset="0%" stop-color="#ffd86d"/>
-      <stop offset="100%" stop-color="#ffb443"/>
+    <linearGradient id="v21Gold" x1="0" x2="1">
+      <stop offset="0%" stop-color="#ffe28a"/>
+      <stop offset="100%" stop-color="#ffaf3f"/>
     </linearGradient>
-    <linearGradient id="phBlue" x1="0" x2="1">
-      <stop offset="0%" stop-color="#2dd8ff"/>
-      <stop offset="100%" stop-color="#356dff"/>
+    <linearGradient id="v21Blue" x1="0" x2="1">
+      <stop offset="0%" stop-color="#29dbff"/>
+      <stop offset="100%" stop-color="#416bff"/>
+    </linearGradient>
+    <linearGradient id="v21Dark" x1="0" x2="1">
+      <stop offset="0%" stop-color="#0e1933"/>
+      <stop offset="100%" stop-color="#1a2350"/>
     </linearGradient>
   </defs>
-  <rect x="10" y="5" width="44" height="15" rx="7" fill="url(#phGold)"/>
-  <rect x="11" y="18" width="8" height="34" rx="4" fill="url(#phBlue)"/>
-  <rect x="45" y="18" width="8" height="34" rx="4" fill="url(#phBlue)"/>
-  <path d="M20 17h24v11c0 12-8 21-12 21s-12-9-12-21z" fill="#f3c29a"/>
-  <path d="M24 15h16v7H24z" fill="url(#phGold)"/>
-  <circle class="ph-eye" cx="27" cy="29" r="2.2" fill="#1c2438"/>
-  <circle class="ph-eye" cx="37" cy="29" r="2.2" fill="#1c2438"/>
-  <path d="M27 37c3.4 2.8 6.6 2.8 10 0" stroke="#8b4b38" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M29 33h6" stroke="#8b4b38" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M22 46c3.5 4 16.5 4 20 0v6H22z" fill="url(#phGold)"/>
-</svg>
-</div>
+  <g class="ph-cape">
+    <path d="M34 70 C26 84,24 108,28 132 C40 142,52 147,60 147 C68 147,80 142,92 132 C96 108,94 84,86 70 Z" fill="#102246" opacity="0.86"/>
+  </g>
+  <g class="ph-leg-left">
+    <rect x="46" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
+    <rect x="43" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-leg-right">
+    <rect x="62" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
+    <rect x="59" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-body">
+    <rect x="39" y="58" width="42" height="62" rx="18" fill="#f2c8a6"/>
+    <path d="M38 64 h44 v56 c-8 7-16 11-22 11 s-14-4-22-11 z" fill="url(#v21Gold)" opacity="0.94"/>
+    <rect x="47" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
+    <rect x="57" y="62" width="6" height="56" rx="3" fill="url(#v21Dark)" opacity="0.85"/>
+    <rect x="67" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
+    <path d="M46 117 h28 l-7 10 h-14 z" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-arm-left">
+    <rect x="28" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
+    <rect x="26" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-arm-right">
+    <rect x="80" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
+    <rect x="78" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-head">
+    <ellipse cx="60" cy="42" rx="24" ry="25" fill="#f2c8a6"/>
+    <path d="M36 32 C39 14,81 14,84 32 L84 54 C74 63,46 63,36 54 Z" fill="url(#v21Dark)"/>
+    <path d="M42 20 h36 a10 10 0 0 1 10 10 v8 h-56 v-8 a10 10 0 0 1 10-10z" fill="url(#v21Gold)"/>
+    <path d="M37 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
+    <path d="M73 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
+    <circle class="ph-eye" cx="52" cy="43" r="2.5" fill="#1d2034"/>
+    <circle class="ph-eye" cx="68" cy="43" r="2.5" fill="#1d2034"/>
+    <path d="M54 54 q6 4 12 0" stroke="#874834" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M58 48 h4" stroke="#874834" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="60" cy="24" r="5" fill="url(#v21Gold)"/>
+    <circle class="ph-staff-gem" cx="60" cy="24" r="2.2" fill="#26dfff"/>
+  </g>
+  <g>
+    <rect x="92" y="60" width="5" height="62" rx="3" fill="url(#v21Gold)"/>
+    <circle cx="94.5" cy="55" r="7" fill="url(#v21Gold)"/>
+    <circle class="ph-staff-gem" cx="94.5" cy="55" r="3" fill="#29dbff"/>
+  </g>
+</svg></div>
         <div>
           <b>فرعون Assistant</b>
           <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
@@ -2827,6 +2938,8 @@ html{scroll-behavior:smooth}
         <button type="button" data-pharaoh-q="الطلبات القديمة">الطلبات القديمة</button>
         <button type="button" data-pharaoh-q="الازدهار">الازدهار</button>
         <button type="button" data-pharaoh-q="اكتر من ID">اكتر من ID</button>
+        <button type="button" data-pharaoh-q="قواعد الشحن">قواعد الشحن</button>
+        <button type="button" data-pharaoh-q="الاكثر طلبا">الأكثر طلبًا</button>
         <button type="button" data-pharaoh-q="مواعيد العمل">مواعيد العمل</button>
         <button type="button" data-pharaoh-q="الدعم">الدعم</button>
       </div>
@@ -2840,27 +2953,66 @@ html{scroll-behavior:smooth}
 
   <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
     <div class="pharaoh-character">
-<svg viewBox="0 0 64 64" aria-hidden="true">
+<svg class="pharaoh-svg" viewBox="0 0 120 180" aria-hidden="true">
   <defs>
-    <linearGradient id="phGold" x1="0" x2="1">
-      <stop offset="0%" stop-color="#ffd86d"/>
-      <stop offset="100%" stop-color="#ffb443"/>
+    <linearGradient id="v21Gold" x1="0" x2="1">
+      <stop offset="0%" stop-color="#ffe28a"/>
+      <stop offset="100%" stop-color="#ffaf3f"/>
     </linearGradient>
-    <linearGradient id="phBlue" x1="0" x2="1">
-      <stop offset="0%" stop-color="#2dd8ff"/>
-      <stop offset="100%" stop-color="#356dff"/>
+    <linearGradient id="v21Blue" x1="0" x2="1">
+      <stop offset="0%" stop-color="#29dbff"/>
+      <stop offset="100%" stop-color="#416bff"/>
+    </linearGradient>
+    <linearGradient id="v21Dark" x1="0" x2="1">
+      <stop offset="0%" stop-color="#0e1933"/>
+      <stop offset="100%" stop-color="#1a2350"/>
     </linearGradient>
   </defs>
-  <rect x="10" y="5" width="44" height="15" rx="7" fill="url(#phGold)"/>
-  <rect x="11" y="18" width="8" height="34" rx="4" fill="url(#phBlue)"/>
-  <rect x="45" y="18" width="8" height="34" rx="4" fill="url(#phBlue)"/>
-  <path d="M20 17h24v11c0 12-8 21-12 21s-12-9-12-21z" fill="#f3c29a"/>
-  <path d="M24 15h16v7H24z" fill="url(#phGold)"/>
-  <circle class="ph-eye" cx="27" cy="29" r="2.2" fill="#1c2438"/>
-  <circle class="ph-eye" cx="37" cy="29" r="2.2" fill="#1c2438"/>
-  <path d="M27 37c3.4 2.8 6.6 2.8 10 0" stroke="#8b4b38" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M29 33h6" stroke="#8b4b38" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M22 46c3.5 4 16.5 4 20 0v6H22z" fill="url(#phGold)"/>
+  <g class="ph-cape">
+    <path d="M34 70 C26 84,24 108,28 132 C40 142,52 147,60 147 C68 147,80 142,92 132 C96 108,94 84,86 70 Z" fill="#102246" opacity="0.86"/>
+  </g>
+  <g class="ph-leg-left">
+    <rect x="46" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
+    <rect x="43" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-leg-right">
+    <rect x="62" y="126" width="12" height="28" rx="6" fill="url(#v21Dark)"/>
+    <rect x="59" y="151" width="18" height="8" rx="4" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-body">
+    <rect x="39" y="58" width="42" height="62" rx="18" fill="#f2c8a6"/>
+    <path d="M38 64 h44 v56 c-8 7-16 11-22 11 s-14-4-22-11 z" fill="url(#v21Gold)" opacity="0.94"/>
+    <rect x="47" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
+    <rect x="57" y="62" width="6" height="56" rx="3" fill="url(#v21Dark)" opacity="0.85"/>
+    <rect x="67" y="62" width="6" height="56" rx="3" fill="url(#v21Blue)"/>
+    <path d="M46 117 h28 l-7 10 h-14 z" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-arm-left">
+    <rect x="28" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
+    <rect x="26" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-arm-right">
+    <rect x="80" y="74" width="12" height="40" rx="6" fill="#f2c8a6"/>
+    <rect x="78" y="104" width="16" height="10" rx="5" fill="url(#v21Gold)"/>
+  </g>
+  <g class="ph-head">
+    <ellipse cx="60" cy="42" rx="24" ry="25" fill="#f2c8a6"/>
+    <path d="M36 32 C39 14,81 14,84 32 L84 54 C74 63,46 63,36 54 Z" fill="url(#v21Dark)"/>
+    <path d="M42 20 h36 a10 10 0 0 1 10 10 v8 h-56 v-8 a10 10 0 0 1 10-10z" fill="url(#v21Gold)"/>
+    <path d="M37 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
+    <path d="M73 28 h10 v34 h-10z" fill="url(#v21Blue)"/>
+    <circle class="ph-eye" cx="52" cy="43" r="2.5" fill="#1d2034"/>
+    <circle class="ph-eye" cx="68" cy="43" r="2.5" fill="#1d2034"/>
+    <path d="M54 54 q6 4 12 0" stroke="#874834" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M58 48 h4" stroke="#874834" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="60" cy="24" r="5" fill="url(#v21Gold)"/>
+    <circle class="ph-staff-gem" cx="60" cy="24" r="2.2" fill="#26dfff"/>
+  </g>
+  <g>
+    <rect x="92" y="60" width="5" height="62" rx="3" fill="url(#v21Gold)"/>
+    <circle cx="94.5" cy="55" r="7" fill="url(#v21Gold)"/>
+    <circle class="ph-staff-gem" cx="94.5" cy="55" r="3" fill="#29dbff"/>
+  </g>
 </svg>
 </div>
     <div class="pharaoh-name-badge">فرعون</div>
@@ -3062,9 +3214,29 @@ html{scroll-behavior:smooth}
       <a href="https://t.me/MOFR3OON" target="_blank" style="color:#7ee7ff;font-weight:900">فتح الدعم على تليجرام 📞</a>`;
     }
 
-    if(/ضمان|قواعد|سياسة/.test(t)){
-      return `قواعد الشحن والضمان موجودة في الموقع، وأهم حاجة تراجع ID واسم الحساب قبل الدفع.<br><br>
-      <span class="mini-action" data-pharaoh-action="rules">افتح قواعد الضمان 🛡️</span>`;
+    if(/ضمان|قواعد|سياسة|الشحن/.test(t)){
+      return `<div class="pharaoh-info-card">
+        <b>🛡️ قواعد الشحن والضمان</b>
+        <ul>
+          <li>راجع PUBG ID واسم الحساب قبل الدفع.</li>
+          <li>ارفع سكرين تحويل واضح فيه بيانات التحويل.</li>
+          <li>لو التحويل من رقم تاني أو محل اكتب آخر 3 أرقام في الملاحظات.</li>
+          <li>لو في مشكلة عندك فرصتين تعديل قبل تحويل الطلب للدعم.</li>
+          <li>التنفيذ حسب ضغط الطلبات ومواعيد العمل.</li>
+        </ul>
+      </div>`;
+    }
+
+    if(/الاكثر|أكثر|طلبا|طلبًا|افضل باقة|باقة/.test(t)){
+      return `<div class="pharaoh-info-card">
+        <b>🔥 الأكثر طلبًا</b>
+        <ul>
+          <li><b>60 UC</b> باقة سريعة ومناسبة.</li>
+          <li><b>325 UC</b> الأكثر طلبًا.</li>
+          <li><b>660 UC</b> قيمة أعلى وشحن أسرع.</li>
+        </ul>
+      </div>
+      <span class="mini-action gold" data-pharaoh-action="products">افتح المنتجات 🎮</span>`;
     }
 
     return `أنا <b>فرعون</b> 👑 أقدر أساعدك في:<br>
@@ -3095,7 +3267,7 @@ html{scroll-behavior:smooth}
       if(a==='products') goTo('#productsSection');
       if(a==='track') goTo('#trackOrder');
       if(a==='reviews') goTo('#customerReviews');
-      if(a==='rules') goTo('#shippingRules');
+      if(a==='rules') botReply('قواعد الشحن');
     }
   });
 
