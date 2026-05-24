@@ -404,3 +404,18 @@ These commands control the top status pill on the website with green / yellow / 
 - Added phone / PUBG ID / transfer validation helpers.
 - Added RLS enable statements in Supabase SQL.
 - Added SECURITY_CHECKLIST.md.
+
+
+## V41 Sync Status Badges
+- مزامنة حالة المتجر فوق وتحت معًا.
+- البادج العلوي والكارت الرئيسي يتغيران بنفس الحالة:
+  - متاح الآن
+  - متاح ولكن فيه ضغط
+  - مغلق حاليا
+- إضافة لون وجلو مختلف لكل حالة.
+
+
+## V42 Screenshot Scope Fix
+- إصلاح ظهور رسالة السكرين أثناء البحث في سجل الطلبات.
+- التحقق من السكرين أصبح يعمل فقط عند تنفيذ الطلب من السلة.
+- فورم متابعة الطلب لا يتأثر بحماية رفع السكرين.

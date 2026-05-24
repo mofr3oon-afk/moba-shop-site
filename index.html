@@ -2453,6 +2453,93 @@ button[type="submit"].disabled-checkout{
   line-height:1.7;
 }
 
+
+/* V41 sync top and main store status */
+.store-status-pill,
+.status-pill,
+.live-status,
+#topStatusBadge,
+#headerStatusBadge{
+  display:inline-flex !important;
+  align-items:center;
+  gap:7px;
+  border-radius:999px;
+  padding:9px 13px;
+  font-size:12px;
+  font-weight:900;
+  line-height:1;
+  border:1px solid rgba(56,224,139,.35);
+  background:linear-gradient(135deg, rgba(56,224,139,.18), rgba(56,224,139,.06));
+  color:#eafff2;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 18px rgba(56,224,139,.13);
+}
+.store-status-pill .status-dot,
+.status-pill .status-dot,
+.live-status .status-dot,
+#topStatusBadge .status-dot,
+#headerStatusBadge .status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  display:inline-block;
+  background:#35e07d;
+  box-shadow:0 0 10px #35e07d;
+}
+.store-status-pill.available,
+.status-pill.available,
+.live-status.available,
+#topStatusBadge.available,
+#headerStatusBadge.available{
+  border-color:rgba(56,224,139,.38);
+  background:linear-gradient(135deg, rgba(56,224,139,.18), rgba(56,224,139,.06));
+  color:#eafff2;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 22px rgba(56,224,139,.16);
+}
+.store-status-pill.available .status-dot,
+.status-pill.available .status-dot,
+.live-status.available .status-dot,
+#topStatusBadge.available .status-dot,
+#headerStatusBadge.available .status-dot{
+  background:#35e07d;
+  box-shadow:0 0 10px #35e07d;
+}
+.store-status-pill.busy,
+.status-pill.busy,
+.live-status.busy,
+#topStatusBadge.busy,
+#headerStatusBadge.busy{
+  border-color:rgba(255,207,92,.45);
+  background:linear-gradient(135deg, rgba(255,207,92,.18), rgba(255,207,92,.06));
+  color:#fff4ce;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 22px rgba(255,207,92,.16);
+}
+.store-status-pill.busy .status-dot,
+.status-pill.busy .status-dot,
+.live-status.busy .status-dot,
+#topStatusBadge.busy .status-dot,
+#headerStatusBadge.busy .status-dot{
+  background:#ffd35c;
+  box-shadow:0 0 10px #ffd35c;
+}
+.store-status-pill.closed,
+.status-pill.closed,
+.live-status.closed,
+#topStatusBadge.closed,
+#headerStatusBadge.closed{
+  border-color:rgba(255,97,97,.48);
+  background:linear-gradient(135deg, rgba(255,97,97,.18), rgba(255,97,97,.06));
+  color:#ffe2e2;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 0 22px rgba(255,97,97,.16);
+}
+.store-status-pill.closed .status-dot,
+.status-pill.closed .status-dot,
+.live-status.closed .status-dot,
+#topStatusBadge.closed .status-dot,
+#headerStatusBadge.closed .status-dot{
+  background:#ff6c6c;
+  box-shadow:0 0 10px #ff6c6c;
+}
+
 </style>
 </head>
 <body>
@@ -5178,7 +5265,7 @@ button[type="submit"].disabled-checkout{
     return checked ? checked.value : (qs('[name="paymentMethod"]')?.value || localStorage.getItem('moba_preferred_payment') || '');
   }
   function screenshotSelected(){
-    const file = qsa('input[type="file"]').find(i => /screen|screenshot|photo|image|file/i.test(i.name || i.id || '') || true);
+    const file = qsa('input[type="file"]').find(i => /screen|screenshot|photo|image|file/i.test(i.name || i.id || '') );
     return !!(file && file.files && file.files.length);
   }
   function updateCheckoutLock(){
@@ -5465,6 +5552,122 @@ button[type="submit"].disabled-checkout{
       i.removeAttribute('multiple');
     });
   },1000);
+})();
+</script>
+
+
+<script id="moba-v41-sync-status-badges">
+(function(){
+  function findTopBadges(){
+    const direct = Array.from(document.querySelectorAll('#topStatusBadge,#headerStatusBadge,.store-status-pill,.status-pill,.live-status'));
+    const byText = Array.from(document.querySelectorAll('body *')).filter(el=>{
+      if(el.closest('#workStatusMini')) return false;
+      if(el.children.length > 3) return false;
+      const t = (el.textContent || '').trim();
+      return /متاح الآن|متاح ولكن فيه ضغط|مغلق حاليا|مغلق حاليًا/.test(t) && !/التنفيذ|مواعيد|الأول قبل الجميع/.test(t);
+    });
+    const all = [...direct, ...byText];
+    return Array.from(new Set(all)).slice(0,4);
+  }
+  function setBadge(el, mode, title){
+    if(!el) return;
+    el.classList.remove('available','busy','closed');
+    el.classList.add('store-status-pill', mode);
+    el.innerHTML = `<span class="status-dot"></span><span class="status-label">${title}</span>`;
+  }
+  function setMainBox(box, mode, title, desc){
+    if(!box) return;
+    box.className = `work-status-mini ${mode}`;
+    box.innerHTML = `<div class="status-head"><span class="status-dot"></span><span>${title}</span></div><div class="status-desc">${desc}</div>`;
+  }
+  function applyStoreStatus(settings){
+    const rawMode = String(settings?.store_status || '').toLowerCase();
+    const legacyBusy = settings?.busy_mode === true || settings?.busy_mode === 'true';
+    const mode = rawMode || (legacyBusy ? 'busy' : 'available');
+    const customMsg = settings?.store_status_message || settings?.busy_message || '';
+    const config = {
+      available:{
+        title:'متاح الآن',
+        desc: customMsg || 'التنفيذ شغال حاليا بشكل طبيعي.'
+      },
+      busy:{
+        title:'متاح ولكن فيه ضغط',
+        desc: customMsg || 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.'
+      },
+      closed:{
+        title:'مغلق حاليا',
+        desc: customMsg || 'ينفع تعمل طلبك عادي وأول ما مواعيد العمل تبدأ هيتم تنفيذ طلبك الأول قبل الجميع.'
+      }
+    };
+    const c = config[mode] || config.available;
+    setMainBox(document.getElementById('workStatusMini'), mode, c.title, c.desc);
+    findTopBadges().forEach(el => setBadge(el, mode, c.title));
+    window.mobaStoreMode = mode;
+    window.mobaBusyMode = mode === 'busy';
+  }
+  async function refreshStoreStatusV41(){
+    try{
+      const res = await fetch('/api/settings?t=' + Date.now());
+      const data = await res.json();
+      if(data && data.ok) applyStoreStatus(data.settings || {});
+    }catch(e){}
+  }
+  window.refreshStoreStatusV41 = refreshStoreStatusV41;
+  refreshStoreStatusV41();
+  setInterval(refreshStoreStatusV41, 30000);
+})();
+</script>
+
+
+<script id="moba-v42-screenshot-scope-fix">
+(function(){
+  function isCheckoutButton(btn){
+    if(!btn) return false;
+    const txt = (btn.textContent || '').trim();
+    return /checkout|شراء|تنفيذ الشراء|تنفيذ الطلب/i.test(txt);
+  }
+  function cartArea(){
+    return document.querySelector('#cartSection') || document.querySelector('#couponBox')?.closest('section,div') || document.querySelector('#orderForm') || document;
+  }
+  function screenshotInput(){
+    const area = cartArea();
+    return Array.from(area.querySelectorAll('input[type="file"]')).find(i => !i.closest('#trackOrder') && !i.closest('#historyList')) || null;
+  }
+  function validScreen(){
+    const input = screenshotInput();
+    const file = input && input.files && input.files[0];
+    if(!file) return false;
+    return ['image/jpeg','image/png','image/webp'].includes(String(file.type||'').toLowerCase()) && /\.(jpg|jpeg|png|webp)$/i.test(file.name||'') && Number(file.size||0) <= 5*1024*1024;
+  }
+  function updateOnlyCheckout(){
+    const area = cartArea();
+    const btns = Array.from(area.querySelectorAll('button,input[type="submit"]')).filter(isCheckoutButton);
+    const ok = validScreen();
+    btns.forEach(btn=>{
+      btn.disabled = !ok;
+      btn.classList.toggle('disabled-checkout', !ok);
+      btn.title = ok ? '' : 'لازم ترفع صورة سكرين التحويل الأول';
+    });
+    let warning = document.getElementById('smartCheckoutWarning');
+    if(warning){
+      warning.style.display = ok ? 'none' : 'block';
+      warning.innerHTML = '⚠️ لازم ترفع صورة سكرين التحويل قبل تنفيذ الطلب.';
+    }
+  }
+
+  setInterval(updateOnlyCheckout, 1200);
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.type === 'file') setTimeout(updateOnlyCheckout, 60);
+  }, true);
+
+  // حماية إضافية: أي فورم متابعة طلب لا يتأثر بالسكرين
+  document.addEventListener('submit', function(e){
+    const form = e.target;
+    if(form && (form.closest('#trackOrder') || form.id === 'trackForm' || form.id === 'statusForm')){
+      e.stopImmediatePropagation();
+      return true;
+    }
+  }, false);
 })();
 </script>
 
