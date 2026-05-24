@@ -2764,6 +2764,89 @@ button.disabled-checkout{
   }
 }
 
+
+/* V48 mobile top nav single-row premium fit */
+.jump-nav{
+  align-items:center;
+}
+.jump-nav a{
+  line-height:1.15;
+}
+@media (max-width: 900px){
+  .jump-nav{
+    display:grid !important;
+    grid-template-columns:repeat(5, minmax(0,1fr)) !important;
+    gap:6px !important;
+    padding:8px !important;
+    border-radius:18px !important;
+    overflow:visible !important;
+  }
+  .jump-nav a{
+    min-width:0 !important;
+    min-height:54px !important;
+    padding:8px 4px !important;
+    border-radius:14px !important;
+    font-size:10.6px !important;
+    font-weight:900 !important;
+    line-height:1.15 !important;
+    white-space:normal !important;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+    text-align:center !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.09),
+      0 8px 22px rgba(0,0,0,.18),
+      0 0 14px rgba(39,216,255,.08) !important;
+  }
+  .jump-nav a::before{
+    opacity:.48 !important;
+  }
+  .jump-nav a:hover,
+  .jump-nav a:focus-visible{
+    transform:translateY(-1px) scale(1.01) !important;
+  }
+}
+@media (max-width: 560px){
+  .jump-nav{
+    grid-template-columns:repeat(5, minmax(0,1fr)) !important;
+    gap:5px !important;
+    padding:7px !important;
+  }
+  .jump-nav a{
+    min-height:52px !important;
+    padding:7px 3px !important;
+    font-size:9.9px !important;
+    border-radius:13px !important;
+    letter-spacing:0 !important;
+  }
+}
+@media (max-width: 420px){
+  .jump-nav{
+    gap:4px !important;
+    padding:6px !important;
+  }
+  .jump-nav a{
+    min-height:50px !important;
+    padding:6px 2px !important;
+    font-size:9.2px !important;
+    border-radius:12px !important;
+  }
+}
+/* polished desktop alignment */
+@media (min-width: 901px){
+  .jump-nav{
+    justify-content:center !important;
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    gap:12px !important;
+  }
+  .jump-nav a{
+    min-width:145px !important;
+    min-height:52px !important;
+    padding:12px 18px !important;
+  }
+}
+
 </style>
 </head>
 <body>

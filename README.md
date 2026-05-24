@@ -453,3 +453,9 @@ These commands control the top status pill on the website with green / yellow / 
 - شكل احترافي Glass + Glow
 - Responsive أفضل للموبايل والكمبيوتر
 - Active state تلقائي حسب القسم المفتوح
+
+
+## V48 Mobile Nav Fit
+- تحسين أزرار الناف العلوية على الموبايل لتظهر كلها في سطر واحد
+- تصغير الأحجام والمسافات بشكل متناسق واحترافي
+- جلو أوضح وشكل مبهر للموبايل والكمبيوتر
