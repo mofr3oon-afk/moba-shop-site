@@ -1357,6 +1357,11 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   function saveLastId(id,name){
     if(id) localStorage.setItem('moba_last_pubg_id', id);
     if(name) localStorage.setItem('moba_last_pubg_name', name);
+    if(id || name){
+      try{
+        localStorage.setItem('moba_last_pubg', JSON.stringify({pubgId:id || '', pubgName:name || ''}));
+      }catch(e){}
+    }
   }
   function getLastId(){return localStorage.getItem('moba_last_pubg_id') || '';}
   function getLastName(){return localStorage.getItem('moba_last_pubg_name') || '';}
@@ -1383,11 +1388,11 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
         ${p.type ? `<div class="type">${esc(p.type)}</div>` : ''}
         <div class="price">💰 ${money(p.price)}</div>
         ${p.warning ? `<div class="warn">⚠️ ${esc(p.warning)}</div>` : ''}
-        <input class="id-input" id="id_${i}" inputmode="numeric" autocomplete="off" placeholder="PUBG ID" />
-        <input class="id-input" id="name_${i}" autocomplete="off" placeholder="اسم الحساب داخل اللعبة" />
-        <div class="product-actions-mini">
-          <button type="button" class="use-last-id-btn" data-last-id="${i}" ${lastId ? '' : 'style="display:none"'}>⚡ استخدم آخر ID</button>
+        <div class="id-inline-wrap">
+          <input class="id-input id-input-main" id="id_${i}" inputmode="numeric" autocomplete="off" placeholder="PUBG ID" />
+          <button type="button" class="use-last-id-inline-btn" data-last-id="${i}" ${lastId ? '' : 'style="display:none"'} title="استخدم آخر ID محفوظ">آخر ID</button>
         </div>
+        <input class="id-input" id="name_${i}" autocomplete="off" placeholder="اسم الحساب داخل اللعبة" />
         ${p.noQty ? `<div class="product-uc-preview">⚠️ كمية واحدة فقط للمنتج ده</div>` : `
         <div class="product-qty">
           <span class="product-qty-label">الكمية</span>

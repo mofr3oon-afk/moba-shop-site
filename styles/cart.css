@@ -5816,3 +5816,79 @@ body[data-page="cart"] #couponAppliedView{
   padding:0 6px 6px !important;
   font-size:10px !important;
 }
+
+
+/* moba-v105-mobile-topbar-lastid */
+.id-inline-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+.use-last-id-inline-btn{
+  border:1px solid rgba(39,216,255,.25);
+  background:rgba(39,216,255,.08);
+  color:#dff8ff;
+  border-radius:12px;
+  height:44px;
+  min-width:76px;
+  padding:0 12px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.use-last-id-inline-btn:hover{
+  background:rgba(39,216,255,.14);
+  box-shadow:0 0 18px rgba(39,216,255,.10);
+}
+.product .moba-v104-use-last,
+.product .last-id-btn,
+.product .product-actions-mini,
+.product .pharaoh-product-helper [data-v65-fill-last]{
+  display:none !important;
+}
+@media(max-width:900px){
+  .topbar{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:8px !important;
+    padding:10px 12px !important;
+    position:sticky;
+    top:0;
+    z-index:40;
+  }
+  .topbar .brand-mini{
+    display:inline-flex !important;
+    align-items:center !important;
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    font-size:14px !important;
+    gap:6px !important;
+  }
+  .topbar .status-pill{
+    flex:0 0 auto !important;
+    font-size:12px !important;
+    padding:7px 10px !important;
+  }
+}
+@media(max-width:520px){
+  .use-last-id-inline-btn{
+    min-width:66px;
+    height:40px;
+    padding:0 10px;
+    font-size:10.5px;
+  }
+  .topbar .brand-mini{
+    font-size:13px !important;
+  }
+  .topbar .brand-mini .site-logo-mark{
+    width:24px !important;
+    height:24px !important;
+    min-width:24px !important;
+  }
+}

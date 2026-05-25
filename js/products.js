@@ -440,36 +440,20 @@
   }
   function polishProductCards(){
     qsa('.product').forEach(function(card){
-      if(card.dataset.v104Polished)return;
       const id=qs('input[id^="id_"]',card);
       const name=qs('input[id^="name_"]',card);
       if(id&&name){
-        const row=document.createElement('div');
-        row.className='moba-v104-id-row';
-        id.parentNode.insertBefore(row,id);
-        row.appendChild(id);
-        row.appendChild(name);
-        const btn=document.createElement('button');
-        btn.type='button';
-        btn.className='moba-v104-use-last';
-        btn.textContent='استخدم آخر ID محفوظ';
-        row.insertAdjacentElement('afterend',btn);
-        btn.addEventListener('click',function(e){
-          e.preventDefault();
-          let data=null;
-          try{data=JSON.parse(localStorage.getItem('moba_last_pubg')||'null')}catch(err){}
-          const lastId=(data&&data.pubgId)||localStorage.getItem('moba_last_pubg_id')||'';
-          const lastName=(data&&data.pubgName)||localStorage.getItem('moba_last_pubg_name')||'';
-          if(!lastId){
-            if(window.mobaToast)window.mobaToast('مفيش ID محفوظ لسه');
-            else alert('مفيش ID محفوظ لسه');
-            return;
-          }
-          id.value=lastId;
-          name.value=lastName||name.value;
-          id.dispatchEvent(new Event('input',{bubbles:true}));
-          name.dispatchEvent(new Event('input',{bubbles:true}));
-        });
+        card.querySelectorAll('.moba-v104-use-last,.last-id-btn,.pharaoh-product-helper [data-v65-fill-last]').forEach(function(btn){btn.remove()});
+        let row=qs('.id-inline-wrap',card);
+        const inlineBtn=qs('.use-last-id-inline-btn,[data-last-id]',card);
+        if(!row){
+          row=document.createElement('div');
+          row.className='id-inline-wrap';
+          id.parentNode.insertBefore(row,id);
+          row.appendChild(id);
+          if(inlineBtn) row.appendChild(inlineBtn);
+        }
+        if(inlineBtn && inlineBtn.parentElement!==row) row.appendChild(inlineBtn);
       }
       card.dataset.v104Polished='1';
     });

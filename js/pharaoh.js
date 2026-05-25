@@ -1,3 +1,293 @@
+/* moba-v109-pharaoh-single-flow-controller */
+(function(){
+  if(window.__mobaV109SingleFlow)return;
+  window.__mobaV109SingleFlow=true;
+  const qs=(s,r=document)=>r.querySelector(s);
+  const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const state={expected:'',active:false,lastError:''};
+  const labels={
+    id:{title:'تمام، هات ID الحساب',small:'اكتب PUBG ID أرقام فقط',errorTitle:'مطلوب PUBG ID',errorSmall:'اكتب الايدي أرقام فقط من 5 لـ 15 رقم.'},
+    name:{title:'تمام، هات اسم الحساب',small:'اكتب اسم الحساب داخل اللعبة',errorTitle:'مطلوب اسم الحساب',errorSmall:'اكتب اسم الحساب داخل اللعبة بوضوح.'},
+    phone:{title:'تمام، هات رقم متابعة الطلب',small:'اكتب رقم موبايل يبدأ بـ 01 لمتابعة حالة الطلب',errorTitle:'مطلوب رقم الموبايل',errorSmall:'اكتب رقم متابعة الطلب 11 رقم ويبدأ بـ 01.'},
+    last3:{title:'اكتب آخر 3 أرقام',small:'اكتب آخر 3 أرقام من الرقم اللي حولت منه',errorTitle:'مطلوب آخر 3 أرقام',errorSmall:'اكتب 3 أرقام فقط من الرقم اللي تم التحويل منه.'}
+  };
+  function api(){return window.__pharaohV91;}
+  function input(){return qs('#pharaohChatInput');}
+  function body(){return qs('#pharaohChatBody');}
+  function esc(t){return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function digitsOnly(text){
+    return String(text||'')
+      .replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/\D/g,'');
+  }
+  function validName(raw){
+    const t=String(raw||'').trim();
+    if(t.length<2)return false;
+    if(/^\d+$/.test(t))return false;
+    return true;
+  }
+  function addUser(text){
+    const b=body(); if(!b)return;
+    const m=document.createElement('div');
+    m.className='pharaoh-msg user pharaoh-brain-new';
+    m.textContent=String(text||'');
+    const ty=qs('#pharaohTyping',b);
+    if(ty&&ty.parentElement===b)b.insertBefore(m,ty); else b.appendChild(m);
+    b.scrollTop=b.scrollHeight;
+  }
+  function lastBotCard(){
+    const cards=qsa('#pharaohChatBody .pharaoh-msg.bot .pharaoh-v85-card, #pharaohChatBody .pharaoh-msg.bot .pharaoh-assist-pro-card');
+    return cards.length?cards[cards.length-1]:null;
+  }
+  function inferStep(){
+    const card=lastBotCard();
+    const t=card?(card.innerText||''):'';
+    if(!t)return '';
+    if(/(هات\s*اسم\s*الحساب|اكتب\s*اسم\s*الحساب|اسم\s*الحساب\s*داخل)/i.test(t))return 'name';
+    if(/(هات\s*رقم\s*متابعة|هات\s*رقم\s*متابعه|رقم\s*موبايل\s*يبدأ|رقم\s*موبايل\s*يبدا|متابعة\s*حالة\s*الطلب)/i.test(t))return 'phone';
+    if(/(آخر\s*3|اخر\s*3|3\s*أرقام|3\s*ارقام|الرقم\s*اللي\s*حولت)/i.test(t))return 'last3';
+    if(/(هات\s*(PUBG\s*)?ID|اكتب\s*(PUBG\s*)?ID|PUBG\s*ID|ID\s*الحساب|هات\s*الايدي|اكتب\s*الايدي)/i.test(t))return 'id';
+    return '';
+  }
+  function actionsHtml(){
+    return '<div class="pharaoh-v109-actions pharaoh-v109-actions--single">'
+      +'<button type="button" class="danger" data-v109-act="cancel">الغاء</button>'
+      +'</div>';
+  }
+  function decorate(step,mode){
+    const cfg=labels[step]; if(!cfg)return;
+    const card=lastBotCard(); if(!card)return;
+    card.dataset.v109Step=step;
+    card.classList.toggle('v109-error',mode==='error');
+    let b=card.querySelector('b');
+    if(!b){b=document.createElement('b'); card.prepend(b);}
+    b.textContent=(mode==='error'?cfg.errorTitle:cfg.title);
+    let sm=card.querySelector('small');
+    if(!sm){sm=document.createElement('small'); b.insertAdjacentElement('afterend',sm);}
+    sm.textContent=(mode==='error'?cfg.errorSmall:cfg.small);
+    card.querySelectorAll('.pharaoh-v108-actions,.pharaoh-v109-actions').forEach(x=>x.remove());
+    card.insertAdjacentHTML('beforeend',actionsHtml());
+  }
+  function setExpected(step,mode){
+    state.expected=step||'';
+    state.active=!!step;
+    if(step)setTimeout(()=>decorate(step,mode||'normal'),0);
+  }
+  function clearExpected(){state.expected='';state.active=false;state.lastError='';}
+  function currentStep(){return state.expected||inferStep();}
+  function focusInput(clear){const i=input(); if(!i)return; if(clear)i.value=''; try{i.focus()}catch(e){}}
+  function reject(step,raw){
+    addUser(raw);
+    setExpected(step,'error');
+    focusInput(true);
+    return true;
+  }
+  function accept(step,raw,value){
+    const a=api();
+    addUser(raw);
+    const i=input(); if(i)i.value='';
+    if(a&&typeof a.consumeText==='function'){
+      try{a.state=a.state||{};a.state.active=true;a.state.startedAt=Date.now()}catch(e){}
+      a.consumeText(value);
+    }
+    if(step==='id')setExpected('name','normal');
+    else if(step==='name')clearExpected();
+    else if(step==='phone')clearExpected();
+    else if(step==='last3')clearExpected();
+    return true;
+  }
+  function processSend(){
+    const i=input(); const raw=String(i&&i.value||'').trim();
+    if(!raw)return false;
+    const step=currentStep();
+    if(!step)return false;
+    const ds=digitsOnly(raw);
+    if(/^(الغي|الغاء|إلغاء|كنسل|cancel)$/i.test(raw)){
+      const a=api(); if(a&&typeof a.handle==='function')a.handle('cancel'); clearExpected(); if(i)i.value=''; return true;
+    }
+    if(step==='id'){
+      if(/^\d{5,15}$/.test(ds))return accept(step,raw,ds);
+      return reject(step,raw);
+    }
+    if(step==='name'){
+      if(validName(raw))return accept(step,raw,raw);
+      return reject(step,raw);
+    }
+    if(step==='phone'){
+      if(/^01\d{9}$/.test(ds))return accept(step,raw,ds);
+      return reject(step,raw);
+    }
+    if(step==='last3'){
+      if(/^\d{3}$/.test(ds))return accept(step,raw,ds);
+      return reject(step,raw);
+    }
+    return false;
+  }
+  document.addEventListener('click',function(e){
+    const send=e.target.closest&&e.target.closest('#pharaohSendBtn,#pharaohChatForm button:not(#pharaohMicBtn)');
+    if(send&&send.closest('#pharaohChatForm')&&processSend()){
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+  },true);
+  document.addEventListener('submit',function(e){
+    if(e.target&&e.target.id==='pharaohChatForm'&&processSend()){
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(e.target&&e.target.id==='pharaohChatInput'&&e.key==='Enter'&&processSend()){
+      e.preventDefault(); e.stopImmediatePropagation(); return false;
+    }
+  },true);
+  document.addEventListener('click',function(e){
+    const act=e.target.closest&&e.target.closest('[data-v91-act]');
+    if(!act)return;
+    const a=act.dataset.v91Act;
+    const v=act.dataset.v;
+    if(a==='combo'||a==='manualPick')setTimeout(()=>setExpected('id','normal'),60);
+    else if(a==='transfer'&&String(v)==='other')setTimeout(()=>setExpected('last3','normal'),60);
+    else if(['cancel','newOrder','askBudget','manualProducts'].includes(String(a)))clearExpected();
+    else if(a==='pay'||a==='paid'||a==='transfer')clearExpected();
+  },true);
+  document.addEventListener('change',function(e){
+    if(e.target&&e.target.id==='pharaohShotV91'&&e.target.files&&e.target.files[0])setTimeout(()=>setExpected('phone','normal'),80);
+  },true);
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest&&e.target.closest('[data-v109-act]');
+    if(!btn)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const a=btn.dataset.v109Act;
+    if(a==='cancel'){
+      const apiObj=api();
+      if(apiObj&&typeof apiObj.handle==='function')apiObj.handle('cancel');
+      clearExpected();
+      return false;
+    }
+  },true);
+})();
+
+
+/* moba-v107-pharaoh-master-context-first */
+(function(){
+  if(true)return; // disabled in v110 to prevent duplicate context handling
+  if(window.__mobaV107MasterContext)return;
+  window.__mobaV107MasterContext=true;
+  const qs=(s,r=document)=>r.querySelector(s);
+  const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  function panel(){return qs('#pharaohChatPanel')}
+  function body(){return qs('#pharaohChatBody')}
+  function input(){return qs('#pharaohChatInput')}
+  function esc(t){return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function digitsOnly(text){return String(text||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/\D/g,'')}
+  function lastBotText(){
+    const bots=qsa('.pharaoh-msg.bot',body()||document);
+    return (bots.slice(-2).map(x=>x.innerText||'').join('\n')||'').slice(-1200);
+  }
+  function addUser(t){
+    const b=body(); if(!b)return;
+    const m=document.createElement('div');
+    m.className='pharaoh-msg user pharaoh-brain-new';
+    m.textContent=String(t||'');
+    const ty=qs('#pharaohTyping',b);
+    if(ty&&ty.parentElement===b)b.insertBefore(m,ty); else b.appendChild(m);
+    b.scrollTop=b.scrollHeight;
+  }
+  let lastGuard='';
+  function guard(title,small){
+    const key=title+'|'+small;
+    if(lastGuard===key) return;
+    lastGuard=key;
+    setTimeout(()=>{ if(lastGuard===key) lastGuard=''; },2500);
+    const b=body(); if(!b)return;
+    const m=document.createElement('div');
+    m.className='pharaoh-msg bot pharaoh-brain-new moba-v107-guard';
+    m.innerHTML='<div class="pharaoh-v85-card"><b>'+esc(title)+'</b><small>'+esc(small)+'</small><div class="pharaoh-v85-actions"><button type="button" class="gold" data-v91-act="newOrder">إعادة من الأول</button><button type="button" data-v91-act="cancel">إلغاء</button></div></div>';
+    const ty=qs('#pharaohTyping',b);
+    if(ty&&ty.parentElement===b)b.insertBefore(m,ty); else b.appendChild(m);
+    b.scrollTop=b.scrollHeight;
+  }
+  function asksId(ctx){return /(هات\s*(pubg\s*)?id|اكتب\s*(pubg\s*)?id|pubg\s*id|id\s*الحساب|رقم\s*الحساب|مطلوب\s*pubg\s*id|مطلوب\s*id|هات\s*الايدي|هات\s*الأيدي|اكتب\s*الايدي|اكتب\s*الأيدي|اكتب\s*ايدي)/i.test(ctx)}
+  function asksPhone(ctx){return /(هات\s*رقم\s*متابعة|هات\s*رقم\s*متابعه|رقم\s*متابعة\s*الطلب|رقم\s*متابعه\s*الطلب|رقم\s*الموبايل|رقم\s*موبايل|يبدأ\s*بـ?\s*01|يبدا\s*بـ?\s*01|مطلوب\s*رقم\s*الموبايل|مطلوب\s*رقم\s*التلفون)/i.test(ctx)}
+  function asksLast3(ctx){return /(آخر\s*3|اخر\s*3|3\s*أرقام|3\s*ارقام|مطلوب\s*آخر\s*3|مطلوب\s*اخر\s*3|رقم\s*التحويل|حولت\s*منه)/i.test(ctx)}
+  function asksName(ctx){return /(هات\s*اسم\s*الحساب|اكتب\s*اسم\s*الحساب|اسم\s*الحساب\s*داخل\s*اللعبة|اسم\s*الحساب\s*داخل\s*اللعبه|مطلوب\s*اسم\s*الحساب)/i.test(ctx)}
+  function isCancel(raw){return /^(الغي|الغاء|إلغاء|كنسل|cancel|بلاش|وقف)$/i.test(String(raw||'').trim())}
+  function isReset(raw){return /^(اعادة|إعادة|اعاده|إعاده|ابدا من الاول|ابدأ من الاول|ريست|reset|طلب جديد)$/i.test(String(raw||'').trim())}
+  function handleContext(raw){
+    const a=window.__pharaohV91;
+    const ctx=lastBotText();
+    const ds=digitsOnly(raw);
+    if(!a) return false;
+    if(isCancel(raw)){ addUser(raw); a.handle&&a.handle('cancel'); return true; }
+    if(isReset(raw)){ addUser(raw); a.start&&a.start(); return true; }
+    if(asksId(ctx)){
+      addUser(raw);
+      try{a.state&&(a.state.active=true,a.state.startedAt=Date.now())}catch(e){}
+      if(/^\d{5,15}$/.test(ds)){
+        if(typeof a.askName==='function') a.askName(ds); else a.consumeText&&a.consumeText(ds);
+      }else{
+        guard('مطلوب PUBG ID','اكتب الايدي أرقام فقط من 5 لـ 15 رقم أو اختار إلغاء / إعادة من الأول.');
+      }
+      return true;
+    }
+    if(asksPhone(ctx)){
+      addUser(raw);
+      try{a.state&&(a.state.active=true,a.state.startedAt=Date.now())}catch(e){}
+      if(/^01\d{9}$/.test(ds)){
+        if(typeof a.askTransfer==='function') a.askTransfer(ds); else a.consumeText&&a.consumeText(ds);
+      }else{
+        guard('مطلوب رقم الموبايل','اكتب رقم متابعة الطلب 11 رقم ويبدأ بـ 01 أو اختار إلغاء / إعادة من الأول.');
+      }
+      return true;
+    }
+    if(asksLast3(ctx)){
+      addUser(raw);
+      try{a.state&&(a.state.active=true,a.state.startedAt=Date.now())}catch(e){}
+      if(/^\d{3}$/.test(ds)){
+        if(a.state){a.state.transferLast3=ds; a.state.step='confirm'}
+        if(typeof a.summary==='function') a.summary(); else a.consumeText&&a.consumeText(ds);
+      }else{
+        guard('مطلوب آخر 3 أرقام','اكتب 3 أرقام فقط من رقم التحويل أو اختار إلغاء / إعادة من الأول.');
+      }
+      return true;
+    }
+    if(asksName(ctx)){
+      addUser(raw);
+      const name=String(raw||'').trim();
+      if(name.length>=2 && !(ds && ds===name)){
+        if(typeof a.askPayment==='function') a.askPayment(name); else a.consumeText&&a.consumeText(name);
+      }else{
+        guard('مطلوب اسم الحساب','اكتب اسم الحساب داخل اللعبة بوضوح أو اختار إلغاء / إعادة من الأول.');
+      }
+      return true;
+    }
+    return false;
+  }
+  function submitNow(e){
+    const inp=input();
+    const raw=String(inp&&inp.value||'').trim();
+    if(!raw)return false;
+    if(handleContext(raw)){
+      if(inp)inp.value='';
+      e&&e.preventDefault&&e.preventDefault();
+      e&&e.stopImmediatePropagation&&e.stopImmediatePropagation();
+      return true;
+    }
+    return false;
+  }
+  document.addEventListener('click',function(e){
+    const target=e.target;
+    const btn=target&&target.closest&&target.closest('#pharaohSendBtn,#pharaohChatForm button:not(#pharaohMicBtn):not([data-v91-act]):not([data-v65-act]):not([data-v67-act]):not([data-pharaoh-q])');
+    if(btn&&btn.closest('#pharaohChatForm')&&submitNow(e)) return false;
+  },true);
+  document.addEventListener('submit',function(e){
+    if(e.target&&e.target.id==='pharaohChatForm'&&submitNow(e)) return false;
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(e.target&&e.target.id==='pharaohChatInput'&&e.key==='Enter'&&submitNow(e)) return false;
+  },true);
+})();
+
 /* pharaoh-v19-assistant */
 (function(){
   const fab = document.getElementById('pharaohAssistantFab');
@@ -2550,6 +2840,18 @@
     wiz.step='last3';
     bot(card('اكتب آخر 3 أرقام','اكتب آخر 3 أرقام من الرقم اللي حولت منه الفلوس','<div class="pharaoh-v85-warn">المطلوب هنا مش رقم متابعة الطلب. ده آخر 3 أرقام من رقم المحفظة أو المحل اللي اتعمل منه التحويل.</div>',[]));
   }
+  function editData(){
+    wiz.pubgId='';
+    wiz.pubgName='';
+    wiz.paymentMethod='';
+    wiz.transferMode='';
+    wiz.transferLast3='';
+    wiz.phone='';
+    wiz.screenshot=null;
+    wiz.step='id';
+    bot(card('تمام، هات ID الحساب','اكتب PUBG ID أرقام فقط',
+      `<div class="pharaoh-v85-note">الباقات: ${wiz.items.map(x=>esc(x.product)).join(' + ')}</div>`,[]));
+  }
   function summary(){
     wiz.step='confirm';
     const total=wiz.items.reduce((s,x)=>s+Number(x.price||0),0);
@@ -2560,7 +2862,7 @@
         <div>الدفع: <b>${esc(wiz.paymentMethod)}</b> | المتابعة: <b>${esc(wiz.phone)}</b></div>
         <div>تأكيد التحويل: <b>${wiz.transferMode==='same'?'نفس الرقم':'آخر 3 أرقام '+esc(wiz.transferLast3)}</b></div>
         <div>الإجمالي: <b>${money(total)}</b></div>
-      </div>`,[{t:'تأكيد الطلب',a:'confirm',cls:'green'},{t:'إلغاء',a:'cancel',cls:'danger'}]));
+      </div>`,[{t:'صح',a:'confirm',cls:'green'},{t:'تصحيح',a:'editData',cls:'gold'},{t:'إلغاء الطلب',a:'cancel',cls:'danger'}]));
   }
   async function submit(){
     if(!wiz.screenshot)return askShot();
@@ -2634,7 +2936,8 @@
     if(a==='transfer')return chooseTransfer(v);
     if(a==='summary')return summary();
     if(a==='confirm')return submit();
-    if(a==='cancel'){reset();return bot(card('تم الإلغاء','نبدأ من جديد وقت ما تحب','',[{t:'طلب جديد',a:'newOrder',cls:'gold'}]))}
+    if(a==='editData')return editData();
+    if(a==='cancel'){reset();return bot(card('تم إلغاء الطلب','نبدأ من جديد وقت ما تحب','',[{t:'طلب جديد',a:'newOrder',cls:'gold'}]))}
     if(a==='newOrder')return start();
     if(a==='openTrack'){if(typeof window.mobaShowView==='function')window.mobaShowView('orders');return}
   }
@@ -2676,7 +2979,7 @@
   ensureMic();
   document.addEventListener('DOMContentLoaded',ensureMic);
   setTimeout(ensureMic,500);
-  window.__pharaohV91={start,consumeText,handle,summary};
+  window.__pharaohV91={start,consumeText,handle,summary,state:wiz,askName,askPayment,askTransfer,chooseTransfer,editData};
 })();
 
 

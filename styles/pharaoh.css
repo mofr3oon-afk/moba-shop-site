@@ -970,3 +970,86 @@ body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
   .moba-v103-timeline{grid-template-columns:repeat(2,1fr) !important}
   .moba-v103-review-actions,.moba-v103-success .actions{grid-template-columns:1fr !important}
 }
+
+
+/* moba-v108-pharaoh-mini-actions */
+.pharaoh-v108-actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+}
+.pharaoh-v108-actions button{
+  min-height:30px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  padding:6px 6px;
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(39,216,255,.06));
+  color:#f7fbff;
+  font-size:10.5px;
+  font-weight:900;
+  cursor:pointer;
+}
+.pharaoh-v108-actions .green{
+  background:linear-gradient(135deg,#39e68b,#8dffb4);
+  color:#032111;
+}
+.pharaoh-v108-actions .danger{
+  background:linear-gradient(135deg,rgba(255,77,104,.16),rgba(255,77,104,.09));
+  color:#ffd6df;
+}
+#pharaohChatBody .pharaoh-v85-card.v108-error small{
+  color:#ffd9a8;
+}
+@media(max-width:520px){
+  .pharaoh-v108-actions button{
+    min-height:28px;
+    font-size:10px;
+    padding:5px 4px;
+  }
+}
+
+
+/* moba-v109-pharaoh-single-flow-actions */
+.pharaoh-v109-actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+}
+.pharaoh-v109-actions button{
+  min-height:28px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:10px;
+  padding:5px 6px;
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(39,216,255,.06));
+  color:#f7fbff;
+  font-size:10.5px;
+  font-weight:900;
+  cursor:pointer;
+}
+.pharaoh-v109-actions .green{
+  background:linear-gradient(135deg,#39e68b,#8dffb4);
+  color:#032111;
+}
+.pharaoh-v109-actions .danger{
+  background:linear-gradient(135deg,rgba(255,77,104,.18),rgba(255,77,104,.09));
+  color:#ffd6df;
+}
+#pharaohChatBody .pharaoh-v85-card.v109-error small,
+#pharaohChatBody .pharaoh-assist-pro-card.v109-error small{
+  color:#ffd9a8;
+}
+@media(max-width:520px){
+  .pharaoh-v109-actions button{min-height:27px;font-size:10px;padding:5px 4px;}
+}
+
+
+/* moba-v110-pharaoh-step-actions */
+.pharaoh-v109-actions--single{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.pharaoh-v109-actions--single button{
+  max-width:140px;
+  justify-self:start;
+}

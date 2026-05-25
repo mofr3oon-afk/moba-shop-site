@@ -37,24 +37,11 @@
 
   // Use last ID button inside product cards
   function addLastIdButtons(){
-    let last = null;
-    try{ last = JSON.parse(localStorage.getItem('moba_last_pubg') || 'null'); }catch(e){}
-    if(!last || !last.pubgId) return;
     document.querySelectorAll('.product').forEach(card=>{
-      if(card.querySelector('.last-id-btn')) return;
-      const idInput = card.querySelector('input[id^="id_"]');
-      const nameInput = card.querySelector('input[id^="name_"]');
-      if(!idInput || !nameInput) return;
-      const btn = document.createElement('button');
-      btn.type='button';
-      btn.className='last-id-btn';
-      btn.textContent='⚡ استخدم آخر ID';
-      btn.onclick=function(){
-        idInput.value = last.pubgId || '';
-        nameInput.value = last.pubgName || '';
-        toast('تم وضع آخر ID ✅');
-      };
-      nameInput.insertAdjacentElement('afterend', btn);
+      const keep = card.querySelector('.use-last-id-inline-btn,[data-last-id]');
+      card.querySelectorAll('.last-id-btn,.moba-v104-use-last,.pharaoh-product-helper [data-v65-fill-last]').forEach(btn=>{
+        if(!keep || btn!==keep) btn.remove();
+      });
     });
   }
   const oldRenderProducts = window.renderProducts;
