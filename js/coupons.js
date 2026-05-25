@@ -54,14 +54,31 @@
   setTimeout(addLastIdButtons,800);
 
   // Checkout confirmation before real submit
+  function getCheckoutCartItems(){
+    let fromStorage = [];
+    try{ fromStorage = JSON.parse(localStorage.getItem('moba_cart') || '[]'); }catch(e){ fromStorage = []; }
+    if(Array.isArray(fromStorage) && fromStorage.length) return fromStorage;
+    if(Array.isArray(window.cart) && window.cart.length) return window.cart;
+    return [];
+  }
+  function getItemQty(x){
+    return Math.max(1, Number(x?.qty || x?.qtyTotal || 1));
+  }
+  function getItemUc(x){
+    const qty = getItemQty(x);
+    const direct = Number(x?.ucTotal || 0);
+    if(direct) return direct;
+    const base = Number(x?.uc || 0);
+    if(base) return base * qty;
+    const txt = String(x?.product || x?.name || '');
+    const m = txt.match(/(\d+)\s*UC/i) || txt.match(/UC\s*(\d+)/i);
+    return (m ? Number(m[1]) : 0) * qty;
+  }
   function cartSummary(){
-    const items = (window.cart && window.cart.length ? window.cart : (()=>{ try{return JSON.parse(localStorage.getItem('moba_cart')||'[]')}catch(e){return []} })()) || [];
-    const count = items.reduce((s,x)=>s+Number(x.qty||1),0);
-    const total = items.reduce((s,x)=>s+(Number(x.price||0)*Number(x.qty||1)),0);
-    const uc = items.reduce((s,x)=>{
-      const m=String(x.product||'').match(/(\d+)\s*UC/i);
-      return s + ((m?Number(m[1]):0)*Number(x.qty||1));
-    },0);
+    const items = getCheckoutCartItems();
+    const count = items.reduce((s,x)=>s+getItemQty(x),0);
+    const total = items.reduce((s,x)=>s+(Number(x.price||0)*getItemQty(x)),0);
+    const uc = items.reduce((s,x)=>s+getItemUc(x),0);
     return {items,count,total,uc};
   }
   function openConfirm(form){
@@ -88,12 +105,67 @@
       openConfirm(form);
     }
   }, true);
-  document.getElementById('confirmSendOrder')?.addEventListener('click', function(){
+  async function submitConfirmedCheckout(form){
+    if(!form || form.dataset.sending === '1') return;
+    const items = getCheckoutCartItems();
+    const statusBox = document.getElementById('status');
+    function show(msg,type){
+      if(statusBox){
+        statusBox.textContent = msg;
+        statusBox.className = 'status ' + (type || 'err');
+        try{statusBox.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+      }else alert(msg);
+    }
+    if(!items.length){ show('سلة الطلبات فاضية','err'); return; }
+    const fd = new FormData(form);
+    const transferMode = fd.get('transferMode');
+    if(!transferMode){ show('حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني','err'); return; }
+    if(transferMode === 'other' && !/^\d{3}$/.test(String(fd.get('transferLast3')||''))){
+      show('لازم تكتب آخر 3 أرقام من رقم التحويل','err'); return;
+    }
+    const shot = form.querySelector('[name="screenshot"]');
+    if(shot && shot.required && (!shot.files || !shot.files[0])){
+      show('لازم ترفع سكرين التحويل','err'); return;
+    }
+    fd.set('cart', JSON.stringify(items));
+    const checkoutBtn = form.querySelector('button[type="submit"]');
+    const confirmBtn = document.getElementById('confirmSendOrder');
+    const oldCheckoutText = checkoutBtn ? checkoutBtn.textContent : '';
+    const oldConfirmText = confirmBtn ? confirmBtn.textContent : '';
+    form.dataset.sending = '1';
+    if(checkoutBtn){ checkoutBtn.disabled = true; checkoutBtn.textContent = '⏳ جاري ارسال الطلب...'; }
+    if(confirmBtn){ confirmBtn.disabled = true; confirmBtn.textContent = '⏳ جاري الإرسال...'; }
+    try{
+      const res = await fetch('/api/order',{method:'POST',body:fd});
+      const data = await res.json().catch(()=>({ok:false,error:'رد السيرفر غير واضح'}));
+      if(!data.ok) throw new Error(data.error || 'حصل خطأ');
+      localStorage.removeItem('moba_cart');
+      window.cart = [];
+      try{ if(typeof cart !== 'undefined') cart = []; }catch(e){}
+      try{ if(typeof window.renderCart === 'function') window.renderCart(); }catch(e){}
+      try{ if(typeof renderCart === 'function') renderCart(); }catch(e){}
+      try{ if(typeof window.updateSticky === 'function') window.updateSticky(); }catch(e){}
+      document.getElementById('checkoutConfirm')?.classList.remove('show');
+      const trackingNote = data.statusTracking ? 'تقدر تتابع الحالة من سجل الطلبات برقم الموبايل.' : 'تم تسجيل الطلب بنجاح.';
+      show('✅ تم إرسال الطلب بنجاح\n' + trackingNote,'ok');
+      form.reset();
+      pendingCheckoutForm = null;
+    }catch(err){
+      show('⚠️ ' + (err.message || 'حصل خطأ أثناء إرسال الطلب'),'err');
+    }finally{
+      delete form.dataset.sending;
+      if(checkoutBtn){ checkoutBtn.disabled = false; checkoutBtn.textContent = oldCheckoutText || '✅ تنفيذ الشراء | Checkout'; }
+      if(confirmBtn){ confirmBtn.disabled = false; confirmBtn.textContent = oldConfirmText || '✅ تأكيد الطلب'; }
+    }
+  }
+  document.getElementById('confirmSendOrder')?.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
     const box=document.getElementById('checkoutConfirm');
     box?.classList.remove('show');
     if(pendingCheckoutForm){
       pendingCheckoutForm.dataset.confirmed='1';
-      pendingCheckoutForm.requestSubmit ? pendingCheckoutForm.requestSubmit() : pendingCheckoutForm.submit();
+      submitConfirmedCheckout(pendingCheckoutForm);
       setTimeout(()=>delete pendingCheckoutForm.dataset.confirmed,1000);
     }
   });
