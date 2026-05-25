@@ -3923,3 +3923,102 @@
   document.addEventListener('DOMContentLoaded',function(){installBrain();installMic()});
   setInterval(function(){installBrain();installMic()},900);
 })();
+
+
+/* moba-v113-pharaoh-fix-buttons-action */
+(function(){
+  if(window.__mobaV113PharaohFixButtons)return;
+  window.__mobaV113PharaohFixButtons=true;
+  function qs(s,r=document){return r.querySelector(s)}
+  function qsa(s,r=document){return Array.from(r.querySelectorAll(s))}
+  function esc(t){return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function openPanel(){
+    const panel=qs('#pharaohChatPanel');
+    const fab=qs('#pharaohAssistantFab');
+    if(panel){
+      panel.classList.add('show');
+      panel.removeAttribute('aria-hidden');
+    }else if(fab){
+      fab.click();
+    }
+    try{fab&&fab.classList.remove('show-hint')}catch(e){}
+  }
+  function addBot(html){
+    openPanel();
+    const body=qs('#pharaohChatBody');
+    const typing=qs('#pharaohTyping');
+    if(!body)return;
+    const msg=document.createElement('div');
+    msg.className='pharaoh-msg bot pharaoh-brain-new';
+    msg.innerHTML=html;
+    if(typing&&typing.parentElement===body)body.insertBefore(msg,typing); else body.appendChild(msg);
+    body.scrollTop=body.scrollHeight;
+  }
+  function issueText(type){
+    if(type==='bad_screen'||type==='badshot'){
+      return '<b>فرعون معاك في مشكلة السكرين 👑</b><small>اضغط على زر رفع السكرين الجديد، واختار صورة واضحة فيها المبلغ ووقت التحويل ورقم العملية، وبعدها اضغط إرسال التعديل للمراجعة.</small>';
+    }
+    if(type==='bad_id'){
+      return '<b>فرعون معاك في تعديل ID 👑</b><small>اكتب PUBG ID الصحيح واسم الحساب داخل اللعبة، وبعدها اضغط إرسال التعديل للمراجعة.</small>';
+    }
+    if(type==='bad_phone'){
+      return '<b>فرعون معاك في تعديل رقم المتابعة 👑</b><small>اكتب رقم موبايل صحيح يبدأ بـ 01 ومكون من 11 رقم، وبعدها ابعت التعديل.</small>';
+    }
+    return '<b>فرعون معاك 👑</b><small>افتح خانة تعديل الطلب واكتب المطلوب أو ارفع السكرين الجديد حسب سبب المشكلة.</small>';
+  }
+  function highlightFixForm(){
+    const form=qs('.fix-form');
+    if(!form)return;
+    form.scrollIntoView({behavior:'smooth',block:'center'});
+    form.style.boxShadow='0 0 0 3px rgba(39,216,255,.35),0 0 28px rgba(39,216,255,.22)';
+    setTimeout(()=>{form.style.boxShadow=''},1800);
+  }
+  window.askPharaohAboutIssue=function(type){
+    const t=String(type||qs('.fix-form [name="fixType"]')?.value||'').trim();
+    addBot('<div class="pharaoh-v85-card">'+issueText(t)+'<div class="pharaoh-v85-actions"><button type="button" class="gold" data-v113-highlight-fix>روح للتعديل</button><a href="https://t.me/MOFR3OON" target="_blank" rel="noopener">الدعم المباشر</a></div></div>');
+    setTimeout(highlightFixForm,250);
+  };
+  function fixButtons(){
+    qsa('.fix-form').forEach(form=>{
+      let type=form.querySelector('[name="fixType"]')?.value||'';
+      let btn=form.querySelector('.ask-pharaoh-btn');
+      if(!btn){
+        btn=document.createElement('button');
+        btn.type='button';
+        btn.className='ask-pharaoh-btn';
+        btn.textContent='👑 اسأل فرعون عن المشكلة';
+        form.appendChild(btn);
+      }
+      btn.type='button';
+      btn.dataset.askPharaohIssue=type;
+      btn.onclick=function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        window.askPharaohAboutIssue(type);
+        return false;
+      };
+    });
+  }
+  document.addEventListener('click',function(e){
+    const h=e.target.closest&&e.target.closest('[data-v113-highlight-fix]');
+    if(h){e.preventDefault();e.stopImmediatePropagation();highlightFixForm();return false}
+    const btn=e.target.closest&&e.target.closest('.ask-pharaoh-btn,[data-ask-pharaoh-issue]');
+    if(btn){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.askPharaohAboutIssue(btn.dataset.askPharaohIssue||btn.closest('.fix-form')?.querySelector('[name="fixType"]')?.value||'');
+      return false;
+    }
+    const support=e.target.closest&&e.target.closest('a.fix-support,a.order-support-link');
+    if(support&&support.href){
+      e.preventDefault();
+      window.location.href=support.href;
+      return false;
+    }
+  },true);
+  const mo=new MutationObserver(()=>fixButtons());
+  mo.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('DOMContentLoaded',fixButtons);
+  setTimeout(fixButtons,300);
+  setInterval(fixButtons,1500);
+})();
