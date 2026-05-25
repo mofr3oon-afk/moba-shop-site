@@ -45,7 +45,7 @@ function calcDiscount(coupon,total,cart){
   const scopes = Array.isArray(coupon.product_scopes) ? coupon.product_scopes : [];
   const eligibleItems = (cart && cart.length ? cart : []).filter(item => scopeMatches(item, scopes));
   const eligibleTotal = cart && cart.length ? eligibleItems.reduce((s,item)=>s+itemLineTotal(item),0) : total;
-  if(eligibleTotal <= 0 && scopes.length) throw new Error('الكوبون لا ينطبق على المنتجات الموجودة في السلة');
+  if(eligibleTotal <= 0 && scopes.length) throw new Error(`الكوبون ده مش مناسب للمنتجات الموجودة في السلة حاليًا${scopes.length ? ' — ينفع على: ' + scopes.join(' / ') : ''}`);
   const base = scopes.length ? eligibleTotal : total;
   let discount = 0;
   if(coupon.discount_type === 'percent'){
@@ -69,9 +69,9 @@ export default async function handler(req,res){
     if(total <= 0) return json(res,400,{ok:false,error:'السلة فاضية'});
     const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`);
     const c = rows && rows[0];
-    if(!c) return json(res,404,{ok:false,error:'الكوبون غير موجود'});
-    if(!c.is_active) return json(res,400,{ok:false,error:'الكوبون متوقف حاليا'});
-    if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return json(res,400,{ok:false,error:'الكوبون منتهي'});
+    if(!c) return json(res,404,{ok:false,error:'الكود ده غير موجود. راجع الكتابة أو جرّب كود تاني'});
+    if(!c.is_active) return json(res,400,{ok:false,error:'الكوبون ده متوقف حاليًا'});
+    if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return json(res,400,{ok:false,error:'صلاحية الكوبون انتهت'});
     if(Number(c.min_order_amount || 0) > total) return json(res,400,{ok:false,error:`الكوبون يحتاج طلب بقيمة ${c.min_order_amount} جنيه على الأقل`});
     const result = calcDiscount(c,total,cart);
     return json(res,200,{ok:true,coupon:{

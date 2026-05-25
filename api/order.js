@@ -3,6 +3,8 @@ import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, valid
 export const config = { api: { bodyParser: false } };
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
 
+async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
+
 function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
 function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
 
@@ -56,14 +58,14 @@ async function validateCouponServer(code,total,cart=[]){
   if(!code) return null;
   const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`);
   const c = rows && rows[0];
-  if(!c) throw new Error('كود الخصم غير موجود');
+  if(!c) throw new Error('الكود ده غير موجود. راجع الكتابة أو جرّب كود تاني');
   if(!c.is_active) throw new Error('كود الخصم متوقف حاليا');
   if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) throw new Error('كود الخصم منتهي');
   if(Number(c.min_order_amount || 0) > total) throw new Error(`الكوبون يحتاج طلب بقيمة ${c.min_order_amount} جنيه على الأقل`);
   const scopes = Array.isArray(c.product_scopes) ? c.product_scopes : [];
   const eligibleItems = (Array.isArray(cart) ? cart : []).filter(item => couponScopeMatches(item, scopes));
   const eligibleTotal = Array.isArray(cart) && cart.length ? eligibleItems.reduce((s,item)=>s+couponItemLineTotal(item),0) : total;
-  if(scopes.length && eligibleTotal <= 0) throw new Error('الكوبون لا ينطبق على المنتجات الموجودة في السلة');
+  if(scopes.length && eligibleTotal <= 0) throw new Error(`الكوبون ده مش مناسب للمنتجات الموجودة في السلة حاليًا${scopes.length ? ' — ينفع على: ' + scopes.join(' / ') : ''}`);
   const base = scopes.length ? eligibleTotal : total;
   let discount = 0;
   if(c.discount_type === 'percent'){
@@ -107,7 +109,7 @@ export default async function handler(req,res){
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
     for(const item of cart){ item.qty = itemQty(item); if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
     total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
-    const coupon_code = String(body.coupon_code || form?.get?.('coupon_code') || '').trim().toUpperCase();
+    const coupon_code = String(fields.coupon_code || '').trim().toUpperCase();
     let coupon_discount = 0;
     if(coupon_code){
       const validCoupon = await validateCouponServer(coupon_code,total,cart);
