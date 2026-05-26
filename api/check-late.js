@@ -1,4 +1,4 @@
-import { requireInternalSecret, rateLimit, safeError } from './_security.js';
+import { requireInternalSecret, rateLimit, safeError } from '../lib/_security.js';
 // moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;

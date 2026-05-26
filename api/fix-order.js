@@ -1,4 +1,4 @@
-import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, validatePubgId } from './_security.js';
+import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, validatePubgId } from '../lib/_security.js';
 // moba-v40-security
 
 const SUPABASE_URL = process.env.SUPABASE_URL;

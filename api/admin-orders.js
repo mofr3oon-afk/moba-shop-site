@@ -1,5 +1,5 @@
-import { json, supabaseReady, supabaseRequest, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
-import { rateLimit, safeError } from './_security.js';
+import { json, supabaseReady, supabaseRequest, STATUS_LABELS, OPEN_STATUSES } from '../lib/_utils.js';
+import { rateLimit, safeError } from '../lib/_security.js';
 
 function requireAdmin(req){
   const expected = process.env.ADMIN_PANEL_SECRET || process.env.SETUP_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET || '';

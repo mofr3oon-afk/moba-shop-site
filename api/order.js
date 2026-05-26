@@ -1,8 +1,8 @@
-import { rateLimit, safeError, getClientIp } from './_security.js';
+import { rateLimit, safeError, getClientIp } from '../lib/_security.js';
 // moba-v40-security
 export const config = { api: { bodyParser: false } };
 import crypto from 'node:crypto';
-import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
+import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from '../lib/_utils.js';
 
 async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
 

@@ -1,6 +1,6 @@
-import { requireSetupSecret, rateLimit, safeError } from './_security.js';
+import { requireSetupSecret, rateLimit, safeError } from '../lib/_security.js';
 // moba-v40-security
-import { json } from './_utils.js';
+import { json } from '../lib/_utils.js';
 export default async function handler(req,res){
   try{ rateLimit(req,'setup',5,60_000); requireSetupSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{

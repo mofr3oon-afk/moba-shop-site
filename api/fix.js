@@ -1,7 +1,7 @@
-import { rateLimit, safeError } from './_security.js';
+import { rateLimit, safeError } from '../lib/_security.js';
 // moba-v40-security
 export const config = { api: { bodyParser: false } };
-import { json, supabaseRequest, telegramForm, telegramJson, buildTelegramText, telegramKeyboard, STATUS_LABELS, supportUrl } from './_utils.js';
+import { json, supabaseRequest, telegramForm, telegramJson, buildTelegramText, telegramKeyboard, STATUS_LABELS, supportUrl } from '../lib/_utils.js';
 
 function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
 function parseMultipart(buffer,contentType){
