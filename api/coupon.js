@@ -58,6 +58,26 @@ function calcDiscount(coupon,total,cart){
   if(discount <= 0) throw new Error('قيمة الخصم غير صحيحة');
   return {discount, eligibleTotal, scopes};
 }
+
+async function readCouponRuleFromSettings(code){
+  try{
+    const rows = await supa('settings?key=eq.coupon_rules&select=value&limit=1');
+    const raw = rows && rows[0] && rows[0].value;
+    const list = raw ? JSON.parse(raw) : [];
+    const found = Array.isArray(list) ? list.find(x=>String(x.code||'').trim().toUpperCase()===code) : null;
+    if(!found) return null;
+    return {
+      code: String(found.code||'').trim().toUpperCase(),
+      is_active: found.active !== false,
+      discount_type: found.type === 'percent' ? 'percent' : 'fixed',
+      discount_value: Number(found.value||0),
+      discount_amount: Number(found.value||0),
+      min_order_amount: Number(found.min||0),
+      product_scopes: Array.isArray(found.products) ? found.products : [],
+      expires_at: found.expires_at || null
+    };
+  }catch(e){ return null; }
+}
 export default async function handler(req,res){
   try{
     rateLimit(req,'coupon',40,60_000);
@@ -67,8 +87,9 @@ export default async function handler(req,res){
     const cart = parseCart(req.query.cart || '');
     if(!code) return json(res,400,{ok:false,error:'اكتب كود الخصم'});
     if(total <= 0) return json(res,400,{ok:false,error:'السلة فاضية'});
-    const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`);
-    const c = rows && rows[0];
+    const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`).catch(()=>[]);
+    let c = rows && rows[0];
+    if(!c) c = await readCouponRuleFromSettings(code);
     if(!c) return json(res,404,{ok:false,error:'الكود ده غير موجود. راجع الكتابة أو جرّب كود تاني'});
     if(!c.is_active) return json(res,400,{ok:false,error:'الكوبون ده متوقف حاليًا'});
     if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return json(res,400,{ok:false,error:'صلاحية الكوبون انتهت'});

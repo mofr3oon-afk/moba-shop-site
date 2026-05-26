@@ -4056,3 +4056,10 @@
     setTimeout(()=>addBot('<div class="pharaoh-v85-card"><b>تمام، فهمت إنك عايز '+m[1]+' UC</b><small>افتح قسم المنتجات واختار نفس الباقة، وبعدها اكتب ID واسم الحساب وضيفها للسلة.</small><div class="pharaoh-v85-actions"><button type="button" class="gold" data-v120-open-products>افتح المنتجات</button></div></div>'),60);
   },true);
 })();
+
+
+/* moba-v129-pharaoh-payment-settings */
+(function(){
+  if(window.__pharaohPayV129)return; window.__pharaohPayV129=true;
+  fetch('/api/settings').then(r=>r.json()).then(d=>{window.mobaPaymentSettings=d.settings?.payment_settings||window.mobaPaymentSettings||null}).catch(()=>{});
+})();

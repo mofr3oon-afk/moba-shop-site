@@ -38,7 +38,16 @@ export default async function handler(req,res){
       if(!order) return json(res,404,{ok:false,error:'الطلب غير موجود'});
       const history=Array.isArray(order.status_history)?order.status_history:[];
       history.push({status,label:STATUS_LABELS[status]||status,at:new Date().toISOString(),by:'admin_panel',role:admin?.role||'owner'});
-      const patch={status,status_text:STATUS_LABELS[status]||status,admin_status_text:STATUS_LABELS[status]||status,customer_status_text:STATUS_LABELS[status]||status,last_status_by: admin?.role === 'owner' ? 'Owner' : 'Staff',last_status_at:new Date().toISOString(),updated_at:new Date().toISOString(),status_history:history.slice(-50)};
+      const adminName = admin?.role === 'owner' ? 'Owner' : 'Staff';
+      const patch={status,status_text:STATUS_LABELS[status]||status,admin_status_text:STATUS_LABELS[status]||status,customer_status_text:STATUS_LABELS[status]||status,last_status_by: adminName,last_status_at:new Date().toISOString(),updated_at:new Date().toISOString(),status_history:history.slice(-50)};
+      if(status === 'claimed' || status === 'processing') patch.handler = adminName;
+      if(status === 'pending' && /إلغاء استلام|Unclaim/i.test(note)) patch.handler = null;
+      if(status === 'needs_fix'){
+        if(/سكرين/i.test(note)) patch.fix_type='bad_screen';
+        else if(/ID|ايدي|أيدي/i.test(note)) patch.fix_type='bad_id';
+        else if(/رقم|موبايل|فون/i.test(note)) patch.fix_type='bad_phone';
+        else patch.fix_type='general';
+      }
       if(note) patch.note = String(order.note||'') + `\n[Admin Panel] ${note}`;
       const updated=await supabaseRequest(`orders?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(patch)});
       await logAdminEvent('order_status_update', req, {orderId:id,status,note}).catch(()=>null);

@@ -50,6 +50,48 @@ async function getDynamicBlacklist(){
   }
   return out;
 }
+
+async function getStoreSettings(){
+  const fallback={store_status:'available',store_message:'',maintenance_mode:false};
+  if(!supabaseReady()) return fallback;
+  const rows=await supabaseRequest('settings?key=in.(store_status,store_message,maintenance_mode)&select=key,value').catch(()=>[]);
+  const out={...fallback};
+  for(const r of rows||[]){
+    let v=r.value;
+    if(v==='true') v=true; if(v==='false') v=false;
+    out[r.key]=v;
+  }
+  return out;
+}
+function enforceStoreOpen(st){
+  const mode=String(st.store_status||'available');
+  if(st.maintenance_mode===true || mode==='maintenance') throw new Error(st.store_message || 'الموقع تحت صيانة مؤقتا. جرب بعد شوية');
+  if(mode==='closed' && String(process.env.ALLOW_CLOSED_ORDERS||'true')!=='true') throw new Error(st.store_message || 'خارج مواعيد التنفيذ حاليا. جرب وقت مواعيد العمل');
+}
+
+async function getPaymentSettings(){
+  const fallback={
+    wallet:{enabled:true,status:'available',phone:'01061707294',name:'مؤمن',message:'Vodafone / Orange / Etisalat / WE'},
+    instapay:{enabled:true,status:'available',user:'mofr3oon1',phone:'01061707294',name:'مؤمن',link:'https://ipn.eg/S/mofr3oon1/instapay/3ALZfx',message:'حوّل على InstaPay وبعدها ارفع السكرين'},
+    updated_at:null
+  };
+  if(!supabaseReady()) return fallback;
+  const rows=await supabaseRequest('settings?key=eq.payment_settings&select=value&limit=1').catch(()=>[]);
+  const raw=rows?.[0]?.value;
+  if(!raw) return fallback;
+  try{
+    const parsed=typeof raw==='string'?JSON.parse(raw):raw;
+    return {...fallback,...parsed,wallet:{...fallback.wallet,...(parsed.wallet||{})},instapay:{...fallback.instapay,...(parsed.instapay||{})}};
+  }catch{return fallback;}
+}
+function validatePaymentSettingsForOrder(paymentMethod,pay){
+  const key = /insta/i.test(paymentMethod) ? 'instapay' : 'wallet';
+  const data = pay[key] || {};
+  if(data.enabled === false || data.status === 'disabled') throw new Error(`${paymentMethod} متوقف مؤقتا. اختار طريقة دفع تانية أو كلم الدعم`);
+  if(data.status === 'maintenance') throw new Error(`${paymentMethod} تحت صيانة مؤقتا. اختار طريقة دفع تانية`);
+  const dest = key === 'instapay' ? `InstaPay: ${data.user||'-'} | Phone: ${data.phone||'-'} | Name: ${data.name||'-'}` : `Wallet Phone: ${data.phone||'-'} | Name: ${data.name||'-'}`;
+  return {key,dest,data};
+}
 async function enforceBlacklist({phone,clientIp,deviceId,cart}){
   const dyn = await getDynamicBlacklist();
   const phones = envList('BLACKLIST_PHONES').concat(dyn.blacklist_phones || []);
@@ -200,6 +242,10 @@ export default async function handler(req,res){
     let total=0;
     if(!/^01\d{9}$/.test(customerPhone) || looksFakeDigits(customerPhone,'phone')) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح أو شكله عشوائي'});
     if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
+    const storeSettings = await getStoreSettings();
+    enforceStoreOpen(storeSettings);
+    const paymentSettings = await getPaymentSettings();
+    const paymentSnapshot = validatePaymentSettingsForOrder(paymentMethod, paymentSettings);
     if(!['same','other'].includes(transferMode)) return json(res,400,{ok:false,error:'حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني'});
     if(transferMode==='other' && !/^\d{3}$/.test(transferLast3)) return json(res,400,{ok:false,error:'اكتب آخر 3 أرقام من رقم التحويل عشان نقدر نراجع الدفع'});
 
@@ -234,12 +280,12 @@ export default async function handler(req,res){
     const identity=await nextDailyIdentity();
     const order={
       id:identity.id, order_code:identity.order_code, order_date:identity.order_date, daily_number:identity.daily_number,
-      phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, total,
+      phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, payment_destination:paymentSnapshot.dest, payment_settings_snapshot:paymentSnapshot.data, total,
       coupon_code,
       coupon_discount,
       status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
       handler:null, items:cart, note, transfer_mode:transferMode, transfer_last3:transferMode==='other'?transferLast3:'', transfer_confirm_text:transferMode==='same'?'نفس رقم المتابعة':`آخر 3 أرقام: ${transferLast3}`, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
-      raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118'}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
+      raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118',paymentKey:paymentSnapshot.key,paymentDestination:paymentSnapshot.dest}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
     if(supabaseReady()) await supabaseRequest('orders',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(order)});

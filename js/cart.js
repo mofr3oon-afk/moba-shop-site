@@ -1336,6 +1336,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       const r = await fetch('/api/settings');
       const d = await r.json();
       const overrides = d && d.settings && d.settings.product_overrides;
+      const dynamicProducts = d && d.settings && Array.isArray(d.settings.dynamic_products) ? d.settings.dynamic_products : [];
       if(overrides && typeof overrides === 'object'){
         Object.keys(PRODUCTS).forEach(cat=>{
           PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
@@ -1345,6 +1346,11 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
           }).filter(p=>!p.hidden);
         });
       }
+      dynamicProducts.forEach(p=>{
+        const cat = p.cat || 'uc';
+        if(!PRODUCTS[cat]) PRODUCTS[cat]=[];
+        if(!p.hidden && p.name && !PRODUCTS[cat].some(x=>x.name===p.name)) PRODUCTS[cat].push({name:p.name,type:p.type||cat,price:Number(p.price||0),uc:Number(p.uc||0),hot:!!p.hot,noQty:!!p.noQty,warning:p.warning||''});
+      });
     }catch(e){}
   }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -1593,6 +1599,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       const r = await fetch('/api/settings');
       const d = await r.json();
       const overrides = d && d.settings && d.settings.product_overrides;
+      const dynamicProducts = d && d.settings && Array.isArray(d.settings.dynamic_products) ? d.settings.dynamic_products : [];
       if(overrides && typeof overrides === 'object'){
         Object.keys(PRODUCTS).forEach(cat=>{
           PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
@@ -1602,6 +1609,11 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
           }).filter(p=>!p.hidden);
         });
       }
+      dynamicProducts.forEach(p=>{
+        const cat = p.cat || 'uc';
+        if(!PRODUCTS[cat]) PRODUCTS[cat]=[];
+        if(!p.hidden && p.name && !PRODUCTS[cat].some(x=>x.name===p.name)) PRODUCTS[cat].push({name:p.name,type:p.type||cat,price:Number(p.price||0),uc:Number(p.uc||0),hot:!!p.hot,noQty:!!p.noQty,warning:p.warning||''});
+      });
     }catch(e){}
   }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -2059,4 +2071,50 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       document.body.appendChild(box);
     }catch(e){}
   };
+})();
+
+
+/* moba-v129-payment-control */
+(function(){
+  if(window.__mobaPaymentControlV129) return;
+  window.__mobaPaymentControlV129=true;
+  const fallback={
+    wallet:{enabled:true,status:'available',phone:'01061707294',name:'مؤمن',message:'Vodafone / Orange / Etisalat / WE'},
+    instapay:{enabled:true,status:'available',user:'mofr3oon1',phone:'01061707294',name:'مؤمن',link:'https://ipn.eg/S/mofr3oon1/instapay/3ALZfx',message:'حوّل على InstaPay وبعدها ارفع السكرين'}
+  };
+  function esc(t){return String(t??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function copy(v){ if(window.copyText) window.copyText(v); else navigator.clipboard?.writeText(v); }
+  window.mobaPaymentSettings=fallback;
+  function normalize(s){s=s||{};return {...fallback,...s,wallet:{...fallback.wallet,...(s.wallet||{})},instapay:{...fallback.instapay,...(s.instapay||{})}}}
+  function statusLabel(x){return x==='busy'?'ضغط مراجعة':x==='disabled'?'متوقف':x==='maintenance'?'صيانة':'متاح'}
+  function enabled(method){const p=window.mobaPaymentSettings; const d=method==='InstaPay'?p.instapay:p.wallet; return d.enabled!==false && !['disabled','maintenance'].includes(String(d.status||'available'));}
+  function updateSelect(){
+    const sel=document.getElementById('paymentMethod'); if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">اختار طريقة الدفع</option>'+
+      `<option value="InstaPay" ${enabled('InstaPay')?'':'disabled'}>InstaPay - ${statusLabel(window.mobaPaymentSettings.instapay.status)}</option>`+
+      `<option value="Wallet" ${enabled('Wallet')?'':'disabled'}>محفظة - ${statusLabel(window.mobaPaymentSettings.wallet.status)}</option>`;
+    if([...sel.options].some(o=>o.value===val && !o.disabled)) sel.value=val;
+  }
+  function render(){
+    const sel=document.getElementById('paymentMethod'), box=document.getElementById('paymentDetails'); if(!sel||!box) return;
+    const v=sel.value; if(!v){box.className='payment-details';box.innerHTML='';return;}
+    const p=window.mobaPaymentSettings;
+    const d=v==='InstaPay'?p.instapay:p.wallet;
+    const disabled=!enabled(v);
+    box.className='payment-details show';
+    if(disabled){box.innerHTML=`<b>طريقة الدفع متوقفة مؤقتا</b><div class="notice">${esc(d.message||'اختار طريقة دفع تانية أو تواصل مع الدعم.')}</div>`;return;}
+    if(v==='InstaPay') box.innerHTML=`<b>بيانات InstaPay</b><div class="pay-row"><span>User: ${esc(d.user||'')}</span><button type="button" class="copy" data-pay-copy="${esc(d.user||'')}">نسخ</button></div><div class="pay-row"><span>Phone: ${esc(d.phone||'')}</span><button type="button" class="copy" data-pay-copy="${esc(d.phone||'')}">نسخ</button></div><div class="pay-row"><span>Name: ${esc(d.name||'')}</span><button type="button" class="copy" data-pay-copy="${esc(d.name||'')}">نسخ</button></div>${d.link?`<a class="pay-link" href="${esc(d.link)}" target="_blank" rel="noopener">فتح لينك InstaPay</a>`:''}<div class="notice">${esc(d.message||'حوّل الأول وبعدها ارفع السكرين.')}</div>`;
+    else box.innerHTML=`<b>بيانات المحفظة</b><div class="pay-row"><span>Phone: ${esc(d.phone||'')}</span><button type="button" class="copy" data-pay-copy="${esc(d.phone||'')}">نسخ</button></div><div class="pay-row"><span>Name: ${esc(d.name||'')}</span><button type="button" class="copy" data-pay-copy="${esc(d.name||'')}">نسخ</button></div><div class="notice">${esc(d.message||'Vodafone / Orange / Etisalat / WE - حوّل الأول وبعدها ارفع السكرين.')}</div>`;
+    ensureHidden(v,d);
+  }
+  function ensureHidden(method,d){
+    const form=document.getElementById('orderForm'); if(!form) return;
+    const data={method,destination:method==='InstaPay'?`InstaPay:${d.user}|${d.phone}`:`Wallet:${d.phone}`,name:d.name||'',status:d.status||'available'};
+    let inp=form.querySelector('[name="paymentSnapshot"]'); if(!inp){inp=document.createElement('input');inp.type='hidden';inp.name='paymentSnapshot';form.appendChild(inp)}
+    inp.value=JSON.stringify(data);
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-pay-copy]'); if(b) copy(b.dataset.payCopy||'')});
+  document.addEventListener('change',e=>{if(e.target && e.target.id==='paymentMethod') setTimeout(render,0)},true);
+  fetch('/api/settings').then(r=>r.json()).then(d=>{window.mobaPaymentSettings=normalize(d.settings?.payment_settings);updateSelect();render();}).catch(()=>{updateSelect();render();});
 })();
