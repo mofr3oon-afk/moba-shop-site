@@ -75,7 +75,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       else if(order.fix_type==='badphone') fd.append('newPhone',document.getElementById('fixNewPhone').value.trim());
       else fd.append('fixNote',document.getElementById('fixNote').value.trim());
       const btn=e.target.querySelector('button'); btn.disabled=true; btn.textContent='⏳ جاري إرسال التعديل...';
-      try{const res=await fetch('/api/fix',{method:'POST',body:fd}); const data=await res.json(); if(!data.ok) throw new Error(data.error||'حصل خطأ'); alert('✅ تم إرسال التعديل'); loadOrderStatus(order.phone);}
+      try{const res=await fetch('/api/fix-order',{method:'POST',body:fd}); const data=await res.json(); if(!data.ok) throw new Error(data.error||'حصل خطأ'); alert('✅ تم إرسال التعديل'); loadOrderStatus(order.phone);}
       catch(err){alert(err.message||'حصل خطأ');} finally{btn.disabled=false; btn.textContent='✅ إرسال التعديل';}
     }
     async function loadOrderStatus(phone){const box=document.getElementById('trackResult');box.className='track-result show';box.textContent='⏳ جاري جلب حالة الطلب...';try{const res=await fetch(`/api/status?phone=${encodeURIComponent(phone)}`);const data=await res.json();if(!data.ok) throw new Error(data.error||'مش قادر اجيب حالة الطلب');window.__supportUrl=data.supportUrl||'https://t.me/MOFR3OON';renderTrack(data.order,data.recent||[]);}catch(err){box.className='track-result show';box.innerHTML=`⚠️ ${escapeText(err.message||'حصل خطأ')}`;}}
