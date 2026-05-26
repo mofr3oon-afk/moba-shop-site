@@ -1,0 +1,1 @@
+v146: fixed checkout submit stability, normalized cart fields before sending, relaxed false screenshot-small errors, clearer server validation.

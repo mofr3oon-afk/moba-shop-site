@@ -1,0 +1,10 @@
+MOBA SHOP v142
+
+Admin improvements:
+- Mobile responsive admin layout improved.
+- Added real blacklist form with type, value, reason, duration, note.
+- Added blacklist table with unblock button.
+- Added internal order note save button.
+- Admin notes save through /api/admin-orders with action=save_note.
+- Blacklist entries sync to legacy lists so order/security checks keep working.
+- Checked JS syntax for admin script, APIs, and public JS files.

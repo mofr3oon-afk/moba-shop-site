@@ -164,12 +164,12 @@ async function enforceBlacklist({phone,clientIp,deviceId,cart}){
 }
 
 function validateScreenshotFile(file){
-  if(!file || !file.buffer || file.buffer.length < 2000) throw new Error('ارفع سكرين تحويل واضح بحجم مناسب');
+  if(!file || !file.buffer || file.buffer.length < 1) throw new Error('ارفع سكرين تحويل واضح');
   const type=String(file.contentType||'').toLowerCase();
   const name=String(file.filename||'').toLowerCase();
-  const okType=['image/jpeg','image/png','image/webp','image/jpg'].includes(type);
+  const okType=['image/jpeg','image/png','image/webp','image/jpg',''].includes(type);
   const okExt=['.jpg','.jpeg','.png','.webp'].some(ext=>name.endsWith(ext));
-  if(!okType || !okExt) throw new Error('السكرين لازم يكون صورة فقط JPG أو PNG أو WEBP');
+  if(!okType && !okExt) throw new Error('السكرين لازم يكون صورة فقط JPG أو PNG أو WEBP');
   const max=Number(process.env.MAX_SCREENSHOT_SIZE || 5*1024*1024);
   if(file.buffer.length > max) throw new Error('حجم السكرين كبير. ارفع صورة أقل من 5MB');
 }
@@ -195,10 +195,27 @@ function enforceSpamRules(rows,{clientIp,deviceId,phone,cart,shotHash}){
   const ids=new Set(cart.map(x=>String(x.pubgId||'')));
   const openSameId=recent.find(o=>OPEN_STATUSES.includes(String(o.status||'')) && (Array.isArray(o.items)?o.items:[]).some(it=>ids.has(String(it.pubgId||''))));
   if(openSameId) throw new Error('في طلب مفتوح بالفعل لنفس PUBG ID. تابع الطلب القديم الأول أو كلم الدعم');
+  const risk_flags=[];
   if(shotHash){
-    const dup=recent.find(o=>isRecent(o.created_at,30) && o.raw_data?.screenshotHash===shotHash);
-    if(dup) throw new Error('نفس السكرين مستخدم في طلب قريب. ارفع سكرين التحويل الصحيح أو تواصل مع الدعم');
+    const dup=recent.find(o=>isRecent(o.created_at,240) && o.raw_data?.screenshotHash===shotHash);
+    if(dup){
+      const samePhone = String(dup.phone||'') === String(phone||'');
+      const sameDevice = deviceId && dup.raw_data?.deviceId === deviceId;
+      const sameIp = clientIp && dup.raw_data?.clientIp === clientIp;
+      risk_flags.push({
+        type:'screenshot_reuse',
+        level: samePhone && (sameDevice || sameIp) ? 'low' : 'medium',
+        message:'سكرين مشابه لطلب سابق. لا يتم رفض الطلب تلقائيا، راجع رقم العملية والمبلغ والوقت قبل التنفيذ.',
+        previous_order_id: dup.id,
+        previous_order_code: dup.order_code || '',
+        same_phone: samePhone,
+        same_device: !!sameDevice,
+        same_ip: !!sameIp,
+        at:new Date().toISOString()
+      });
+    }
   }
+  return risk_flags;
 }
 
 function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
@@ -309,9 +326,17 @@ export default async function handler(req,res){
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
     for(const item of cart){
       item.qty = itemQty(item);
-      const id=String(item.pubgId||'').trim();
-      const name=String(item.pubgName||'').trim();
-      if(!item.product || !/^\d{5,15}$/.test(id) || looksFakeDigits(id,'id') || name.length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'});
+      const id=String(item.pubgId||item.id||item.playerId||'').replace(/\s+/g,'').trim();
+      let name=String(item.pubgName || item.playerName || item.accountName || '').trim();
+      const productName=String(item.product||item.productName||'').trim();
+      if(!name && item.name && !/\bUC\b|ازدهار|Prime|برايم|كريستالة|Crystal/i.test(String(item.name))) name=String(item.name).trim();
+      item.product = productName;
+      item.pubgId = id;
+      item.pubgName = name;
+      item.name = name;
+      if(!productName) return json(res,400,{ok:false,error:'في منتج داخل السلة بياناته ناقصة. امسح المنتج وضيفه من جديد'});
+      if(!/^\d{5,15}$/.test(id) || looksFakeDigits(id,'id')) return json(res,400,{ok:false,error:`PUBG ID غير صحيح في المنتج: ${productName}`});
+      if(name.length<2) return json(res,400,{ok:false,error:`اسم الحساب ناقص في المنتج: ${productName}`});
       if(item.qty>20) return json(res,400,{ok:false,error:'الكمية كبيرة جدا. راجع السلة أو كلم الدعم'});
     }
     total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
@@ -327,7 +352,7 @@ export default async function handler(req,res){
     const shotHash=screenshotHash(files.screenshot);
     await enforceBlacklist({phone:customerPhone,clientIp,deviceId,cart});
     const recentRows=await recentOrdersForSpamCheck();
-    enforceSpamRules(recentRows,{clientIp,deviceId,phone:customerPhone,cart,shotHash});
+    const riskFlags = enforceSpamRules(recentRows,{clientIp,deviceId,phone:customerPhone,cart,shotHash}) || [];
 
     const openPhone=await findOpenOrderByPhone(customerPhone);
     if(openPhone) return json(res,409,{ok:false,error:'عندك طلب مفتوح بالفعل. تابع حالته برقم الموبايل أو كلم الدعم لو محتاج تعديل.'});
@@ -342,7 +367,7 @@ export default async function handler(req,res){
       coupon_discount,
       status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
       handler:null, items:cart, note, transfer_mode:transferMode, transfer_last3:transferMode==='other'?transferLast3:'', transfer_confirm_text:transferMode==='same'?'نفس رقم المتابعة':`آخر 3 أرقام: ${transferLast3}`, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
-      raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118',paymentKey:paymentSnapshot.key,paymentDestination:paymentSnapshot.dest}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
+      raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v145',paymentKey:paymentSnapshot.key,paymentDestination:paymentSnapshot.dest,risk_flags:riskFlags}, risk_flags:riskFlags, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
     if(supabaseReady()) await supabaseWriteWithSchemaFallback('orders', order, {method:'POST',headers:{Prefer:'return=minimal'}});

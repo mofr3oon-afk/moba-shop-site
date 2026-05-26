@@ -3,7 +3,7 @@ import { requireAdmin, requireRole, logAdminEvent } from '../lib/admin-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLIC_KEYS = ['store_status','store_message','store_status_message','work_status','work_status_message','product_overrides','dynamic_products','policy_text','maintenance_mode','payment_settings'];
+const PUBLIC_KEYS = ['store_status','store_message','store_status_message','work_status','work_status_message','product_overrides','dynamic_products','policy_text','maintenance_mode','payment_settings','work_hours','admin_canned_messages','admin_quick_messages'];
 function json(res,status,obj){res.status(status).json(obj);}
 function isReady(){return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)}
 async function supa(path,opts={}){
@@ -66,7 +66,7 @@ export default async function handler(req,res){
       if(!isReady()) return json(res,200,{ok:false,error:'Supabase غير مفعل'});
       const body = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}');
       const input = body.settings && typeof body.settings === 'object' ? body.settings : {};
-      const allowed = ['store_status','store_message','work_status','work_status_message','blacklist_phones','blacklist_ips','blacklist_device_ids','blacklist_pubg_ids','trusted_admin_devices','trusted_admin_ips','product_overrides','dynamic_products','coupon_rules','maintenance_mode','payment_settings','policy_text','store_status_message','vip_phones','customer_notes','staff_settings','sla_minutes','admin_notifications','payment_settings','payment_history','trusted_admin_device_meta','blacklist_entries','client_error_logs'];
+      const allowed = ['store_status','store_message','work_status','work_status_message','blacklist_phones','blacklist_ips','blacklist_device_ids','blacklist_pubg_ids','trusted_admin_devices','trusted_admin_ips','product_overrides','dynamic_products','coupon_rules','maintenance_mode','payment_settings','policy_text','store_status_message','vip_phones','customer_notes','staff_settings','sla_minutes','admin_notifications','payment_settings','payment_history','trusted_admin_device_meta','blacklist_entries','client_error_logs','work_hours','admin_canned_messages','admin_quick_messages','admin_ui_preferences','screenshot_risk_rules'];
       const rows = Object.entries(input).filter(([k])=>allowed.includes(k)).map(([key,value])=>({key,value:serializeValue(value),updated_at:new Date().toISOString()}));
       if(!rows.length) return json(res,400,{ok:false,error:'لا يوجد إعدادات للحفظ'});
       const previousSettings = input.payment_settings ? await readSettings(true).catch(()=>({})) : {};

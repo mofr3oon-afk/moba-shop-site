@@ -1519,7 +1519,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     const qty = p.noQty ? 1 : Math.max(1, Number(window.productQty[i] || 1));
     const item = {
       product:p.name,type:p.type || cat,price:Number(p.price||0),uc:Number(p.uc||0),
-      pubgId,name,qty,qtyTotal:qty,ucTotal:Number(p.uc||0)*qty,game:'PUBG Mobile'
+      pubgId,pubgName:name,name,qty,qtyTotal:qty,ucTotal:Number(p.uc||0)*qty,game:'PUBG Mobile'
     };
     const c = getCart();
     c.push(item);
@@ -2169,4 +2169,106 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape') window.closeOrderDetails();
   },true);
+})();
+
+
+/* moba-v146-checkout-stability-final */
+(function(){
+  if(window.__mobaV146CheckoutStability)return;
+  window.__mobaV146CheckoutStability=true;
+  function $(id){return document.getElementById(id)}
+  function esc(t){return String(t??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function show(msg,type){
+    const el=$('status');
+    if(el){el.innerHTML=esc(msg).replace(/\n/g,'<br>');el.className='status '+(type||'err');try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){} }
+    else alert(msg);
+  }
+  function money(n){return Number(n||0).toLocaleString('ar-EG')+' جنيه';}
+  function getCartSafe(){
+    try{
+      const stored=JSON.parse(localStorage.getItem('moba_cart')||'[]');
+      if(Array.isArray(stored)) return stored;
+    }catch(e){}
+    if(Array.isArray(window.cart)) return window.cart;
+    return [];
+  }
+  function looksProductName(v){return /\bUC\b|ازدهار|Prime|برايم|كريستالة|Crystal/i.test(String(v||''));}
+  function normalizeCartForCheckout(){
+    const raw=getCartSafe();
+    const out=[];
+    const errors=[];
+    raw.forEach((it,idx)=>{
+      const product=String(it.product||it.productName||it.package||'').trim();
+      let id=String(it.pubgId||it.id||it.playerId||'').replace(/\s+/g,'').trim();
+      let name=String(it.pubgName||it.playerName||it.accountName||'').trim();
+      if(!name && it.name && !looksProductName(it.name)) name=String(it.name).trim();
+      const qty=Math.max(1,Math.min(20,Number(it.qty||it.quantity||it.qtyTotal||1)||1));
+      const price=Number(it.price||it.unitPrice||0)||0;
+      const uc=Number(it.uc||0)||((String(product).match(/(\d+)\s*UC/i)||[])[1]?Number((String(product).match(/(\d+)\s*UC/i)||[])[1]):0);
+      if(!product) errors.push(`المنتج رقم ${idx+1}: اسم المنتج ناقص`);
+      if(!/^\d{5,15}$/.test(id)) errors.push(`المنتج رقم ${idx+1}: PUBG ID ناقص أو غير صحيح`);
+      if(!name || name.length<2 || looksProductName(name)) errors.push(`المنتج رقم ${idx+1}: اسم الحساب ناقص أو غير صحيح`);
+      out.push({...it,product,pubgId:id,pubgName:name,name,qty,qtyTotal:qty,price,uc,ucTotal:uc*qty,game:it.game||'PUBG Mobile'});
+    });
+    return {cart:out,errors};
+  }
+  function validateScreenshot(form){
+    const input=form.querySelector('input[type="file"][name="screenshot"]');
+    const file=input && input.files && input.files[0];
+    if(!file) return 'ارفع سكرين التحويل قبل إرسال الطلب';
+    const name=String(file.name||'').toLowerCase();
+    const type=String(file.type||'').toLowerCase();
+    const okExt=/\.(jpg|jpeg|png|webp)$/i.test(name);
+    const okType=/^image\/(jpeg|jpg|png|webp)$/.test(type);
+    if(!okExt && !okType) return 'السكرين لازم يكون صورة JPG أو PNG أو WEBP';
+    if(Number(file.size||0) <= 0) return 'الصورة مش واضحة. اختار سكرين تاني';
+    if(Number(file.size||0) > 5*1024*1024) return 'حجم السكرين كبير. ارفع صورة أقل من 5MB';
+    return '';
+  }
+  async function submitStable(e){
+    const form=e.target;
+    if(!form || form.id!=='orderForm') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const btn=form.querySelector('button[type="submit"], input[type="submit"]');
+    const oldText=btn ? (btn.textContent||btn.value||'تنفيذ الشراء') : '';
+    try{
+      const {cart,errors}=normalizeCartForCheckout();
+      if(!cart.length) throw new Error('السلة فاضية. ضيف منتج الأول');
+      if(errors.length) throw new Error(errors.slice(0,3).join('\n'));
+      const fd=new FormData(form);
+      const phone=String(fd.get('customerPhone')||'').trim();
+      if(!/^01\d{9}$/.test(phone)) throw new Error('اكتب رقم موبايل صحيح يبدأ بـ 01');
+      if(!String(fd.get('paymentMethod')||'').trim()) throw new Error('اختار طريقة الدفع');
+      const transferMode=String(fd.get('transferMode')||'').trim();
+      if(!['same','other'].includes(transferMode)) throw new Error('حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني');
+      if(transferMode==='other' && !/^\d{3}$/.test(String(fd.get('transferLast3')||''))) throw new Error('اكتب آخر 3 أرقام من رقم التحويل');
+      const shotErr=validateScreenshot(form); if(shotErr) throw new Error(shotErr);
+      try{
+        let did=localStorage.getItem('moba_device_id');
+        if(!did){did='dev_'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('moba_device_id',did)}
+        fd.set('deviceId',did);
+      }catch(_){ }
+      fd.set('cart',JSON.stringify(cart));
+      if(btn){btn.disabled=true;if(btn.tagName==='INPUT')btn.value='جاري إرسال الطلب...';else btn.textContent='⏳ جاري إرسال الطلب...';}
+      show('جاري إرسال الطلب للإدارة...','ok');
+      const res=await fetch('/api/order',{method:'POST',body:fd});
+      let data={};
+      try{data=await res.json()}catch(_){throw new Error('حصل خطأ مؤقت في السيرفر. حاول تاني')}
+      if(!res.ok || !data.ok) throw new Error(data.error||'حصل خطأ مؤقت. حاول تاني أو تواصل مع الدعم');
+      try{localStorage.setItem('moba_cart','[]');window.cart=[];if(typeof renderCart==='function')renderCart();}catch(_){ }
+      form.reset();
+      try{ if(typeof renderPaymentDetails==='function') renderPaymentDetails(); }catch(_){ }
+      const msg=`✅ تم استلام طلبك بنجاح\nرقم الطلب: ${data.orderCode||data.orderId||'MOBA'}\nالإجمالي: ${data.total?money(data.total):'تم التسجيل'}\nتقدر تتابع الحالة برقم الموبايل من خانة طلباتي.`;
+      show(msg,'ok');
+      const track=$('trackPhone'); if(track) track.value=phone;
+      if(data.statusTracking && typeof loadOrderStatus==='function') setTimeout(()=>loadOrderStatus(phone),600);
+    }catch(err){
+      show(err.message||'حصل خطأ مؤقت. حاول تاني أو تواصل مع الدعم','err');
+    }finally{
+      if(btn){btn.disabled=false;if(btn.tagName==='INPUT')btn.value=oldText||'تنفيذ الشراء';else btn.textContent=oldText||'✅ تنفيذ الشراء | Checkout';}
+    }
+    return false;
+  }
+  document.addEventListener('submit',submitStable,true);
 })();

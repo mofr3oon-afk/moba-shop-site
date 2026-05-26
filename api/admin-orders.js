@@ -61,14 +61,41 @@ export default async function handler(req,res){
       requireRole(admin, ['owner','staff']);
       const body = await new Promise((resolve,reject)=>{let s='';req.on('data',c=>s+=c);req.on('end',()=>{try{resolve(JSON.parse(s||'{}'))}catch(e){reject(e)}});req.on('error',reject);});
       const id=String(body.id||'').trim();
+      const action=String(body.action||'').trim();
       const status=String(body.status||'').trim();
       const note=String(body.note||'').trim();
-      if(!id || !status) return json(res,400,{ok:false,error:'بيانات ناقصة'});
-      const allowed=['pending','claimed','processing','delivered','on_hold','needs_fix','rejected','cancelled','archived'];
-      if(!allowed.includes(status)) return json(res,400,{ok:false,error:'حالة غير صحيحة'});
+      if(!id) return json(res,400,{ok:false,error:'بيانات ناقصة'});
       const rows=await supabaseRequest(`orders?id=eq.${encodeURIComponent(id)}&select=*`);
       const order=rows&&rows[0];
       if(!order) return json(res,404,{ok:false,error:'الطلب غير موجود'});
+
+      if(action === 'customer_message'){
+        const messages=Array.isArray(order.customer_messages)?order.customer_messages:[];
+        messages.push({message:note,at:new Date().toISOString(),by:'admin_panel',role:admin?.role||'owner'});
+        const patch={customer_message:note,customer_messages:messages.slice(-50),updated_at:new Date().toISOString()};
+        const updated=await supabasePatchWithSchemaFallback(`orders?id=eq.${encodeURIComponent(id)}`, patch);
+        await logAdminEvent('customer_message', req, {orderId:id,message:note}).catch(()=>null);
+        return json(res,200,{ok:true,order:updated&&updated[0]});
+      }
+      if(action === 'mark_suspect'){
+        const flags=Array.isArray(order.risk_flags)?order.risk_flags:(Array.isArray(order.raw_data?.risk_flags)?order.raw_data.risk_flags:[]);
+        flags.push({type:'admin_suspect',level:'manual',message:note||'تم تعليم الطلب كمشتبه للمراجعة',at:new Date().toISOString(),by:admin?.role||'owner'});
+        const patch={risk_flags:flags.slice(-30),updated_at:new Date().toISOString(),raw_data:{...(order.raw_data||{}),risk_flags:flags.slice(-30)}};
+        const updated=await supabasePatchWithSchemaFallback(`orders?id=eq.${encodeURIComponent(id)}`, patch);
+        await logAdminEvent('order_mark_suspect', req, {orderId:id}).catch(()=>null);
+        return json(res,200,{ok:true,order:updated&&updated[0]});
+      }
+      if(action === 'save_note'){
+        const history=Array.isArray(order.admin_notes_history)?order.admin_notes_history:[];
+        history.push({note,at:new Date().toISOString(),by:'admin_panel',role:admin?.role||'owner'});
+        const patch={admin_note:note,internal_note:note,admin_notes_history:history.slice(-50),updated_at:new Date().toISOString()};
+        const updated=await supabasePatchWithSchemaFallback(`orders?id=eq.${encodeURIComponent(id)}`, patch);
+        await logAdminEvent('order_note_save', req, {orderId:id}).catch(()=>null);
+        return json(res,200,{ok:true,order:updated&&updated[0]});
+      }
+      if(!status) return json(res,400,{ok:false,error:'اختار حالة الطلب'});
+      const allowed=['pending','claimed','processing','delivered','on_hold','needs_fix','rejected','cancelled','archived'];
+      if(!allowed.includes(status)) return json(res,400,{ok:false,error:'حالة غير صحيحة'});
       const history=Array.isArray(order.status_history)?order.status_history:[];
       history.push({status,label:STATUS_LABELS[status]||status,at:new Date().toISOString(),by:'admin_panel',role:admin?.role||'owner'});
       const adminName = admin?.role === 'owner' ? 'Owner' : 'Staff';
