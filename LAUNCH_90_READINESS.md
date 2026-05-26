@@ -29,8 +29,7 @@ Use this before sending real Eid traffic to the site.
 8. Open `/admin.html`, change status to processing, then delivered.
 9. Search the customer phone in order tracking and confirm timeline updates.
 10. Try opening `/api/telegram` without the webhook secret and confirm it is rejected.
-11. Open `/api/health` while logged in as admin and confirm no missing variables.
-12. Trigger `/api/process-telegram-queue?key=INTERNAL_API_SECRET` once after a test order if Telegram delivery fails.
+11. Use the admin panel health tab and confirm the core APIs respond.
 
 ## Vercel Hobby note
 
@@ -40,12 +39,11 @@ If you upgrade to Pro later, you can add:
 
 ```json
 "crons": [
-  {"path": "/api/check-late", "schedule": "*/10 * * * *"},
-  {"path": "/api/process-telegram-queue", "schedule": "*/5 * * * *"}
+  {"path": "/api/check-late", "schedule": "*/10 * * * *"}
 ]
 ```
 
-On Hobby, run those endpoints manually with `?key=INTERNAL_API_SECRET` only when needed.
+On Hobby, keep the project under 12 functions. This build removes optional endpoints to fit the free-plan limit.
 
 ## Operating limits until queue/retry is added
 
@@ -57,6 +55,7 @@ On Hobby, run those endpoints manually with `?key=INTERNAL_API_SECRET` only when
 ## Still recommended after this patch
 
 - Add real file storage for screenshots so failed Telegram photo uploads can be fully replayed later.
+- Move optional endpoints such as queue processing and extra health checks back in only after upgrading Vercel to Pro.
 - Compress the large Pharaoh and logo images to WebP/AVIF.
 - Move admin inline JavaScript to a separate file when there is time.
 - Move rate limits to Redis/Upstash if traffic becomes very large.
