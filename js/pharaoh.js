@@ -2818,11 +2818,27 @@
     bot(card('اختار طريقة الدفع','تحب تحول على InstaPay ولا محفظة كاش؟','',
       [{t:'InstaPay',a:'pay',v:'InstaPay',cls:'green'},{t:'محفظة كاش',a:'pay',v:'Wallet',cls:'gold'}]));
   }
-  function choosePay(v){
+  function getLivePaymentSettings(){
+    const d={wallet:{enabled:true,status:'available',phone:PAY_PHONE,name:'مؤمن',message:''},instapay:{enabled:true,status:'available',user:INSTAPAY,phone:PAY_PHONE,name:'مؤمن',link:'',message:''}};
+    const p=window.mobaPaymentSettings||{};
+    return {...d,...p,wallet:{...d.wallet,...(p.wallet||{})},instapay:{...d.instapay,...(p.instapay||{})}};
+  }
+  async function refreshLivePaymentSettings(){
+    try{const r=await fetch('/api/settings?t='+Date.now());const j=await r.json();if(j&&j.ok&&j.settings&&j.settings.payment_settings)window.mobaPaymentSettings=j.settings.payment_settings;}catch(e){}
+    return getLivePaymentSettings();
+  }
+  async function choosePay(v){
     wiz.paymentMethod=v; wiz.step='paid';
-    const info=v==='InstaPay'?`InstaPay: <b>${INSTAPAY}</b><br>Phone: <b>${PAY_PHONE}</b>`:`Wallet Phone: <b>${PAY_PHONE}</b><br>Name: <b>مؤمن</b>`;
-    bot(card('بيانات الدفع',v==='InstaPay'?'حوّل على InstaPay وبعدها اضغط تم التحويل':'حوّل على المحفظة وبعدها اضغط تم التحويل',
-      `<div class="pharaoh-v91-paybox">${info}</div>`,[{t:'تم التحويل',a:'paid',cls:'gold'},{t:'الدعم',href:SUPPORT}]));
+    const pay=await refreshLivePaymentSettings();
+    const isInsta=v==='InstaPay';
+    const data=isInsta?pay.instapay:pay.wallet;
+    if(!data.enabled || ['disabled','maintenance'].includes(String(data.status||''))){
+      return bot(card('طريقة الدفع متوقفة مؤقتا',isInsta?'InstaPay غير متاح حاليا':'المحفظة غير متاحة حاليا','<div class="pharaoh-v85-warn">اختار طريقة دفع تانية أو تواصل مع الدعم.</div>',[{t:'اختار InstaPay',a:'pay',v:'InstaPay',cls:'green'},{t:'اختار محفظة',a:'pay',v:'Wallet',cls:'gold'},{t:'الدعم',href:SUPPORT}]));
+    }
+    const busyNote=String(data.status||'')==='busy'?'<div class="pharaoh-v85-warn">فيه ضغط على طريقة الدفع دي، المراجعة ممكن تتأخر شوية.</div>':'';
+    const info=isInsta?`InstaPay: <b>${esc(data.user||INSTAPAY)}</b><br>Phone: <b>${esc(data.phone||PAY_PHONE)}</b>${data.link?`<br>Link: <b>${esc(data.link)}</b>`:''}`:`Wallet Phone: <b>${esc(data.phone||PAY_PHONE)}</b><br>Name: <b>${esc(data.name||'مؤمن')}</b>`;
+    bot(card('بيانات الدفع',isInsta?'حوّل على InstaPay وبعدها اضغط تم التحويل':'حوّل على المحفظة وبعدها اضغط تم التحويل',
+      `<div class="pharaoh-v91-paybox">${info}</div>${data.message?`<div class="pharaoh-v85-note">${esc(data.message)}</div>`:''}${busyNote}`,[{t:'تم التحويل',a:'paid',cls:'gold'},{t:'الدعم',href:SUPPORT}]));
   }
   function askShot(){
     wiz.step='screenshot';

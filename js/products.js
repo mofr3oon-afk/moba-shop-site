@@ -124,7 +124,7 @@
   }
   function setBadge(el, mode, title, desc){
     if(!el) return;
-    el.classList.remove('available','busy','closed');
+    el.classList.remove('available','busy','closed','maintenance');
     el.classList.add('store-status-pill', mode);
     el.innerHTML = `<span class="status-dot"></span><span class="status-copy"><span class="status-label">${title}</span><small class="status-desc">${desc||''}</small></span>`;
   }
@@ -149,7 +149,11 @@
       },
       closed:{
         title:'خارج مواعيد التنفيذ',
-        desc: customMsg || 'ينفع تعمل طلبك عادي دلوقتي ✅ طلبك هيتسجل، وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات اللي يتم تنفيذها.'
+        desc: customMsg || 'ينفع تعمل طلبك عادي دلوقتي. الطلب هيتسجل وأول ما مواعيد العمل تبدأ هيكون من أوائل الطلبات.'
+      },
+      maintenance:{
+        title:'صيانة مؤقتة',
+        desc: customMsg || 'الموقع تحت تحديث بسيط حاليا. الطلبات الجديدة متوقفة مؤقتا.'
       }
     };
     const c = config[mode] || config.available;
@@ -167,7 +171,7 @@
   }
   window.refreshStoreStatusV41 = refreshStoreStatusV41;
   refreshStoreStatusV41();
-  setInterval(refreshStoreStatusV41, 90000);
+  setInterval(refreshStoreStatusV41, 15000);
 })();
 
 
@@ -360,7 +364,7 @@
 
 /* moba-v86-site-logo-favicon */
 (function(){
-  const logoSrc='assets/moba-shop-logo.png';
+  const logoSrc='assets/moba-shop-logo-512.webp';
   function addLogo(sel,cls){
     document.querySelectorAll(sel).forEach(function(el){
       if(el.querySelector('.site-logo-mark'))return;

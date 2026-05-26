@@ -28,5 +28,5 @@ export default async function handler(req,res){
     }
     const topProducts=Object.entries(products).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([name,count])=>({name,count}));
     return json(res,200,{ok:true,day,count:(rows||[]).length,total,byStatus,byPayment,topProducts});
-  }catch(e){ return json(res,500,{ok:false,error:String(e.message||e)}); }
+  }catch(e){ return safeError(res,e,e.statusCode||500); }
 }

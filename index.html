@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MOBA SHOP | Digital Store For Gamers</title>
   <meta name="description" content="MOBA SHOP - متجرك الرقمي للجيمرز" />
-  <link rel="icon" type="image/png" href="assets/moba-shop-logo.png" />
-  <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo.png" />
-  <link rel="apple-touch-icon" href="assets/moba-shop-logo.png" />
+  <link rel="icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="apple-touch-icon" href="assets/moba-shop-logo-256.png" />
   
-  <link rel="stylesheet" href="styles/home.css?v=130">
-  <link rel="stylesheet" href="styles/cart.css?v=130">
-  <link rel="stylesheet" href="styles/pharaoh.css?v=130">
+  <link rel="stylesheet" href="styles/home.css?v=133">
+  <link rel="stylesheet" href="styles/cart.css?v=134">
+  <link rel="stylesheet" href="styles/pharaoh.css?v=133">
 </head>
 <body>
   <main class="wrap">
     <div class="topbar">
       <div class="brand-mini" dir="ltr">
-        <img class="site-logo-mark" src="assets/moba-shop-logo.png" alt="MOBA SHOP">
+        <img class="site-logo-mark" src="assets/moba-shop-logo-512.webp" alt="MOBA SHOP" width="28" height="28">
         <div class="brand-mini-copy">
           <div class="brand-mini-line"><span class="brand-word">MOBA</span> <span>SHOP</span></div>
           <small>Digital Store For Gamers</small>
@@ -369,7 +369,7 @@
   <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
     <div class="pharaoh-chat-head">
       <div class="pharaoh-chat-title">
-        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic-transparent.png" alt="فرعون"></div>
+        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="96" height="120" loading="lazy"></div>
         <div>
           <b>فرعون Assistant</b>
           <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
@@ -408,7 +408,7 @@
   </div>
 
   <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
-    <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent.png" alt="فرعون"></div>
+    <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="128" height="160" loading="lazy"></div>
     <div class="pharaoh-name-badge">فرعون</div>
     <div class="pharaoh-hint-bubble" id="pharaohHintBubble"></div>
   </div>
@@ -611,11 +611,30 @@
 
 
 
-<script src="js/products.js?v=130"></script>
+<script src="js/products.js?v=134"></script>
 <script src="js/router.js?v=130"></script>
-<script src="js/coupons.js?v=130"></script>
-<script src="js/cart.js?v=130"></script>
-<script src="js/pharaoh.js?v=130"></script>
+<script src="js/coupons.js?v=133"></script>
+<script src="js/cart.js?v=134"></script>
+<script src="js/pharaoh.js?v=134"></script>
 <script id="moba-v130-client-error-logger">window.addEventListener('error',function(e){try{fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'site',message:e.message,source:e.filename,lineno:e.lineno,colno:e.colno,stack:e.error&&e.error.stack})})}catch(_){}});</script>
+
+<script>
+(function(){
+  if(window.__mobaVisitorPing)return; window.__mobaVisitorPing=true;
+  const KEY='moba_device_id';
+  let id=localStorage.getItem(KEY);
+  if(!id){ id='dev_'+Math.random().toString(36).slice(2)+'_'+Date.now().toString(36); localStorage.setItem(KEY,id); }
+  async function ping(){
+    if(document.hidden) return;
+    try{
+      await fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'visitor_ping',deviceId:id,page:location.pathname||'/'})});
+    }catch(e){}
+  }
+  ping();
+  setInterval(ping,30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) ping(); });
+})();
+</script>
+
 </body>
 </html>

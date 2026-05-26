@@ -1,10 +1,66 @@
-import { rateLimit, safeError, getClientIp } from '../lib/_security.js';
+import { rateLimit, persistentRateLimit, safeError, getClientIp } from '../lib/_security.js';
 // moba-v40-security
 export const config = { api: { bodyParser: false } };
 import crypto from 'node:crypto';
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from '../lib/_utils.js';
 
 async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
+
+function wait(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
+
+async function telegramFormWithRetry(method, formFactory, attempts=3){
+  let lastError;
+  for(let i=0;i<attempts;i++){
+    try{
+      return await telegramForm(method, formFactory());
+    }catch(error){
+      lastError = error;
+      if(i < attempts - 1) await wait(450 * (i + 1));
+    }
+  }
+  throw lastError;
+}
+
+function fail(status, message){
+  const err = new Error(message);
+  err.statusCode = status;
+  return err;
+}
+
+function publicOrderError(res, error){
+  const msg = String(error?.message || '');
+  const status = Number(error?.statusCode || 0);
+  if(status >= 400 && status < 500) return json(res,status,{ok:false,error:msg || 'راجع بيانات الطلب'});
+  const internal = /missing|supabase|telegram|fetch|network|service_role|bot_token|order_group_id|unexpected|syntax|json/i.test(msg);
+  if(internal) return safeError(res,error,500);
+  return json(res,400,{ok:false,error:msg || 'راجع بيانات الطلب وحاول تاني'});
+}
+
+function missingColumnFromSupabaseError(err){
+  const msg=String(err?.message||err||'');
+  const m=msg.match(/Could not find the '([^']+)' column/i) || msg.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+.*does not exist/i);
+  return m ? m[1] : '';
+}
+async function supabaseWriteWithSchemaFallback(path, payload, options={}){
+  const clean={...(payload||{})};
+  const removed=[];
+  for(let i=0;i<12;i++){
+    try{
+      return await supabaseRequest(path,{...options,body:JSON.stringify(clean)});
+    }catch(err){
+      const col=missingColumnFromSupabaseError(err);
+      if(col && Object.prototype.hasOwnProperty.call(clean,col)){
+        removed.push(col);
+        delete clean[col];
+        if(clean.raw_data && typeof clean.raw_data==='object') clean.raw_data.schemaFallbackRemoved=removed;
+        continue;
+      }
+      throw err;
+    }
+  }
+  return await supabaseRequest(path,{...options,body:JSON.stringify(clean)});
+}
+
 
 function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
 function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
@@ -54,7 +110,7 @@ async function getDynamicBlacklist(){
 async function getStoreSettings(){
   const fallback={store_status:'available',store_message:'',maintenance_mode:false};
   if(!supabaseReady()) return fallback;
-  const rows=await supabaseRequest('settings?key=in.(store_status,store_message,maintenance_mode)&select=key,value').catch(()=>[]);
+  const rows=await supabaseRequest('settings?key=in.(store_status,store_message,store_status_message,maintenance_mode)&select=key,value').catch(()=>[]);
   const out={...fallback};
   for(const r of rows||[]){
     let v=r.value;
@@ -65,8 +121,8 @@ async function getStoreSettings(){
 }
 function enforceStoreOpen(st){
   const mode=String(st.store_status||'available');
-  if(st.maintenance_mode===true || mode==='maintenance') throw new Error(st.store_message || 'الموقع تحت صيانة مؤقتا. جرب بعد شوية');
-  if(mode==='closed' && String(process.env.ALLOW_CLOSED_ORDERS||'true')!=='true') throw new Error(st.store_message || 'خارج مواعيد التنفيذ حاليا. جرب وقت مواعيد العمل');
+  if(st.maintenance_mode===true || mode==='maintenance') throw new Error(st.store_status_message || st.store_message || 'الموقع تحت صيانة مؤقتا. جرب بعد شوية');
+  if(mode==='closed' && String(process.env.ALLOW_CLOSED_ORDERS||'true')!=='true') throw new Error(st.store_status_message || st.store_message || 'خارج مواعيد التنفيذ حاليا. جرب وقت مواعيد العمل');
 }
 
 async function getPaymentSettings(){
@@ -228,7 +284,8 @@ export default async function handler(req,res){
   try{ rateLimit(req,'order',5,10*60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
-    const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw new Error('ORDER_GROUP_ID missing');
+    await persistentRateLimit(req,'order-persistent',8,10*60_000);
+    const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw fail(500,'ORDER_GROUP_ID missing');
     const raw=await readRawBody(req); const {fields,files}=parseMultipart(raw,req.headers['content-type']);
     const clientIp=getClientIp(req) || 'unknown';
     const deviceId=String(fields.deviceId||'').trim().slice(0,80);
@@ -288,17 +345,24 @@ export default async function handler(req,res){
       raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118',paymentKey:paymentSnapshot.key,paymentDestination:paymentSnapshot.dest}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
-    if(supabaseReady()) await supabaseRequest('orders',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(order)});
+    if(supabaseReady()) await supabaseWriteWithSchemaFallback('orders', order, {method:'POST',headers:{Prefer:'return=minimal'}});
 
+    let telegramOk = false;
+    try{
     const msgForm=new FormData(); msgForm.append('chat_id',groupId); msgForm.append('text',message); msgForm.append('parse_mode','HTML'); msgForm.append('reply_markup',JSON.stringify(telegramKeyboard(order.id,'pending')));
-    const msgData=await telegramForm('sendMessage',msgForm);
+    const msgData=await telegramFormWithRetry('sendMessage',()=>msgForm,3);
     const messageId=msgData?.result?.message_id || null;
-    if(supabaseReady()) await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({telegram_message_id:messageId,admin_message_id:String(messageId||''),message_id:String(messageId||''),updated_at:new Date().toISOString()})});
+    if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {telegram_message_id:messageId,admin_message_id:String(messageId||''),message_id:String(messageId||''),updated_at:new Date().toISOString()}, {method:'PATCH',headers:{Prefer:'return=minimal'}});
 
     const photoForm=new FormData(); photoForm.append('chat_id',groupId); if(messageId) photoForm.append('reply_to_message_id',String(messageId)); photoForm.append('caption',`📸 Screenshot for ${order.order_code}`); photoForm.append('photo',new Blob([files.screenshot.buffer],{type:files.screenshot.contentType}),files.screenshot.filename||'screenshot.jpg');
-    const photoData=await telegramForm('sendPhoto',photoForm);
-    if(supabaseReady()) await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString()})});
+    const photoData=await telegramFormWithRetry('sendPhoto',()=>photoForm,3);
+    if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString(),raw_data:{...(order.raw_data||{}),telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg'}}, {method:'PATCH',headers:{Prefer:'return=minimal'}});
+    telegramOk = true;
+    }catch(telegramError){
+      console.error('[TELEGRAM_DELIVERY_FAILED]', telegramError);
+      if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {updated_at:new Date().toISOString(),raw_data:{...(order.raw_data||{}),telegramOk:false,telegramPending:true,telegramError:String(telegramError?.message||telegramError).slice(0,220),screenshot_file_name:files.screenshot.filename||'screenshot.jpg'}}, {method:'PATCH',headers:{Prefer:'return=minimal'}}).catch(()=>null);
+    }
 
-    return json(res,200,{ok:true,statusTracking:supabaseReady(),orderCode:order.order_code,orderId:order.id,total:order.total,phone:order.phone});
-  }catch(error){return json(res,500,{ok:false,error:error.message||'Server error'});}
+    return json(res,200,{ok:true,telegramOk,statusTracking:supabaseReady(),orderCode:order.order_code,orderId:order.id,total:order.total,phone:order.phone});
+  }catch(error){return publicOrderError(res,error);}
 }

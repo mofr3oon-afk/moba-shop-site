@@ -3,7 +3,7 @@ import { requireAdmin, requireRole, logAdminEvent } from '../lib/admin-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLIC_KEYS = ['store_status','store_message','store_status_message','work_status','work_status_message','product_overrides','dynamic_products','coupon_rules','policy_text','maintenance_mode','payment_settings','payment_history'];
+const PUBLIC_KEYS = ['store_status','store_message','store_status_message','work_status','work_status_message','product_overrides','dynamic_products','policy_text','maintenance_mode','payment_settings'];
 function json(res,status,obj){res.status(status).json(obj);}
 function isReady(){return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)}
 async function supa(path,opts={}){

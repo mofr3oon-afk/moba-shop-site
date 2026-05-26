@@ -1,5 +1,5 @@
 import { json } from '../lib/_utils.js';
-import { safeError } from '../lib/_security.js';
+import { rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
 import { currentAdminSession, setSessionCookie, makeSession, checkFailedLock, recordLoginAttempt, getAdminSecret, timingSafeEquals, otpEnabled, createOtpChallenge, verifyOtp, sendAdminTelegram, logAdminEvent, resolveAdminRole, readTrustedAdminSettings, shouldForceOtpForDevice, trustAdminDevice } from '../lib/admin-auth.js';
 
 async function readBody(req){
@@ -7,6 +7,8 @@ async function readBody(req){
 }
 export default async function handler(req,res){
   try{
+    rateLimit(req,'admin-login',20,15*60_000);
+    await persistentRateLimit(req,'admin-login-persistent',30,15*60_000);
     if(req.method === 'GET'){
       const s = currentAdminSession(req);
       return json(res,200,{ok:true,authenticated:!!s,session:s?{role:s.role,exp:s.exp,ip:s.ip}:null,otpEnabled:otpEnabled()});

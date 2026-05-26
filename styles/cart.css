@@ -6245,3 +6245,42 @@ body[data-page="cart"] .cart h2, body[data-page="cart"] .section-title h2{margin
   .tab[data-cat]{min-width:0!important;padding:9px 6px!important;font-size:12px!important}
   .tab[data-cat]::after{font-size:8.5px}
 }
+
+
+/* v133 store status maintenance + admin report polish */
+.store-status-pill.maintenance,.work-status-mini.maintenance{border-color:rgba(255,112,112,.36)!important;background:linear-gradient(135deg,rgba(255,82,82,.18),rgba(255,183,77,.10))!important;color:#fff!important;box-shadow:0 0 22px rgba(255,82,82,.10)!important}
+.store-status-pill.maintenance .status-dot,.work-status-mini.maintenance .status-dot{background:#ff6464!important;box-shadow:0 0 14px rgba(255,100,100,.8)!important}
+
+
+/* v134 product ID input full width */
+.product .id-inline-wrap,
+.product .compact-inline-wrap{
+  grid-template-columns:1fr !important;
+  gap:7px !important;
+}
+.product .id-inline-wrap .id-input-main,
+.product .compact-inline-wrap .id-input-main{
+  width:100% !important;
+  min-width:0 !important;
+  order:1 !important;
+}
+.product .id-inline-wrap .use-last-id-inline-btn,
+.product .compact-inline-wrap .compact-last-btn{
+  order:2 !important;
+  justify-self:start !important;
+  width:auto !important;
+  min-width:82px !important;
+  height:34px !important;
+  padding:0 12px !important;
+  font-size:10.5px !important;
+  opacity:.92;
+}
+@media(max-width:520px){
+  .product .id-inline-wrap .use-last-id-inline-btn,
+  .product .compact-inline-wrap .compact-last-btn{height:32px!important;min-width:76px!important;font-size:10px!important}
+}
+
+
+/* moba-v135-details-close-visibility */
+.order-details-close{z-index:10050!important;pointer-events:auto!important;cursor:pointer!important}
+.order-details-modal.show{z-index:9999!important}

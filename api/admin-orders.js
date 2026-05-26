@@ -4,6 +4,37 @@ import { requireAdmin, requireRole, logAdminEvent } from '../lib/admin-auth.js';
 
 function orderByRecent(a,b){ return new Date(b.created_at||0)-new Date(a.created_at||0); }
 
+function missingColumnFromSupabaseError(err){
+  const msg=String(err?.message||err||'');
+  const m=msg.match(/Could not find the '([^']+)' column/i) || msg.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+.*does not exist/i);
+  return m ? m[1] : '';
+}
+async function supabasePatchWithSchemaFallback(path, patch){
+  const clean={...(patch||{})};
+  for(let i=0;i<10;i++){
+    try{return await supabaseRequest(path,{method:'PATCH',body:JSON.stringify(clean)});}catch(err){
+      const col=missingColumnFromSupabaseError(err);
+      if(col && Object.prototype.hasOwnProperty.call(clean,col)){delete clean[col];continue;}
+      throw err;
+    }
+  }
+  return await supabaseRequest(path,{method:'PATCH',body:JSON.stringify(clean)});
+}
+async function streamTelegramPhoto(res,fileId){
+  if(!process.env.BOT_TOKEN) return json(res,500,{ok:false,error:'BOT_TOKEN missing'});
+  const meta=await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/getFile?file_id=${encodeURIComponent(fileId)}`).then(r=>r.json()).catch(()=>null);
+  const filePath=meta?.result?.file_path;
+  if(!filePath) return json(res,404,{ok:false,error:'screenshot not found'});
+  const img=await fetch(`https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${filePath}`);
+  if(!img.ok) return json(res,404,{ok:false,error:'cannot load screenshot'});
+  const buf=Buffer.from(await img.arrayBuffer());
+  res.statusCode=200;
+  res.setHeader('Content-Type', img.headers.get('content-type') || 'image/jpeg');
+  res.setHeader('Cache-Control','private, max-age=120');
+  return res.end(buf);
+}
+
+
 export default async function handler(req,res){
   let admin;
   try{ rateLimit(req,'admin-orders',60,60_000); admin=requireAdmin(req); }
@@ -11,6 +42,8 @@ export default async function handler(req,res){
   try{
     if(!supabaseReady()) return json(res,200,{ok:false,error:'Supabase غير مفعل'});
     if(req.method === 'GET'){
+      const screenshotId = String(req.query?.screenshot || '').trim();
+      if(screenshotId) return await streamTelegramPhoto(res, screenshotId);
       const status = String(req.query?.status || '').trim();
       const q = String(req.query?.q || '').trim();
       const limit = Math.min(150, Math.max(20, Number(req.query?.limit || 80)));
@@ -49,10 +82,10 @@ export default async function handler(req,res){
         else patch.fix_type='general';
       }
       if(note) patch.note = String(order.note||'') + `\n[Admin Panel] ${note}`;
-      const updated=await supabaseRequest(`orders?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(patch)});
+      const updated=await supabasePatchWithSchemaFallback(`orders?id=eq.${encodeURIComponent(id)}`, patch);
       await logAdminEvent('order_status_update', req, {orderId:id,status,note}).catch(()=>null);
       return json(res,200,{ok:true,order:updated&&updated[0]});
     }
     return json(res,405,{ok:false,error:'Method not allowed'});
-  }catch(e){ return json(res,500,{ok:false,error:String(e.message||e)}); }
+  }catch(e){ return safeError(res,e,e.statusCode||500); }
 }

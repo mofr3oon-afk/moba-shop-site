@@ -26,15 +26,5 @@
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/check-late",
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/process-telegram-queue",
-      "schedule": "*/5 * * * *"
-    }
   ]
 }

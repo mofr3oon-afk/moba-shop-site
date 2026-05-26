@@ -1,4 +1,4 @@
-import { requireTelegramSecret, rateLimit, safeError } from '../lib/_security.js';
+import { requireTelegramSecret, rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
 // moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -669,7 +669,7 @@ async function handleCallback(cb){
   }
 }
 export default async function handler(req,res){
-  try{ rateLimit(req,'telegram',120,60_000); requireTelegramSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
+  try{ rateLimit(req,'telegram',120,60_000); await persistentRateLimit(req,'telegram-persistent',180,60_000); requireTelegramSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     if(req.method!=='POST') return json(res,200,{ok:true});
     const qSecret=req.query?.secret || '';

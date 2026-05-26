@@ -1333,11 +1333,32 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     if(PRODUCT_OVERRIDES_LOADED) return;
     PRODUCT_OVERRIDES_LOADED = true;
     try{
-      const r = await fetch('/api/settings');
+      const r = await fetch('/api/settings?ts=' + Date.now(), {cache:'no-store'});
       const d = await r.json();
       const overrides = d && d.settings && d.settings.product_overrides;
       const dynamicProducts = d && d.settings && Array.isArray(d.settings.dynamic_products) ? d.settings.dynamic_products : [];
-      if(overrides && typeof overrides === 'object'){
+      if(dynamicProducts.length){
+        Object.keys(PRODUCTS).forEach(cat=>{ PRODUCTS[cat] = []; });
+        dynamicProducts
+          .filter(p=>p && p.name && !p.hidden)
+          .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0))
+          .forEach(p=>{
+            const cat = p.cat || 'uc';
+            if(!PRODUCTS[cat]) PRODUCTS[cat]=[];
+            PRODUCTS[cat].push({
+              name:String(p.name||''),
+              type:p.type || (cat==='uc'?'شحن بالايدي | ID':cat),
+              price:Number(p.price||0),
+              cost:Number(p.cost||0),
+              uc:Number(p.uc||0),
+              hot:!!p.hot,
+              noQty:!!p.noQty,
+              warning:p.warning||'',
+              image:p.image||'',
+              cat
+            });
+          });
+      }else if(overrides && typeof overrides === 'object'){
         Object.keys(PRODUCTS).forEach(cat=>{
           PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
             const ov = overrides[p.name] || overrides[`${cat}:${p.name}`];
@@ -1346,12 +1367,8 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
           }).filter(p=>!p.hidden);
         });
       }
-      dynamicProducts.forEach(p=>{
-        const cat = p.cat || 'uc';
-        if(!PRODUCTS[cat]) PRODUCTS[cat]=[];
-        if(!p.hidden && p.name && !PRODUCTS[cat].some(x=>x.name===p.name)) PRODUCTS[cat].push({name:p.name,type:p.type||cat,price:Number(p.price||0),uc:Number(p.uc||0),hot:!!p.hot,noQty:!!p.noQty,warning:p.warning||''});
-      });
-    }catch(e){}
+      window.mobaProducts = PRODUCTS;
+    }catch(e){ console.warn('products settings failed', e); }
   }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function money(n){return Number(n||0).toLocaleString('en-US') + ' جنيه';}
@@ -1397,9 +1414,13 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   window.productQty = window.productQty || {};
 
   function renderProducts(){
-    loadProductOverrides().then(()=>{});
     const productList = document.getElementById('productList');
     if(!productList) return;
+    if(!PRODUCT_OVERRIDES_LOADED){
+      productList.innerHTML='<div class="empty">جاري تحميل المنتجات...</div>';
+      loadProductOverrides().then(()=>renderProducts());
+      return;
+    }
     const cat = window.activeCat || 'uc';
     const list = PRODUCTS[cat] || [];
     document.querySelectorAll('.tab[data-cat]').forEach(t=>t.classList.toggle('active', t.dataset.cat === cat));
@@ -1592,30 +1613,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
 (function(){
 
   let PRODUCT_OVERRIDES_LOADED = false;
-  async function loadProductOverrides(){
-    if(PRODUCT_OVERRIDES_LOADED) return;
-    PRODUCT_OVERRIDES_LOADED = true;
-    try{
-      const r = await fetch('/api/settings');
-      const d = await r.json();
-      const overrides = d && d.settings && d.settings.product_overrides;
-      const dynamicProducts = d && d.settings && Array.isArray(d.settings.dynamic_products) ? d.settings.dynamic_products : [];
-      if(overrides && typeof overrides === 'object'){
-        Object.keys(PRODUCTS).forEach(cat=>{
-          PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
-            const ov = overrides[p.name] || overrides[`${cat}:${p.name}`];
-            if(!ov || typeof ov !== 'object') return p;
-            return {...p, ...ov, hidden: Boolean(ov.hidden)};
-          }).filter(p=>!p.hidden);
-        });
-      }
-      dynamicProducts.forEach(p=>{
-        const cat = p.cat || 'uc';
-        if(!PRODUCTS[cat]) PRODUCTS[cat]=[];
-        if(!p.hidden && p.name && !PRODUCTS[cat].some(x=>x.name===p.name)) PRODUCTS[cat].push({name:p.name,type:p.type||cat,price:Number(p.price||0),uc:Number(p.uc||0),hot:!!p.hot,noQty:!!p.noQty,warning:p.warning||''});
-      });
-    }catch(e){}
-  }
+  async function loadProductOverrides(){ return; }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function getCart(){
     try{
@@ -2117,4 +2115,33 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   document.addEventListener('click',e=>{const b=e.target.closest('[data-pay-copy]'); if(b) copy(b.dataset.payCopy||'')});
   document.addEventListener('change',e=>{if(e.target && e.target.id==='paymentMethod') setTimeout(render,0)},true);
   fetch('/api/settings').then(r=>r.json()).then(d=>{window.mobaPaymentSettings=normalize(d.settings?.payment_settings);updateSelect();render();}).catch(()=>{updateSelect();render();});
+})();
+
+
+/* moba-v135-order-details-close-hard-fix */
+(function(){
+  if(window.__mobaV135DetailsCloseFix)return;
+  window.__mobaV135DetailsCloseFix=true;
+  window.closeOrderDetails=function(){
+    const modal=document.getElementById('orderDetailsModal');
+    if(modal) modal.classList.remove('show');
+    document.body.style.overflow='';
+  };
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest && e.target.closest('[data-order-modal-close-btn],.order-details-close');
+    if(btn){
+      e.preventDefault();
+      e.stopPropagation();
+      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      window.closeOrderDetails();
+      return false;
+    }
+    if(e.target && e.target.id==='orderDetailsModal'){
+      e.preventDefault();
+      window.closeOrderDetails();
+    }
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') window.closeOrderDetails();
+  },true);
 })();
