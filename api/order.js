@@ -33,11 +33,32 @@ function inBlacklist(value, list){
   const v=String(value||'').trim().toLowerCase();
   return list.some(x=>v && v===String(x).trim().toLowerCase());
 }
-function enforceBlacklist({phone,clientIp,deviceId,cart}){
-  if(inBlacklist(phone, envList('BLACKLIST_PHONES'))) throw new Error('لا يمكن تنفيذ طلب من رقم المتابعة ده حاليا. تواصل مع الدعم');
-  if(inBlacklist(clientIp, envList('BLACKLIST_IPS'))) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
-  if(inBlacklist(deviceId, envList('BLACKLIST_DEVICE_IDS'))) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
-  const blockedIds = envList('BLACKLIST_PUBG_IDS');
+
+async function getDynamicBlacklist(){
+  if(!supabaseReady()) return {};
+  const keys=['blacklist_phones','blacklist_ips','blacklist_device_ids','blacklist_pubg_ids'];
+  const rows=await supabaseRequest(`settings?key=in.(${keys.join(',')})&select=key,value`).catch(()=>[]);
+  const out={};
+  for(const r of rows||[]){
+    let v=r.value;
+    if(typeof v==='string'){
+      const t=v.trim();
+      if(t.startsWith('[')){ try{v=JSON.parse(t)}catch{} }
+      else v=t.split(',').map(x=>x.trim()).filter(Boolean);
+    }
+    out[r.key]=Array.isArray(v)?v:[];
+  }
+  return out;
+}
+async function enforceBlacklist({phone,clientIp,deviceId,cart}){
+  const dyn = await getDynamicBlacklist();
+  const phones = envList('BLACKLIST_PHONES').concat(dyn.blacklist_phones || []);
+  const ips = envList('BLACKLIST_IPS').concat(dyn.blacklist_ips || []);
+  const devices = envList('BLACKLIST_DEVICE_IDS').concat(dyn.blacklist_device_ids || []);
+  const blockedIds = envList('BLACKLIST_PUBG_IDS').concat(dyn.blacklist_pubg_ids || []);
+  if(inBlacklist(phone, phones)) throw new Error('لا يمكن تنفيذ طلب من رقم المتابعة ده حاليا. تواصل مع الدعم');
+  if(inBlacklist(clientIp, ips)) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
+  if(inBlacklist(deviceId, devices)) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
   if(blockedIds.length){
     const ids=(Array.isArray(cart)?cart:[]).map(x=>String(x.pubgId||'').trim());
     if(ids.some(id=>inBlacklist(id, blockedIds))) throw new Error('لا يمكن تنفيذ طلب على الـ ID ده حاليا. تواصل مع الدعم');
@@ -201,7 +222,7 @@ export default async function handler(req,res){
     }
     validateScreenshotFile(files.screenshot);
     const shotHash=screenshotHash(files.screenshot);
-    enforceBlacklist({phone:customerPhone,clientIp,deviceId,cart});
+    await enforceBlacklist({phone:customerPhone,clientIp,deviceId,cart});
     const recentRows=await recentOrdersForSpamCheck();
     enforceSpamRules(recentRows,{clientIp,deviceId,phone:customerPhone,cart,shotHash});
 

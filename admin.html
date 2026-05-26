@@ -6,67 +6,109 @@
   <title>MOBA SHOP Admin</title>
   <link rel="icon" type="image/png" href="assets/moba-shop-logo.png">
   <style>
-    *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#050914;color:#eef7ff}
-    .wrap{width:min(1180px,94%);margin:auto;padding:18px 0 60px}
-    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(180deg,#121b2c,#0b1220);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:16px;margin-bottom:14px}
-    .brand{display:flex;gap:10px;align-items:center}.brand img{width:42px;height:42px;border-radius:12px}.brand b{font-size:22px}.brand small{color:#99aec3}
-    input,select,button,textarea{border:1px solid rgba(255,255,255,.12);background:#07111f;color:#fff;border-radius:12px;padding:11px;outline:none}
-    button{cursor:pointer;font-weight:800}.gold{background:linear-gradient(135deg,#ffc75a,#ff9f2e);color:#140b00}.blue{background:linear-gradient(135deg,#29d4ff,#2878ff);color:#00111a}
-    .filters{display:grid;grid-template-columns:1fr 160px 130px;gap:10px;margin-bottom:14px}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{background:#10192a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px}.stat b{font-size:22px;color:#42ffc0}.stat span{display:block;color:#9db2c8;margin-top:4px}
-    .orders{display:grid;gap:10px}.order{background:#10192a;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px}.head{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px;margin-bottom:10px}.code{font-weight:900;color:#83e9ff}
-    .items{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.item{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;line-height:1.7}
-    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.actions button{padding:9px 10px;font-size:12px}
-    .note{width:100%;min-height:48px;margin-top:8px}.muted{color:#a7b8cb;font-size:12px}.err{color:#ffbac8}.ok{color:#8dffbf}
-    @media(max-width:800px){.filters,.stats{grid-template-columns:1fr}.items{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+    *{box-sizing:border-box}
+    :root{--bg:#050914;--panel:#10192a;--panel2:#0b1220;--panel3:#07111f;--line:rgba(255,255,255,.10);--muted:#9db2c8;--text:#eef7ff;--cyan:#2fd2ff;--blue:#2878ff;--gold:#ffc75a;--green:#42ffc0;--red:#ff6f87;--orange:#ff9f2e;--shadow:0 18px 55px rgba(0,0,0,.35)}
+    body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at 12% 0,rgba(47,210,255,.14),transparent 30%),radial-gradient(circle at 90% 0,rgba(255,159,46,.10),transparent 28%),#050914;color:var(--text);min-height:100vh}
+    button,input,select,textarea{font-family:inherit}button{cursor:pointer}.wrap{width:min(1440px,96%);margin:auto;padding:18px 0 70px}
+    .top{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:linear-gradient(180deg,#121b2c,#0b1220);border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+    .brand{display:flex;gap:12px;align-items:center}.brand img{width:54px;height:54px;border-radius:16px;box-shadow:0 0 26px rgba(47,210,255,.18)}.brand b{font-size:28px;letter-spacing:.4px}.brand small{display:block;color:var(--muted);margin-top:4px}.top-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+    .status-light{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(66,255,192,.25);background:rgba(66,255,192,.08);color:#dfffea;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
+    input,select,textarea{border:1px solid var(--line);background:#07111f;color:#fff;border-radius:14px;padding:12px;outline:none;width:100%}input:focus,select:focus,textarea:focus{border-color:rgba(47,210,255,.55);box-shadow:0 0 0 3px rgba(47,210,255,.08)}
+    .btn,button{border:1px solid var(--line);border-radius:14px;padding:11px 13px;font-weight:900;color:#fff;background:rgba(255,255,255,.07)}.blue{background:linear-gradient(135deg,#29d4ff,#2878ff);color:#00111a;border:0}.gold{background:linear-gradient(135deg,#ffc75a,#ff9f2e);color:#140b00;border:0}.green{background:linear-gradient(135deg,#42ffc0,#7dffb2);color:#03140d;border:0}.danger{background:rgba(255,111,135,.13);border-color:rgba(255,111,135,.35);color:#ffd5dd}.ghost{background:rgba(255,255,255,.045)}
+    .login{background:linear-gradient(180deg,rgba(16,25,42,.94),rgba(8,15,27,.94));border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:14px}.login label{grid-column:1/-1;color:var(--muted);font-size:12px}.login small{grid-column:1/-1;color:var(--muted);line-height:1.7}
+    .tabs{display:flex;gap:8px;overflow:auto;padding:3px;margin-bottom:14px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;min-width:130px}.tab.active{background:linear-gradient(135deg,rgba(47,210,255,.95),rgba(40,120,255,.9));color:#00111a;border:0}
+    .panel{background:linear-gradient(180deg,rgba(16,25,42,.94),rgba(8,15,27,.94));border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:14px;box-shadow:0 12px 35px rgba(0,0,0,.22)}.hidden{display:none!important}.muted{color:var(--muted)}#msg{min-height:24px;line-height:1.8;margin:8px 0}.ok{color:#8dffbf}.err{color:#ffbac8}.warnText{color:#ffe2ac}
+    .filters{display:grid;grid-template-columns:1fr 180px 150px 150px;gap:10px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.stat{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid var(--line);border-radius:18px;padding:13px}.stat b{font-size:24px;color:var(--green);display:block}.stat span{color:var(--muted);font-size:12px}
+    .orders{display:grid;gap:12px}.order{background:#10192a;border:1px solid var(--line);border-radius:20px;padding:14px}.head{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px;margin-bottom:10px}.code{font-weight:900;color:#83e9ff;font-size:16px}.pill{display:inline-flex;border:1px solid rgba(47,210,255,.25);background:rgba(47,210,255,.08);color:#dff8ff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.pill.red{background:rgba(255,111,135,.10);border-color:rgba(255,111,135,.28);color:#ffd5dd}.pill.greenP{background:rgba(66,255,192,.08);border-color:rgba(66,255,192,.25);color:#dfffea}
+    .items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.item{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;line-height:1.75}.item b{color:#fff}.security{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.security div{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:8px;font-size:12px;color:#dceaff;word-break:break-word}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.actions button{padding:9px 10px;font-size:12px}.note{width:100%;min-height:52px;margin-top:8px}.empty{border:1px dashed rgba(255,255,255,.14);border-radius:18px;padding:28px;text-align:center;color:var(--muted);background:rgba(255,255,255,.025)}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}.reportGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.miniTable{display:grid;gap:7px}.row{display:flex;justify-content:space-between;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:9px 10px;border-radius:12px}.copyBtn{font-size:11px;padding:6px 8px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:3px 7px;font-size:11px;color:#dfeaff}
+    @media(max-width:950px){.top,.login,.filters,.two,.formGrid,.reportGrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.items,.security{grid-template-columns:1fr}.brand b{font-size:22px}.top-actions{justify-content:flex-start}.tab{min-width:112px}.head{grid-template-columns:1fr}.wrap{width:min(100%,96%);padding-top:10px}}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="brand"><img src="assets/moba-shop-logo.png"><div><b>MOBA SHOP Admin</b><small>إدارة الطلبات والمتابعة</small></div></div>
-    <button class="gold" onclick="saveKey()">حفظ مفتاح الأدمن</button>
+    <div class="brand"><img src="assets/moba-shop-logo.png" alt="MOBA SHOP"><div><b>MOBA SHOP Admin Pro</b><small>لوحة احترافية لإدارة الطلبات والحماية والتقارير</small></div></div>
+    <div class="top-actions"><span class="status-light"><span class="dot"></span><span id="connState">جاهز</span></span><button class="ghost" onclick="lockAdmin()">قفل اللوحة</button><button class="gold" onclick="focusKey()">مفتاح الأدمن</button></div>
   </div>
-  <div class="filters">
-    <input id="q" placeholder="بحث برقم الطلب / رقم الموبايل / ID">
-    <select id="status"><option value="all">كل الحالات</option><option value="pending">جديد</option><option value="claimed">مستلم</option><option value="processing">جاري التنفيذ</option><option value="needs_fix">محتاج تعديل</option><option value="delivered">تم الشحن</option><option value="cancelled">ملغي</option></select>
-    <button class="blue" onclick="load()">تحديث</button>
+
+  <div class="login" id="loginBox">
+    <label for="adminKey">مفتاح الأدمن</label>
+    <input id="adminKey" type="password" placeholder="اكتب نفس قيمة ADMIN_PANEL_SECRET من Vercel">
+    <button class="gold" type="button" onclick="saveKey()">حفظ</button>
+    <button class="blue" type="button" onclick="testConnection()">اختبار وتحميل</button>
+    <small>المفتاح بيتحفظ محليًا في المتصفح فقط. استخدم زر قفل اللوحة لو فتحتها على جهاز مش جهازك.</small>
   </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="orders" onclick="openTab('orders')">الطلبات</button>
+    <button class="tab" data-tab="reports" onclick="openTab('reports')">تقرير اليوم</button>
+    <button class="tab" data-tab="security" onclick="openTab('security')">الحماية والحظر</button>
+    <button class="tab" data-tab="settings" onclick="openTab('settings')">حالة المتجر</button>
+    <button class="tab" data-tab="help" onclick="openTab('help')">مساعدة</button>
+  </div>
+
   <div id="msg" class="muted"></div>
-  <div id="stats" class="stats"></div>
-  <div id="orders" class="orders"></div>
+
+  <section id="tab-orders">
+    <div class="panel">
+      <div class="filters">
+        <input id="q" placeholder="بحث برقم الطلب / رقم الموبايل / PUBG ID">
+        <select id="status"><option value="all">كل الحالات</option><option value="pending">جديد</option><option value="claimed">مستلم</option><option value="processing">جاري التنفيذ</option><option value="needs_fix">محتاج تعديل</option><option value="on_hold">تعليق</option><option value="delivered">تم الشحن</option><option value="cancelled">ملغي</option></select>
+        <button class="blue" onclick="loadOrders()">تحديث</button>
+        <button class="ghost" onclick="clearFilters()">مسح البحث</button>
+      </div>
+      <div class="toolbar"><span class="kbd">Enter للبحث</span><span class="kbd">الطلبات المفتوحة: pending / claimed / processing / needs_fix / hold</span></div>
+    </div>
+    <div id="stats" class="stats"></div>
+    <div id="orders" class="orders"></div>
+  </section>
+
+  <section id="tab-reports" class="hidden">
+    <div class="panel"><div class="filters"><input id="reportDay" type="date"><button class="blue" onclick="loadReport()">تحميل التقرير</button><button class="gold" onclick="copyReport()">نسخ ملخص اليوم</button><button class="ghost" onclick="loadReport(true)">اليوم</button></div></div>
+    <div id="reportBox"></div>
+  </section>
+
+  <section id="tab-security" class="hidden">
+    <div class="two">
+      <div class="panel"><h3>قوائم الحظر الديناميكية</h3><p class="muted">اكتب كل قيمة في سطر منفصل. دي بتتخزن في Supabase settings من غير ما تحتاج ترفع الموقع.</p><div class="formGrid"><div><label class="label">أرقام موبايل محظورة</label><textarea id="blPhones" rows="7" placeholder="010..."></textarea></div><div><label class="label">PUBG IDs محظورة</label><textarea id="blPubg" rows="7" placeholder="443..."></textarea></div><div><label class="label">IPs محظورة</label><textarea id="blIps" rows="7" placeholder="156.222..."></textarea></div><div><label class="label">Device IDs محظورة</label><textarea id="blDevices" rows="7" placeholder="device id"></textarea></div></div><div class="toolbar"><button class="green" onclick="saveSecurity()">حفظ الحظر</button><button class="blue" onclick="loadSettings()">تحميل الحالي</button></div></div>
+      <div class="panel"><h3>حماية الطلبات مفعلة</h3><div class="miniTable"><div class="row"><span>Rate limit من نفس IP</span><b class="ok">مفعل</b></div><div class="row"><span>منع طلب مفتوح لنفس الرقم</span><b class="ok">مفعل</b></div><div class="row"><span>منع طلب مفتوح لنفس ID</span><b class="ok">مفعل</b></div><div class="row"><span>رفض أرقام عشوائية</span><b class="ok">مفعل</b></div><div class="row"><span>رفض نفس السكرين المتكرر</span><b class="ok">مفعل</b></div><div class="row"><span>IP و Device ID في الطلب</span><b class="ok">مفعل</b></div></div></div>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="hidden">
+    <div class="two"><div class="panel"><h3>حالة المتجر</h3><div class="formGrid"><div><label class="label">الحالة</label><select id="storeStatus"><option value="available">متاح الآن</option><option value="busy">ضغط طلبات</option><option value="closed">خارج مواعيد التنفيذ</option></select></div><div><label class="label">رسالة مختصرة تظهر للعميل</label><input id="storeMsg" placeholder="التنفيذ شغال حاليا / فيه ضغط..."></div></div><div class="toolbar"><button class="green" onclick="saveStoreSettings()">حفظ الحالة</button><button class="blue" onclick="loadSettings()">تحميل الحالي</button></div></div><div class="panel"><h3>اختصارات مهمة</h3><div class="miniTable"><div class="row"><span>الموقع الرئيسي</span><button class="copyBtn" onclick="open('/')">فتح</button></div><div class="row"><span>API الطلبات</span><button class="copyBtn" onclick="copyText('/api/admin-orders')">نسخ</button></div><div class="row"><span>تقرير اليوم</span><button class="copyBtn" onclick="copyText('/api/daily-report')">نسخ</button></div></div></div></div>
+  </section>
+
+  <section id="tab-help" class="hidden"><div class="panel"><h3>طريقة الاستخدام السريعة</h3><div class="miniTable"><div class="row"><span>1) اضغط استلام لما تبدأ طلب</span><b>Claim</b></div><div class="row"><span>2) اضغط جاري التنفيذ وقت الشحن</span><b>Processing</b></div><div class="row"><span>3) لو في مشكلة اختار نوع المشكلة</span><b>Needs fix</b></div><div class="row"><span>4) بعد الشحن اضغط تم الشحن</span><b>Delivered</b></div><div class="row"><span>5) لو عميل مزعج انسخ IP أو الرقم للحظر</span><b>Security</b></div></div></div></section>
 </div>
 <script>
-let key=localStorage.getItem('moba_admin_key')||prompt('اكتب مفتاح الأدمن')||'';
-if(key)localStorage.setItem('moba_admin_key',key);
-function saveKey(){key=prompt('اكتب مفتاح الأدمن الجديد',key)||key;localStorage.setItem('moba_admin_key',key);load()}
-function money(n){return Number(n||0).toLocaleString('ar-EG')+' جنيه'}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function load(){
-  msg.textContent='جاري التحميل...';
-  const url='/api/admin-orders?key='+encodeURIComponent(key)+'&status='+encodeURIComponent(status.value)+'&q='+encodeURIComponent(q.value||'');
-  const r=await fetch(url); const d=await r.json();
-  if(!d.ok){msg.innerHTML='<span class="err">'+esc(d.error||'خطأ')+'</span>';return}
-  msg.innerHTML='<span class="ok">تم تحميل '+d.orders.length+' طلب</span>';
-  const total=d.orders.reduce((s,o)=>s+Number(o.total||0),0);
-  const open=d.meta.open||0;
-  stats.innerHTML='<div class="stat"><b>'+d.orders.length+'</b><span>طلبات ظاهرة</span></div><div class="stat"><b>'+open+'</b><span>طلبات مفتوحة</span></div><div class="stat"><b>'+money(total)+'</b><span>إجمالي ظاهر</span></div><div class="stat"><b>'+new Date().toLocaleTimeString('ar-EG')+'</b><span>آخر تحديث</span></div>';
-  orders.innerHTML=d.orders.map(o=>card(o)).join('');
-}
-function card(o){
-  const items=Array.isArray(o.items)?o.items:[];
-  return '<div class="order"><div class="head"><div><div class="code">'+esc(o.order_code||o.id)+'</div><div class="muted">'+esc(o.phone||'')+' | '+esc(o.payment_method||'')+'</div></div><div><b>'+esc(o.status_text||o.status)+'</b><br><span class="muted">'+money(o.total)+'</span></div></div>'
-  +'<div class="items">'+items.map(it=>'<div class="item"><b>'+esc(it.product)+'</b><br>ID: '+esc(it.pubgId)+'<br>Name: '+esc(it.pubgName||'-')+'<br>Qty: '+esc(it.qty||1)+'</div>').join('')+'</div>'
-  +'<textarea class="note" id="note_'+esc(o.id)+'" placeholder="ملاحظة داخلية اختيارية"></textarea>'
-  +'<div class="actions">'+['claimed:استلام','processing:بدأ التنفيذ','delivered:تم الشحن','needs_fix:محتاج تعديل','on_hold:تعليق','cancelled:إلغاء'].map(x=>{let [s,t]=x.split(':');return '<button onclick="updateOrder(\\''+esc(o.id)+'\\',\\''+s+'\\')">'+t+'</button>'}).join('')+'</div></div>';
-}
-async function updateOrder(id,status){
-  const note=document.getElementById('note_'+id)?.value||'';
-  const r=await fetch('/api/admin-orders?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status,note})});
-  const d=await r.json(); if(!d.ok){alert(d.error||'خطأ');return} load();
-}
-q.addEventListener('keydown',e=>{if(e.key==='Enter')load()});
-load();
+(function(){
+  const $=id=>document.getElementById(id); let lastOrders=[]; let lastReport=null;
+  const saved=localStorage.getItem('moba_admin_key')||localStorage.getItem('moba_admin_secret')||''; $('adminKey').value=saved;
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function money(n){return Number(n||0).toLocaleString('ar-EG')+' جنيه'}
+  function msg(t,ok){$('msg').innerHTML='<span class="'+(ok?'ok':'err')+'">'+esc(t)+'</span>'; $('connState').textContent=ok?'متصل':'مشكلة'}
+  function headers(){return {'x-admin-secret':$('adminKey').value.trim()||localStorage.getItem('moba_admin_key')||''}}
+  function label(s){return {pending:'جديد',claimed:'مستلم',processing:'جاري التنفيذ',needs_fix:'محتاج تعديل',on_hold:'تعليق',delivered:'تم الشحن',cancelled:'ملغي',rejected:'مرفوض',archived:'مؤرشف'}[s]||s||'-'}
+  window.focusKey=()=>{$('adminKey').focus();$('adminKey').select()}; window.saveKey=()=>{const v=$('adminKey').value.trim(); if(!v)return msg('اكتب مفتاح الأدمن الأول',false); localStorage.setItem('moba_admin_key',v); localStorage.setItem('moba_admin_secret',v); msg('تم حفظ المفتاح',true)}; window.lockAdmin=()=>{localStorage.removeItem('moba_admin_key');localStorage.removeItem('moba_admin_secret');$('adminKey').value='';lastOrders=[];$('orders').innerHTML='';msg('تم قفل اللوحة',false);focusKey()};
+  window.openTab=function(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['orders','reports','security','settings','help'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==name)); if(name==='reports')loadReport(true); if(name==='security'||name==='settings')loadSettings();}
+  window.clearFilters=function(){$('q').value='';$('status').value='all';loadOrders()}; window.testConnection=()=>loadOrders();
+  window.loadOrders=async function(){const key=$('adminKey').value.trim(); if(!key){msg('اكتب مفتاح الأدمن واحفظه',false);return focusKey()} saveKey(); $('orders').innerHTML='<div class="empty">جاري تحميل الطلبات...</div>'; try{const url='/api/admin-orders?status='+encodeURIComponent($('status').value)+'&q='+encodeURIComponent($('q').value||'')+'&limit=150'; const r=await fetch(url,{headers:headers()}); const d=await r.json().catch(()=>({ok:false,error:'رد السيرفر غير مفهوم'})); if(!d.ok){$('orders').innerHTML='<div class="empty">'+esc(d.error||'خطأ')+'</div>'; $('stats').innerHTML=''; return msg(d.error||'خطأ في التحميل',false)} lastOrders=d.orders||[]; renderOrders(lastOrders); msg('تم تحميل '+lastOrders.length+' طلب',true)}catch(e){$('orders').innerHTML='<div class="empty">حصل خطأ في الاتصال</div>';msg(e.message||'خطأ',false)}};
+  function renderOrders(orders){const total=orders.reduce((s,o)=>s+Number(o.total||0),0),open=orders.filter(o=>['pending','claimed','processing','needs_fix','on_hold'].includes(String(o.status))).length,fix=orders.filter(o=>o.status==='needs_fix').length,done=orders.filter(o=>o.status==='delivered').length; $('stats').innerHTML=`<div class="stat"><b>${orders.length}</b><span>طلبات ظاهرة</span></div><div class="stat"><b>${open}</b><span>مفتوحة</span></div><div class="stat"><b>${fix}</b><span>محتاج تعديل</span></div><div class="stat"><b>${done}</b><span>تم الشحن</span></div><div class="stat"><b>${money(total)}</b><span>إجمالي ظاهر</span></div>`; $('orders').innerHTML=orders.length?orders.map(card).join(''):'<div class="empty">مفيش طلبات مطابقة</div>'}
+  function pillClass(s){return s==='delivered'?'greenP':(['cancelled','rejected','needs_fix'].includes(s)?'red':'')}
+  function card(o){const items=Array.isArray(o.items)?o.items:[], id=esc(o.id||''); const acts=[['claimed','استلام'],['processing','جاري التنفيذ'],['delivered','تم الشحن'],['needs_fix','محتاج تعديل'],['on_hold','تعليق'],['cancelled','إلغاء']].map(a=>`<button onclick="updateOrder('${id}','${a[0]}')">${a[1]}</button>`).join(''); const issue=`<button class="danger" onclick="updateOrder('${id}','needs_fix','ID غلط')">ID غلط</button><button class="danger" onclick="updateOrder('${id}','needs_fix','سكرين غير واضح')">سكرين غير واضح</button><button class="danger" onclick="updateOrder('${id}','needs_fix','رقم غلط')">رقم غلط</button>`; return `<div class="order"><div class="head"><div><div class="code">${esc(o.order_code||o.id||'-')}</div><div class="muted">${esc(o.phone||'')} | ${esc(o.payment_method||'')} | ${esc(o.created_at||'')}</div></div><div><span class="pill ${pillClass(o.status)}">${esc(o.status_text||label(o.status))}</span><br><b>${money(o.total)}</b></div></div><div class="items">${items.map((it,i)=>`<div class="item"><b>${i+1}) ${esc(it.product||'-')}</b><br>ID: <code>${esc(it.pubgId||'-')}</code><br>Name: ${esc(it.pubgName||it.name||'-')}<br>Qty: ${esc(it.qty||1)}<button class="copyBtn" onclick="copyText('${esc(it.pubgId||'')}')">نسخ ID</button></div>`).join('')}</div><div class="security"><div><b>IP</b><br>${esc(o.ip||o.client_ip||o.raw_data?.clientIp||'-')} <button class="copyBtn" onclick="copyText('${esc(o.ip||o.client_ip||o.raw_data?.clientIp||'')}')">نسخ</button></div><div><b>Device ID</b><br>${esc(o.device_id||o.raw_data?.deviceId||'-')}</div><div><b>Phone</b><br>${esc(o.phone||'-')} <button class="copyBtn" onclick="copyText('${esc(o.phone||'')}')">نسخ</button></div><div><b>Handler</b><br>${esc(o.handler||o.last_status_by||'-')}</div></div><textarea class="note" id="note_${id}" placeholder="ملاحظة داخلية أو سبب المشكلة"></textarea><div class="actions">${acts}${issue}</div></div>`}
+  window.updateOrder=async function(id,status,preset){const n=$('note_'+id); if(preset&&n&&!n.value)n.value=preset; const note=n?n.value:''; try{const r=await fetch('/api/admin-orders',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers()),body:JSON.stringify({id,status,note})}); const d=await r.json(); if(!d.ok)return alert(d.error||'خطأ'); loadOrders()}catch(e){alert(e.message||'خطأ')}};
+  window.copyText=async t=>{try{await navigator.clipboard.writeText(t||'');msg('تم النسخ',true)}catch(e){prompt('انسخ النص',t||'')}};
+  window.loadReport=async function(today){if(today){const d=new Date(); $('reportDay').value=d.toISOString().slice(0,10)} const day=$('reportDay').value; $('reportBox').innerHTML='<div class="empty">جاري تحميل التقرير...</div>'; try{const r=await fetch('/api/daily-report?day='+encodeURIComponent(day||''),{headers:headers()}); const d=await r.json(); if(!d.ok){$('reportBox').innerHTML='<div class="empty">'+esc(d.error||'خطأ')+'</div>';return} lastReport=d; const statusRows=Object.entries(d.byStatus||{}).map(([k,v])=>`<div class="row"><span>${label(k)}</span><b>${v}</b></div>`).join(''); const payRows=Object.entries(d.byPayment||{}).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><b>${v}</b></div>`).join(''); const prodRows=(d.topProducts||[]).map(x=>`<div class="row"><span>${esc(x.name)}</span><b>${x.count}</b></div>`).join(''); $('reportBox').innerHTML=`<div class="stats"><div class="stat"><b>${d.count}</b><span>عدد الطلبات</span></div><div class="stat"><b>${money(d.total)}</b><span>إجمالي المبيعات</span></div><div class="stat"><b>${esc(d.day)}</b><span>اليوم</span></div><div class="stat"><b>${(d.topProducts||[])[0]?.name||'-'}</b><span>الأكثر طلبًا</span></div></div><div class="two"><div class="panel"><h3>حسب الحالة</h3><div class="miniTable">${statusRows||'<div class="muted">لا يوجد</div>'}</div></div><div class="panel"><h3>حسب الدفع</h3><div class="miniTable">${payRows||'<div class="muted">لا يوجد</div>'}</div></div></div><div class="panel"><h3>أكثر المنتجات</h3><div class="miniTable">${prodRows||'<div class="muted">لا يوجد</div>'}</div></div>`}catch(e){$('reportBox').innerHTML='<div class="empty">خطأ في التقرير</div>'}};
+  window.copyReport=function(){if(!lastReport)return msg('حمل التقرير الأول',false); copyText(`تقرير MOBA SHOP ${lastReport.day}\nعدد الطلبات: ${lastReport.count}\nالإجمالي: ${lastReport.total} جنيه`)};
+  function splitLines(id){return $(id).value.split('\n').map(x=>x.trim()).filter(Boolean)} function setLines(id,v){$(id).value=Array.isArray(v)?v.join('\n'):String(v||'').split(',').map(x=>x.trim()).filter(Boolean).join('\n')}
+  window.loadSettings=async function(){try{const r=await fetch('/api/settings?admin=1',{headers:headers()}); const d=await r.json(); if(!d.ok)return; const s=d.settings||{}; setLines('blPhones',s.blacklist_phones||[]); setLines('blPubg',s.blacklist_pubg_ids||[]); setLines('blIps',s.blacklist_ips||[]); setLines('blDevices',s.blacklist_device_ids||[]); if($('storeStatus'))$('storeStatus').value=s.store_status||'available'; if($('storeMsg'))$('storeMsg').value=s.store_message||''}catch(e){}}
+  window.saveSecurity=async function(){await saveSettings({blacklist_phones:splitLines('blPhones'),blacklist_pubg_ids:splitLines('blPubg'),blacklist_ips:splitLines('blIps'),blacklist_device_ids:splitLines('blDevices')})};
+  window.saveStoreSettings=async function(){await saveSettings({store_status:$('storeStatus').value,store_message:$('storeMsg').value.trim()})};
+  async function saveSettings(settings){try{const r=await fetch('/api/settings',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers()),body:JSON.stringify({settings})}); const d=await r.json(); if(!d.ok)return msg(d.error||'خطأ في حفظ الإعدادات',false); msg('تم حفظ الإعدادات',true)}catch(e){msg(e.message||'خطأ',false)}}
+  $('q').addEventListener('keydown',e=>{if(e.key==='Enter')loadOrders()}); $('status').addEventListener('change',loadOrders); if(saved)setTimeout(loadOrders,250); else msg('اكتب مفتاح الأدمن واضغط اختبار وتحميل',false);
+})();
 </script>
 </body>
 </html>
