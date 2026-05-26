@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MOBA SHOP Admin</title>
+  <link rel="icon" type="image/png" href="assets/moba-shop-logo.png">
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#050914;color:#eef7ff}
+    .wrap{width:min(1180px,94%);margin:auto;padding:18px 0 60px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(180deg,#121b2c,#0b1220);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:16px;margin-bottom:14px}
+    .brand{display:flex;gap:10px;align-items:center}.brand img{width:42px;height:42px;border-radius:12px}.brand b{font-size:22px}.brand small{color:#99aec3}
+    input,select,button,textarea{border:1px solid rgba(255,255,255,.12);background:#07111f;color:#fff;border-radius:12px;padding:11px;outline:none}
+    button{cursor:pointer;font-weight:800}.gold{background:linear-gradient(135deg,#ffc75a,#ff9f2e);color:#140b00}.blue{background:linear-gradient(135deg,#29d4ff,#2878ff);color:#00111a}
+    .filters{display:grid;grid-template-columns:1fr 160px 130px;gap:10px;margin-bottom:14px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{background:#10192a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px}.stat b{font-size:22px;color:#42ffc0}.stat span{display:block;color:#9db2c8;margin-top:4px}
+    .orders{display:grid;gap:10px}.order{background:#10192a;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px}.head{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px;margin-bottom:10px}.code{font-weight:900;color:#83e9ff}
+    .items{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.item{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;line-height:1.7}
+    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.actions button{padding:9px 10px;font-size:12px}
+    .note{width:100%;min-height:48px;margin-top:8px}.muted{color:#a7b8cb;font-size:12px}.err{color:#ffbac8}.ok{color:#8dffbf}
+    @media(max-width:800px){.filters,.stats{grid-template-columns:1fr}.items{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><img src="assets/moba-shop-logo.png"><div><b>MOBA SHOP Admin</b><small>إدارة الطلبات والمتابعة</small></div></div>
+    <button class="gold" onclick="saveKey()">حفظ مفتاح الأدمن</button>
+  </div>
+  <div class="filters">
+    <input id="q" placeholder="بحث برقم الطلب / رقم الموبايل / ID">
+    <select id="status"><option value="all">كل الحالات</option><option value="pending">جديد</option><option value="claimed">مستلم</option><option value="processing">جاري التنفيذ</option><option value="needs_fix">محتاج تعديل</option><option value="delivered">تم الشحن</option><option value="cancelled">ملغي</option></select>
+    <button class="blue" onclick="load()">تحديث</button>
+  </div>
+  <div id="msg" class="muted"></div>
+  <div id="stats" class="stats"></div>
+  <div id="orders" class="orders"></div>
+</div>
+<script>
+let key=localStorage.getItem('moba_admin_key')||prompt('اكتب مفتاح الأدمن')||'';
+if(key)localStorage.setItem('moba_admin_key',key);
+function saveKey(){key=prompt('اكتب مفتاح الأدمن الجديد',key)||key;localStorage.setItem('moba_admin_key',key);load()}
+function money(n){return Number(n||0).toLocaleString('ar-EG')+' جنيه'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function load(){
+  msg.textContent='جاري التحميل...';
+  const url='/api/admin-orders?key='+encodeURIComponent(key)+'&status='+encodeURIComponent(status.value)+'&q='+encodeURIComponent(q.value||'');
+  const r=await fetch(url); const d=await r.json();
+  if(!d.ok){msg.innerHTML='<span class="err">'+esc(d.error||'خطأ')+'</span>';return}
+  msg.innerHTML='<span class="ok">تم تحميل '+d.orders.length+' طلب</span>';
+  const total=d.orders.reduce((s,o)=>s+Number(o.total||0),0);
+  const open=d.meta.open||0;
+  stats.innerHTML='<div class="stat"><b>'+d.orders.length+'</b><span>طلبات ظاهرة</span></div><div class="stat"><b>'+open+'</b><span>طلبات مفتوحة</span></div><div class="stat"><b>'+money(total)+'</b><span>إجمالي ظاهر</span></div><div class="stat"><b>'+new Date().toLocaleTimeString('ar-EG')+'</b><span>آخر تحديث</span></div>';
+  orders.innerHTML=d.orders.map(o=>card(o)).join('');
+}
+function card(o){
+  const items=Array.isArray(o.items)?o.items:[];
+  return '<div class="order"><div class="head"><div><div class="code">'+esc(o.order_code||o.id)+'</div><div class="muted">'+esc(o.phone||'')+' | '+esc(o.payment_method||'')+'</div></div><div><b>'+esc(o.status_text||o.status)+'</b><br><span class="muted">'+money(o.total)+'</span></div></div>'
+  +'<div class="items">'+items.map(it=>'<div class="item"><b>'+esc(it.product)+'</b><br>ID: '+esc(it.pubgId)+'<br>Name: '+esc(it.pubgName||'-')+'<br>Qty: '+esc(it.qty||1)+'</div>').join('')+'</div>'
+  +'<textarea class="note" id="note_'+esc(o.id)+'" placeholder="ملاحظة داخلية اختيارية"></textarea>'
+  +'<div class="actions">'+['claimed:استلام','processing:بدأ التنفيذ','delivered:تم الشحن','needs_fix:محتاج تعديل','on_hold:تعليق','cancelled:إلغاء'].map(x=>{let [s,t]=x.split(':');return '<button onclick="updateOrder(\\''+esc(o.id)+'\\',\\''+s+'\\')">'+t+'</button>'}).join('')+'</div></div>';
+}
+async function updateOrder(id,status){
+  const note=document.getElementById('note_'+id)?.value||'';
+  const r=await fetch('/api/admin-orders?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status,note})});
+  const d=await r.json(); if(!d.ok){alert(d.error||'خطأ');return} load();
+}
+q.addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+load();
+</script>
+</body>
+</html>

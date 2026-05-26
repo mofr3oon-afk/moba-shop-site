@@ -1053,3 +1053,6 @@ body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
   max-width:140px;
   justify-self:start;
 }
+
+/* v119 hide product pharaoh helper buttons */
+.pharaoh-product-helper,.pharaoh-product-smart-v85{display:none!important}

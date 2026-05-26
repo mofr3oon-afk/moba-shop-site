@@ -1,12 +1,86 @@
-import { rateLimit, safeError, validateSingleImageFromForm, validatePhone, validatePubgId, validateTransferInfo } from './_security.js';
+import { rateLimit, safeError, getClientIp } from './_security.js';
 // moba-v40-security
 export const config = { api: { bodyParser: false } };
+import crypto from 'node:crypto';
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from './_utils.js';
 
 async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
 
 function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
 function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
+
+function looksFakeDigits(value, kind='number'){
+  const v=String(value||'').replace(/\D/g,'');
+  if(!v) return true;
+  if(/^(\d)\1+$/.test(v)) return true;
+  if(/0123456789|123456789|234567890|987654321|0987654321/.test(v)) return true;
+  if(kind==='phone'){
+    if(['01000000000','01111111111','01234567890','01010101010','01111111110','01012345678'].includes(v)) return true;
+    const tail=v.slice(3);
+    if(/^(\d)\1{5,}$/.test(tail)) return true;
+  }
+  if(kind==='id'){
+    if(v.length<5 || v.length>15) return true;
+    if(new Set(v.split('')).size <= 2 && v.length >= 7) return true;
+  }
+  return false;
+}
+
+function envList(name){
+  return String(process.env[name] || '').split(',').map(x=>x.trim()).filter(Boolean);
+}
+function inBlacklist(value, list){
+  const v=String(value||'').trim().toLowerCase();
+  return list.some(x=>v && v===String(x).trim().toLowerCase());
+}
+function enforceBlacklist({phone,clientIp,deviceId,cart}){
+  if(inBlacklist(phone, envList('BLACKLIST_PHONES'))) throw new Error('لا يمكن تنفيذ طلب من رقم المتابعة ده حاليا. تواصل مع الدعم');
+  if(inBlacklist(clientIp, envList('BLACKLIST_IPS'))) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
+  if(inBlacklist(deviceId, envList('BLACKLIST_DEVICE_IDS'))) throw new Error('لا يمكن تنفيذ طلب من الجهاز ده حاليا. تواصل مع الدعم');
+  const blockedIds = envList('BLACKLIST_PUBG_IDS');
+  if(blockedIds.length){
+    const ids=(Array.isArray(cart)?cart:[]).map(x=>String(x.pubgId||'').trim());
+    if(ids.some(id=>inBlacklist(id, blockedIds))) throw new Error('لا يمكن تنفيذ طلب على الـ ID ده حاليا. تواصل مع الدعم');
+  }
+}
+
+function validateScreenshotFile(file){
+  if(!file || !file.buffer || file.buffer.length < 2000) throw new Error('ارفع سكرين تحويل واضح بحجم مناسب');
+  const type=String(file.contentType||'').toLowerCase();
+  const name=String(file.filename||'').toLowerCase();
+  const okType=['image/jpeg','image/png','image/webp','image/jpg'].includes(type);
+  const okExt=['.jpg','.jpeg','.png','.webp'].some(ext=>name.endsWith(ext));
+  if(!okType || !okExt) throw new Error('السكرين لازم يكون صورة فقط JPG أو PNG أو WEBP');
+  const max=Number(process.env.MAX_SCREENSHOT_SIZE || 5*1024*1024);
+  if(file.buffer.length > max) throw new Error('حجم السكرين كبير. ارفع صورة أقل من 5MB');
+}
+function screenshotHash(file){
+  return file?.buffer ? crypto.createHash('sha256').update(file.buffer).digest('hex') : '';
+}
+async function recentOrdersForSpamCheck(){
+  if(!supabaseReady()) return [];
+  return await supabaseRequest('orders?select=id,order_code,phone,status,items,created_at,raw_data&order=created_at.desc&limit=80').catch(()=>[]);
+}
+function isRecent(ts, mins){
+  const t=new Date(ts||0).getTime();
+  return Number.isFinite(t) && Date.now()-t < mins*60*1000;
+}
+function enforceSpamRules(rows,{clientIp,deviceId,phone,cart,shotHash}){
+  const recent=(Array.isArray(rows)?rows:[]).filter(o=>isRecent(o.created_at,60));
+  const ip15=recent.filter(o=>isRecent(o.created_at,15) && o.raw_data?.clientIp && o.raw_data.clientIp===clientIp).length;
+  if(clientIp && ip15>=4) throw new Error('تم إيقاف الطلبات مؤقتا من نفس الجهاز بسبب تكرار المحاولات. جرب بعد شوية أو تواصل مع الدعم');
+  const device15=recent.filter(o=>isRecent(o.created_at,15) && deviceId && o.raw_data?.deviceId===deviceId).length;
+  if(deviceId && device15>=3) throw new Error('تم إيقاف الطلبات مؤقتا من نفس الجهاز بسبب تكرار المحاولات. جرب بعد شوية');
+  const phone60=recent.filter(o=>o.phone===phone).length;
+  if(phone60>=5) throw new Error('في محاولات كتير من نفس رقم الموبايل. استنى شوية أو تواصل مع الدعم');
+  const ids=new Set(cart.map(x=>String(x.pubgId||'')));
+  const openSameId=recent.find(o=>OPEN_STATUSES.includes(String(o.status||'')) && (Array.isArray(o.items)?o.items:[]).some(it=>ids.has(String(it.pubgId||''))));
+  if(openSameId) throw new Error('في طلب مفتوح بالفعل لنفس PUBG ID. تابع الطلب القديم الأول أو كلم الدعم');
+  if(shotHash){
+    const dup=recent.find(o=>isRecent(o.created_at,30) && o.raw_data?.screenshotHash===shotHash);
+    if(dup) throw new Error('نفس السكرين مستخدم في طلب قريب. ارفع سكرين التحويل الصحيح أو تواصل مع الدعم');
+  }
+}
 
 function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
 function parseMultipart(buffer,contentType){
@@ -88,11 +162,13 @@ async function hasOpenOrderForPhone(phone){
 }
 
 export default async function handler(req,res){
-  try{ rateLimit(req,'order',10,60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
+  try{ rateLimit(req,'order',5,10*60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
     const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw new Error('ORDER_GROUP_ID missing');
     const raw=await readRawBody(req); const {fields,files}=parseMultipart(raw,req.headers['content-type']);
+    const clientIp=getClientIp(req) || 'unknown';
+    const deviceId=String(fields.deviceId||'').trim().slice(0,80);
     const cart=JSON.parse(fields.cart||'[]');
     const customerPhone=String(fields.customerPhone||'').trim();
     const paymentMethod=String(fields.paymentMethod||'').trim();
@@ -101,14 +177,21 @@ export default async function handler(req,res){
     const transferMode=String(fields.transferMode||'').trim(); // same | other
     const transferLast3=String(fields.transferLast3||'').trim();
     let total=0;
-    if(!/^01\d{9}$/.test(customerPhone)) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح'});
+    if(!/^01\d{9}$/.test(customerPhone) || looksFakeDigits(customerPhone,'phone')) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح أو شكله عشوائي'});
     if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
     if(!['same','other'].includes(transferMode)) return json(res,400,{ok:false,error:'حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني'});
     if(transferMode==='other' && !/^\d{3}$/.test(transferLast3)) return json(res,400,{ok:false,error:'اكتب آخر 3 أرقام من رقم التحويل عشان نقدر نراجع الدفع'});
 
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
-    for(const item of cart){ item.qty = itemQty(item); if(!item.product || !/^\d{5,15}$/.test(String(item.pubgId)) || String(item.pubgName||'').trim().length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'}); }
+    for(const item of cart){
+      item.qty = itemQty(item);
+      const id=String(item.pubgId||'').trim();
+      const name=String(item.pubgName||'').trim();
+      if(!item.product || !/^\d{5,15}$/.test(id) || looksFakeDigits(id,'id') || name.length<2) return json(res,400,{ok:false,error:'راجع المنتج و PUBG ID واسم الحساب في السلة'});
+      if(item.qty>20) return json(res,400,{ok:false,error:'الكمية كبيرة جدا. راجع السلة أو كلم الدعم'});
+    }
     total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
+    if(total<=0) return json(res,400,{ok:false,error:'إجمالي الطلب غير صحيح'});
     const coupon_code = String(fields.coupon_code || '').trim().toUpperCase();
     let coupon_discount = 0;
     if(coupon_code){
@@ -116,10 +199,16 @@ export default async function handler(req,res){
       coupon_discount = Number(validCoupon.discount_amount || 0);
       total = Math.max(0, total - coupon_discount);
     }
-    if(!files.screenshot || files.screenshot.buffer.length<50) return json(res,400,{ok:false,error:'ارفع سكرين التحويل'});
+    validateScreenshotFile(files.screenshot);
+    const shotHash=screenshotHash(files.screenshot);
+    enforceBlacklist({phone:customerPhone,clientIp,deviceId,cart});
+    const recentRows=await recentOrdersForSpamCheck();
+    enforceSpamRules(recentRows,{clientIp,deviceId,phone:customerPhone,cart,shotHash});
 
     const openPhone=await findOpenOrderByPhone(customerPhone);
     if(openPhone) return json(res,409,{ok:false,error:'عندك طلب مفتوح بالفعل. تابع حالته برقم الموبايل أو كلم الدعم لو محتاج تعديل.'});
+    const openPubgId=await findOpenOrderByPubgId(cart);
+    if(openPubgId) return json(res,409,{ok:false,error:'في طلب مفتوح بالفعل لنفس PUBG ID. تابع الطلب القديم الأول أو كلم الدعم'});
 
     const identity=await nextDailyIdentity();
     const order={
@@ -129,7 +218,7 @@ export default async function handler(req,res){
       coupon_discount,
       status:'pending', status_text:STATUS_LABELS.pending, customer_status_text:STATUS_LABELS.pending, admin_status_text:STATUS_LABELS.pending,
       handler:null, items:cart, note, transfer_mode:transferMode, transfer_last3:transferMode==='other'?transferLast3:'', transfer_confirm_text:transferMode==='same'?'نفس رقم المتابعة':`آخر 3 أرقام: ${transferLast3}`, telegram_chat_id:String(groupId), source:'website', order_type:'cart',
-      raw_data:{userAgent:req.headers['user-agent']||''}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
+      raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118'}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
     if(supabaseReady()) await supabaseRequest('orders',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(order)});
@@ -143,6 +232,6 @@ export default async function handler(req,res){
     const photoData=await telegramForm('sendPhoto',photoForm);
     if(supabaseReady()) await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString()})});
 
-    return json(res,200,{ok:true,statusTracking:supabaseReady()});
+    return json(res,200,{ok:true,statusTracking:supabaseReady(),orderCode:order.order_code,orderId:order.id,total:order.total,phone:order.phone});
   }catch(error){return json(res,500,{ok:false,error:error.message||'Server error'});}
 }

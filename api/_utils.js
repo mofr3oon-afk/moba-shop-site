@@ -91,6 +91,8 @@ export function buildTelegramText(order){
   (order.handler?`👨‍💻 المسؤول: ${escapeHtml(order.handler)}\n`:``)+
   ((order.customer_name && order.customer_name !== 'غير محدد')?`👤 الاسم: ${escapeHtml(order.customer_name)}\n`:``)+
   `📱 رقم المتابعة: <code>${escapeHtml(order.phone || order.customer_phone || '')}</code>\n`+
+  `${order.raw_data?.clientIp ? `🌐 IP الجهاز: <code>${escapeHtml(order.raw_data.clientIp)}</code>\n` : ''}`+
+  `${order.raw_data?.deviceId ? `📱 Device ID: <code>${escapeHtml(String(order.raw_data.deviceId).slice(0,60))}</code>\n` : ''}`+
   `💳 الدفع: ${escapeHtml(order.payment_method || '')}\n`+
   `🔐 تأكيد التحويل: ${escapeHtml(order.transfer_confirm_text || 'غير محدد')}\n`+
   `💰 الإجمالي: <b>${escapeHtml(order.total || 0)} جنيه</b>\n\n`+

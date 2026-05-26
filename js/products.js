@@ -122,11 +122,11 @@
     const all = [...direct, ...byText];
     return Array.from(new Set(all)).slice(0,4);
   }
-  function setBadge(el, mode, title){
+  function setBadge(el, mode, title, desc){
     if(!el) return;
     el.classList.remove('available','busy','closed');
     el.classList.add('store-status-pill', mode);
-    el.innerHTML = `<span class="status-dot"></span><span class="status-label">${title}</span>`;
+    el.innerHTML = `<span class="status-dot"></span><span class="status-copy"><span class="status-label">${title}</span><small class="status-desc">${desc||''}</small></span>`;
   }
   function setMainBox(box, mode, title, desc){
     if(!box) return;
@@ -154,7 +154,7 @@
     };
     const c = config[mode] || config.available;
     setMainBox(document.getElementById('workStatusMini'), mode, c.title, c.desc);
-    findTopBadges().forEach(el => setBadge(el, mode, c.title));
+    findTopBadges().forEach(el => setBadge(el, mode, c.title, c.desc));
     window.mobaStoreMode = mode;
     window.mobaBusyMode = mode === 'busy';
   }
@@ -167,7 +167,7 @@
   }
   window.refreshStoreStatusV41 = refreshStoreStatusV41;
   refreshStoreStatusV41();
-  setInterval(refreshStoreStatusV41, 30000);
+  setInterval(refreshStoreStatusV41, 90000);
 })();
 
 
@@ -240,7 +240,7 @@
     };
   }
 
-  setInterval(enhanceClosedStatus, 1000);
+  setInterval(enhanceClosedStatus, 12000);
   setTimeout(enhanceClosedStatus, 600);
 
   document.addEventListener('click', function(e){
@@ -385,11 +385,13 @@
 /* moba-v102-game-card-status-icon-polish */
 (function(){
   const iconMap={
-    pubg:'assets/game-icons/pubg.svg',
-    freefire:'assets/game-icons/freefire.svg',
+    pubg:'assets/game-icons/pubg-icon.webp',
+    freefire:'assets/game-icons/freefire-icon.webp',
     roblox:'assets/game-icons/roblox.svg',
     blood_mena:'assets/game-icons/bloodstrike.svg',
-    blood_global:'assets/game-icons/bloodstrike-global.svg'
+    blood_global:'assets/game-icons/bloodstrike-global.svg',
+    tiktok:'assets/game-icons/tiktok-icon.webp',
+    valorant:'assets/game-icons/valorant-icon.jpg'
   };
   function polishGames(){
     document.querySelectorAll('#gamesHome .clean-games-v64 .cover-card').forEach(function(card){
@@ -414,7 +416,7 @@
   polishGames();
   document.addEventListener('DOMContentLoaded',polishGames);
   setTimeout(polishGames,160);
-  setInterval(polishGames,1200);
+  setInterval(polishGames,15000);
 })();
 /* V104 split polish: unavailable game popup + product inputs helper */
 (function(){
@@ -477,5 +479,5 @@
     };
   }
   document.addEventListener('DOMContentLoaded',polishProductCards);
-  setInterval(polishProductCards,900);
+  setInterval(polishProductCards,12000);
 })();

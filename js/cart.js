@@ -52,7 +52,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     document.getElementById('orderForm').addEventListener('submit',async e=>{e.preventDefault();hideStatus(); if(!cart.length){showStatus('سلة الطلبات فاضية','err');return;} const form=e.currentTarget,fd=new FormData(form);
       const transferMode=fd.get('transferMode');
       if(!transferMode){showStatus('حدد هل التحويل من نفس رقم المتابعة ولا من رقم/محل تاني','err');return;}
-      if(transferMode==='other' && !/^\d{3}$/.test(String(fd.get('transferLast3')||''))){showStatus('لازم تكتب آخر 3 أرقام من رقم التحويل','err');return;}fd.append('cart',JSON.stringify(cart)); const btn=form.querySelector('button[type="submit"]'); btn.disabled=true;btn.textContent='⏳ جاري ارسال الطلب...'; try{const res=await fetch('/api/order',{method:'POST',body:fd});const data=await res.json();if(!data.ok) throw new Error(data.error||'حصل خطأ'); const trackingNote=data.statusTracking?'تقدر تتابع الحالة من تحت برقم الموبايل.':'متابعة الحالة محتاجة تفعيل Supabase.'; showStatus(`✅ تم استلام طلبك بنجاح.\nطلبك تحت المراجعة الآن.\n${trackingNote}`,'ok'); document.getElementById('trackPhone').value=fd.get('customerPhone')||''; if(data.statusTracking) loadOrderStatus(fd.get('customerPhone')); cart=[];saveCart();renderCart();form.reset();renderPaymentDetails();}catch(err){showStatus(err.message||'حصل خطأ اثناء ارسال الطلب','err');}finally{btn.disabled=false;btn.textContent='✅ تنفيذ الشراء | Checkout';}});
+      if(transferMode==='other' && !/^\d{3}$/.test(String(fd.get('transferLast3')||''))){showStatus('لازم تكتب آخر 3 أرقام من رقم التحويل','err');return;}fd.append('cart',JSON.stringify(cart)); const btn=form.querySelector('button[type="submit"]'); btn.disabled=true;btn.textContent='⏳ جاري ارسال الطلب...'; try{const res=await fetch('/api/order',{method:'POST',body:fd});const data=await res.json();if(!data.ok) throw new Error(data.error||'حصل خطأ'); const trackingNote=data.statusTracking?'تقدر تتابع الحالة من تحت برقم الموبايل.':'متابعة الحالة محتاجة تفعيل Supabase.'; showStatus(`✅ تم استلام طلبك بنجاح.\nرقم الطلب: ${data.orderCode || data.orderId || 'MOBA'}\nالإجمالي: ${data.total ? Number(data.total).toLocaleString('ar-EG')+' جنيه' : 'تم التسجيل'}\n${trackingNote}`,'ok'); document.getElementById('trackPhone').value=fd.get('customerPhone')||''; if(data.statusTracking) loadOrderStatus(fd.get('customerPhone')); cart=[];saveCart();renderCart();form.reset();renderPaymentDetails();}catch(err){showStatus(err.message||'حصل خطأ اثناء ارسال الطلب','err');}finally{btn.disabled=false;btn.textContent='✅ تنفيذ الشراء | Checkout';}});
     function statusIcon(s){return s==='delivered'?'✅':(s==='rejected'||s==='cancelled')?'❌':s==='needs_fix'?'⚠️':s==='on_hold'?'⏸':s==='processing'?'🔄':s==='claimed'?'🙋':'⏳';}
     function renderFixBox(order){
       if(order.status!=='needs_fix') return '';
@@ -1376,34 +1376,52 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     const cat = window.activeCat || 'uc';
     const list = PRODUCTS[cat] || [];
     document.querySelectorAll('.tab[data-cat]').forEach(t=>t.classList.toggle('active', t.dataset.cat === cat));
+    const catInfo=document.getElementById('productCatInfo');
+    if(catInfo){
+      const map={
+        uc:'باقات UC للشحن بالـ ID. اكتب ID واسم الحساب بدقة قبل الإضافة للسلة.',
+        growth:'منتجات الازدهار والكريستالة حساسة. اتأكد إنها متاحة داخل اللعبة قبل الطلب.',
+        prime:'اشتراكات برايم وبرايم بلس. راجع نوع الاشتراك قبل الدفع.'
+      };
+      catInfo.textContent=map[cat]||'اختار المنتج المناسب واكتب بيانات الحساب قبل الإضافة للسلة.';
+    }
 
     productList.innerHTML = list.map((p,i)=>{
       const qty = p.noQty ? 1 : Math.max(1, Number(window.productQty[i] || 1));
       const ucTotal = Number(p.uc || 0) * qty;
       const lastId = getLastId();
-      const lastName = getLastName();
-      return `<div class="product" data-card-index="${i}">
-        ${p.hot ? '<span class="hot">🔥 الاكثر طلبا</span>' : ''}
-        <b>${esc(p.name)}</b>
-        ${p.type ? `<div class="type">${esc(p.type)}</div>` : ''}
-        <div class="price">💰 ${money(p.price)}</div>
-        ${p.warning ? `<div class="warn">⚠️ ${esc(p.warning)}</div>` : ''}
-        <div class="id-inline-wrap">
-          <input class="id-input id-input-main" id="id_${i}" inputmode="numeric" autocomplete="off" placeholder="PUBG ID" />
-          <button type="button" class="use-last-id-inline-btn" data-last-id="${i}" ${lastId ? '' : 'style="display:none"'} title="استخدم آخر ID محفوظ">آخر ID</button>
-        </div>
-        <input class="id-input" id="name_${i}" autocomplete="off" placeholder="اسم الحساب داخل اللعبة" />
-        ${p.noQty ? `<div class="product-uc-preview">⚠️ كمية واحدة فقط للمنتج ده</div>` : `
-        <div class="product-qty">
-          <span class="product-qty-label">الكمية</span>
-          <div class="qty-box">
-            <button class="qty-btn" type="button" data-v57-qty="${i}" data-dir="-1">−</button>
-            <span class="qty-num">${qty}</span>
-            <button class="qty-btn" type="button" data-v57-qty="${i}" data-dir="1">+</button>
+      return `<div class="product product--compact" data-card-index="${i}">
+        <div class="product-card-head">
+          <div class="product-card-copy">
+            <b>${esc(p.name)}</b>
+            ${p.type ? `<div class="type">${esc(p.type)}</div>` : ''}
+          </div>
+          <div class="product-card-side">
+            ${p.hot ? '<span class="hot">🔥 الاكثر طلبا</span>' : ''}
+            <div class="price">${money(p.price)}</div>
           </div>
         </div>
-        <div class="product-uc-preview">🎮 إجمالي الشدات: <b>${ucTotal.toLocaleString('en-US')} UC</b></div>`}
-        <button class="btn add" type="button" data-v57-add="${i}">➕ إضافة للسلة</button>
+        ${p.warning ? `<div class="warn compact-warn">⚠️ ${esc(p.warning)}</div>` : ''}
+        <div class="product-fields compact-fields">
+          <div class="id-inline-wrap compact-inline-wrap">
+            <button type="button" class="use-last-id-inline-btn compact-last-btn" data-last-id="${i}" ${lastId ? '' : 'style="display:none"'} title="استخدم آخر ID محفوظ">آخر ID</button>
+            <input class="id-input id-input-main" id="id_${i}" inputmode="numeric" autocomplete="off" placeholder="PUBG ID" />
+          </div>
+          <input class="id-input" id="name_${i}" autocomplete="off" placeholder="اسم الحساب داخل اللعبة" />
+        </div>
+        <div class="product-bottom compact-bottom ${p.noQty ? 'single-only' : ''}">
+          ${p.noQty ? `<div class="product-uc-preview compact-preview single">⚠️ كمية واحدة فقط للمنتج ده</div>` : `
+          <div class="product-qty compact-qty">
+            <span class="product-qty-label">الكمية</span>
+            <div class="qty-box">
+              <button class="qty-btn" type="button" data-v57-qty="${i}" data-dir="-1">−</button>
+              <span class="qty-num">${qty}</span>
+              <button class="qty-btn" type="button" data-v57-qty="${i}" data-dir="1">+</button>
+            </div>
+          </div>
+          <div class="product-uc-preview compact-preview">🎮 إجمالي الشدات: <b>${ucTotal.toLocaleString('en-US')} UC</b></div>`}
+        </div>
+        <button class="btn add compact-add" type="button" data-v57-add="${i}">إضافة للسلة +</button>
       </div>`;
     }).join('');
   }
@@ -1421,6 +1439,9 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     if(!/^\d{5,15}$/.test(pubgId)){status('اكتب ID صحيح ارقام فقط','err');return;}
     if(!name){status('اكتب اسم الحساب داخل اللعبة','err');return;}
 
+    if((cat==='growth'||/ازدهار|كريستالة|جوهرة|Crystal|Growth/i.test(String(p.name||p.type||p.warning||''))) && !confirm('تأكيد مهم: اتأكد إن المنتج متاح عندك داخل اللعبة قبل الطلب. تكمل الإضافة للسلة؟')){
+      return;
+    }
     saveLastId(pubgId,name);
     const qty = p.noQty ? 1 : Math.max(1, Number(window.productQty[i] || 1));
     const item = {
@@ -1798,4 +1819,190 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       }
     }
   },true);
+})();
+
+
+/* moba-v114-final-order-modal-rebuild */
+(function(){
+  if(window.__mobaV114FinalOrderModal)return;
+  window.__mobaV114FinalOrderModal=true;
+  function esc(t){return String(t??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function money(n){try{return Number(n||0).toLocaleString('ar-EG')+' جنيه';}catch(e){return (n||0)+' جنيه';}}
+  function fmtDate(v){try{return new Date(v).toLocaleString('ar-EG',{year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return v||'-';}}
+  function ucTotal(x){
+    if(typeof window.itemUcTotal==='function') return window.itemUcTotal(x);
+    const qty=Math.max(1,Number(x&&x.qty||1));
+    const explicit=Number(x.ucTotal||x.uc_total||0);
+    if(explicit) return explicit;
+    const line=String(x.product||'').match(/(\d+)\s*UC/i);
+    return line ? Number(line[1])*qty : 0;
+  }
+  function lineTotal(x){return Number(x.line_total||0)||Number(x.total||0)||Number(x.price||0)*Math.max(1,Number(x.qty||1));}
+  function statusText(status){
+    const m={pending:'تم استلام الطلب',processing:'جاري المراجعة',delivered:'تم التنفيذ',archived:'تم التنفيذ',needs_fix:'محتاج تعديل',rejected:'مرفوض',cancelled:'ملغي'};
+    return m[status]||status||'-';
+  }
+  function issueType(order){
+    const all=[order?.fix_type,order?.status_text,order?.customer_status_text,order?.admin_status_text,order?.note].join(' ').toLowerCase();
+    if(/bad[_\s-]?screen|badshot|screenshot|screen|shot|سكرين/.test(all)) return 'bad_screen';
+    return order?.fix_type || 'general';
+  }
+  function buildFixPanel(order){
+    if(!order || order.status!=='needs_fix') return '';
+    const type=issueType(order);
+    const count=Number(order.fix_count||0);
+    const left=Math.max(0,2-count);
+    if(left<=0){
+      return `<div class="fix-panel-v114"><div class="fix-alert">⚠️ تم استخدام فرص التعديل المتاحة. تواصل مع الدعم لو لسه المشكلة موجودة.</div><a class="fix-support" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 تواصل مع الدعم</a><button type="button" class="ask-pharaoh-btn" data-ask-pharaoh-issue="${esc(type)}">👑 اسأل فرعون عن المشكلة</button></div>`;
+    }
+    const screen = type==='bad_screen';
+    return `<form class="fix-panel-v114 fix-form" onsubmit="return window.submitOrderFixV114(event,'${esc(order.id)}')">
+      <div class="fix-alert">⚠️ فيه مشكلة في الطلب: <b>${screen?'السكرين غير واضح':'الطلب محتاج تعديل'}</b><br>المتبقي ليك ${left} فرصة تعديل.</div>
+      <div class="fix-form-title">✏️ إرسال تعديل الطلب</div>
+      ${screen ? `<div class="fix-upload-wrap"><label class="fix-upload-trigger">📸 اختار سكرين جديد<input type="file" name="fixFile" accept="image/*" required></label><span class="fix-file-name">لم يتم اختيار ملف بعد</span></div>` : `<textarea class="textarea fix-textarea" name="fixValue" placeholder="اكتب التعديل المطلوب بوضوح" required></textarea>`}
+      <input type="hidden" name="phone" value="${esc(order.phone||'')}">
+      <input type="hidden" name="fixType" value="${esc(type)}">
+      <div class="fix-actions">
+        <button class="fix-submit" type="submit">✅ إرسال التعديل</button>
+        <button type="button" class="ask-pharaoh-btn" data-ask-pharaoh-issue="${esc(type)}">👑 اسأل فرعون عن المشكلة</button>
+      </div>
+      <a class="fix-support" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 تواصل مع الدعم</a>
+    </form>`;
+  }
+  window.submitOrderFixV114 = async function(e, orderId){
+    e.preventDefault();
+    const form=e.target;
+    const btn=form.querySelector('.fix-submit');
+    const old=btn.textContent;
+    btn.disabled=true; btn.textContent='جاري الإرسال...';
+    try{
+      const fd=new FormData(form);
+      fd.append('orderId',orderId);
+      const type=String(fd.get('fixType')||'');
+      if(type==='bad_screen'){
+        const file=fd.get('fixFile');
+        if(!file || !file.name) throw new Error('اختار سكرين واضح الأول');
+      }else{
+        const v=String(fd.get('fixValue')||'').trim();
+        if(v.length<2) throw new Error('اكتب التعديل المطلوب');
+      }
+      const res=await fetch('/api/fix-order',{method:'POST',body:fd});
+      const data=await res.json();
+      if(!data.ok) throw new Error(data.error||'حصل خطأ أثناء الإرسال');
+      form.outerHTML='<div class="fix-panel-v114"><div class="fix-alert">✅ تم إرسال التعديل للمراجعة. تابع الطلب من نفس الصفحة.</div></div>';
+      const phone=String(fd.get('phone')||'').trim();
+      if(phone && typeof window.loadOrderStatus==='function') setTimeout(()=>window.loadOrderStatus(phone),700);
+    }catch(err){
+      btn.disabled=false; btn.textContent=old; alert(err.message||'حصل خطأ');
+    }
+    return false;
+  };
+  function bindFixUi(content){
+    content.querySelectorAll('input[type="file"][name="fixFile"]').forEach(function(inp){
+      inp.addEventListener('change',function(){
+        const name=inp.files&&inp.files[0]?inp.files[0].name:'لم يتم اختيار ملف بعد';
+        const out=inp.closest('.fix-upload-wrap')?.querySelector('.fix-file-name');
+        if(out) out.textContent=name;
+      });
+    });
+  }
+  window.openOrderDetailsByIndex=function(orderId){
+    const orders=Array.isArray(window.allHistoryOrders)?window.allHistoryOrders:[];
+    const order=orders.find(o=>String(o.id)===String(orderId));
+    if(!order) return;
+    const items=Array.isArray(order.items)?order.items:[];
+    const modal=document.getElementById('orderDetailsModal');
+    const content=document.getElementById('orderDetailsContent');
+    if(!modal||!content) return;
+    const products=items.map((x,i)=>`<div class="order-v114-product"><div class="order-v114-product-head"><div class="order-v114-product-title">${i+1}) ${esc(x.product||'منتج')}</div><div class="order-v114-product-price">${money(lineTotal(x))}</div></div><div class="order-v114-product-meta">🆔 ID: <code>${esc(x.pubgId||'-')}</code><br>👤 الاسم: ${esc(x.pubgName||'-')}<br>🔢 الكمية: ${Math.max(1,Number(x.qty||1))}<br>🎮 إجمالي الشدات: ${Number(ucTotal(x)||0).toLocaleString('ar-EG')} UC</div></div>`).join('') || '<div class="order-v114-product">لا يوجد منتجات</div>';
+    const note=String(order.note||'').trim();
+    content.innerHTML=`<div class="order-v114-grid"><div class="order-v114-summary"><div class="order-v114-chip"><span class="k">الحالة</span><span class="v">${statusText(order.status)}</span></div><div class="order-v114-chip"><span class="k">طريقة الدفع</span><span class="v">${esc(order.payment_method||'-')}</span></div><div class="order-v114-chip"><span class="k">الوقت</span><span class="v">${fmtDate(order.created_at)}</span></div><div class="order-v114-chip"><span class="k">رقم المتابعة</span><span class="v">${esc(order.phone||'-')}</span></div><div class="order-v114-chip"><span class="k">عدد المنتجات</span><span class="v">${items.length||0}</span></div><div class="order-v114-chip"><span class="k">الإجمالي</span><span class="v">${money(order.total)}</span></div></div><div class="order-v114-products">${products}</div>${note?`<div class="order-v114-note"><b>ملاحظة الطلب:</b><br>${esc(note)}</div>`:''}${buildFixPanel(order)}</div>`;
+    bindFixUi(content);
+    modal.classList.add('show');
+    document.body.style.overflow='hidden';
+  };
+  window.closeOrderDetails=function(){
+    const modal=document.getElementById('orderDetailsModal');
+    if(modal) modal.classList.remove('show');
+    document.body.style.overflow='';
+  };
+})();
+
+
+/* moba-v118-antispam-cart-clean */
+(function(){
+  if(window.__mobaV118AntiSpamCartClean)return;
+  window.__mobaV118AntiSpamCartClean=true;
+  function getDeviceId(){
+    let id=localStorage.getItem('moba_device_id');
+    if(!id){
+      id='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
+      localStorage.setItem('moba_device_id',id);
+    }
+    return id;
+  }
+  function ensureDeviceInput(){
+    const form=document.getElementById('orderForm');
+    if(!form)return;
+    let input=form.querySelector('input[name="deviceId"]');
+    if(!input){
+      input=document.createElement('input');
+      input.type='hidden';
+      input.name='deviceId';
+      form.appendChild(input);
+    }
+    input.value=getDeviceId();
+  }
+  function cleanCartTopSummary(){
+    document.getElementById('cartV71Summary')?.remove();
+    document.getElementById('mobaV103Totals')?.remove();
+    document.getElementById('cartV71Steps')?.remove();
+  }
+  ensureDeviceInput(); cleanCartTopSummary();
+  document.addEventListener('submit',function(e){ if(e.target&&e.target.id==='orderForm')ensureDeviceInput(); },true);
+  document.addEventListener('DOMContentLoaded',function(){ensureDeviceInput();cleanCartTopSummary();});
+  const cart=document.getElementById('cartSection');
+  if(cart && 'MutationObserver' in window){ new MutationObserver(cleanCartTopSummary).observe(cart,{childList:true,subtree:true}); }
+})();
+
+/* moba-v120-cart-admin-ux */
+(function(){
+  if(window.__mobaV120CartUx)return; window.__mobaV120CartUx=true;
+  function qs(s,r=document){return r.querySelector(s)}
+  function ensureDeviceId(){
+    let id=localStorage.getItem('moba_device_id');
+    if(!id){id='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);localStorage.setItem('moba_device_id',id)}
+    return id;
+  }
+  document.addEventListener('submit',function(e){
+    const form=e.target;
+    if(!form || !form.querySelector || !form.querySelector('[name="customerPhone"]')) return;
+    let d=form.querySelector('[name="deviceId"]');
+    if(!d){d=document.createElement('input');d.type='hidden';d.name='deviceId';form.appendChild(d)}
+    d.value=ensureDeviceId();
+  },true);
+  function addCartGuides(){
+    const cart=document.getElementById('cartSection') || document.querySelector('.cart');
+    if(!cart) return;
+    if(!qs('.cart-v120-steps',cart)){
+      const h=cart.querySelector('h2') || cart.firstElementChild;
+      const box=document.createElement('div');
+      box.className='cart-v120-steps';
+      box.innerHTML='<span>راجع المنتجات</span><span>اختار الدفع</span><span>ارفع السكرين</span><span>نفذ الطلب</span>';
+      if(h) h.insertAdjacentElement('afterend',box); else cart.prepend(box);
+    }
+    if(!qs('.cart-v120-policy',cart)){
+      const box=document.createElement('div');
+      box.className='cart-v120-policy';
+      box.innerHTML='<b>سياسة الطلب</b><small>راجع ID واسم الحساب قبل الدفع. السكرين لازم يكون واضح. الطلبات خارج المواعيد بتتسجل والتنفيذ يبدأ وقت التشغيل. أي ID غلط بعد التأكيد مسؤولية العميل.</small>';
+      const form=cart.querySelector('form');
+      if(form) form.insertAdjacentElement('beforebegin',box); else cart.appendChild(box);
+    }
+  }
+  document.addEventListener('DOMContentLoaded',addCartGuides);
+  setTimeout(addCartGuides,500);
+  const old=window.renderCart;
+  if(typeof old==='function'){
+    window.renderCart=function(){const r=old.apply(this,arguments);setTimeout(addCartGuides,20);return r}
+  }
 })();

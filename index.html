@@ -9,13 +9,25 @@
   <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo.png" />
   <link rel="apple-touch-icon" href="assets/moba-shop-logo.png" />
   
-  <link rel="stylesheet" href="styles/home.css?v=104">
-  <link rel="stylesheet" href="styles/cart.css?v=104">
-  <link rel="stylesheet" href="styles/pharaoh.css?v=104">
+  <link rel="stylesheet" href="styles/home.css?v=120">
+  <link rel="stylesheet" href="styles/cart.css?v=120">
+  <link rel="stylesheet" href="styles/pharaoh.css?v=120">
 </head>
 <body>
   <main class="wrap">
-    <div class="topbar"><div class="brand-mini" dir="ltr"><img class="site-logo-mark" src="assets/moba-shop-logo.png" alt="MOBA SHOP"><span class="brand-word">MOBA</span> <span>SHOP</span></div><div class="status-pill">🟢 متاح الآن</div></div>
+    <div class="topbar">
+      <div class="brand-mini" dir="ltr">
+        <img class="site-logo-mark" src="assets/moba-shop-logo.png" alt="MOBA SHOP">
+        <div class="brand-mini-copy">
+          <div class="brand-mini-line"><span class="brand-word">MOBA</span> <span>SHOP</span></div>
+          <small>Digital Store For Gamers</small>
+        </div>
+      </div>
+      <div class="status-pill available" id="topStatusBadge">
+        <span class="status-dot"></span>
+        <span class="status-copy"><span class="status-label">متاح الآن</span><small class="status-desc">التنفيذ شغال حاليا بشكل طبيعي.</small></span>
+      </div>
+    </div>
     <nav class="jump-nav app-nav" aria-label="روابط سريعة">
       <a class="primary" href="#home" data-view="home">🏠 الرئيسية</a>
       <a href="#cart" data-view="cart">🛒 السلة</a>
@@ -82,13 +94,13 @@
       <div class="game-cards-grid premium-games-grid clean-games-v64">
 
         <button type="button" class="game-card premium-card active cover-card" data-game="pubg">
-          <div class="game-cover"><img src="assets/game-covers/pubg.webp" alt="PUBG Mobile"></div>
+          <div class="game-cover"><img src="assets/game-covers/pubg-new.webp" alt="PUBG Mobile"></div>
           <div class="game-overlay"></div>
           <div class="game-card-content"><span class="game-badge available">متاح الآن</span><b>PUBG Mobile</b><small>UC | ازدهار | برايم</small></div>
         </button>
 
         <button type="button" class="game-card premium-card coming cover-card" data-game="freefire">
-          <div class="game-cover"><img src="assets/game-covers/freefire.webp" alt="Free Fire"></div>
+          <div class="game-cover"><img src="assets/game-covers/freefire-new.webp" alt="Free Fire"></div>
           <div class="game-overlay"></div>
           <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Free Fire</b><small>Diamonds</small></div>
         </button>
@@ -147,17 +159,49 @@
           <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>eFootball</b><small>Coins / Points</small></div>
         </button>
 
+        <button type="button" class="game-card premium-card coming cover-card" data-game="tiktok">
+          <div class="game-cover"><img src="assets/game-covers/tiktok.webp" alt="TikTok"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>TikTok</b><small>Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="valorant">
+          <div class="game-cover"><img src="assets/game-covers/valorant.jpg" alt="Valorant"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Valorant</b><small>Points</small></div>
+        </button>
+
       </div>
 
     </section>
 
     <section class="grid moba-view" data-page="game" id="shopWorkspace">
       <div class="panel products" id="productsSection">
-        <div class="section-title"><h2>🎮 المنتجات | Products</h2><div class="tabs"><button class="tab active" data-cat="uc">شدات | UC</button><button class="tab" data-cat="growth">ازدهار</button><button class="tab" data-cat="prime">برايم</button></div></div>
+        <div class="section-title products-head-v119">
+          <div class="products-title-copy">
+            <h2>المنتجات | Products</h2>
+            <small id="productCatInfo">اختار القسم المناسب، واكتب ID واسم الحساب قبل الإضافة للسلة.</small>
+          </div>
+          <div class="tabs product-tabs-v119" aria-label="Product categories">
+            <button class="tab active" data-cat="uc"><span>شدات UC</span><small>باقات الشحن</small></button>
+            <button class="tab" data-cat="growth"><span>ازدهار</span><small>عروض خاصة</small></button>
+            <button class="tab" data-cat="prime"><span>برايم</span><small>اشتراكات</small></button>
+          </div>
+        </div>
         <div id="productList" class="product-list"></div>
       </div>
       <aside class="panel cart" id="cartSection" data-cart-panel="1">
-        <h2>🛒 سلة الطلبات | Cart</h2>
+        <h2>السلة والدفع | Cart</h2>
+        <div class="cart-flow-v119">
+          <span>راجع المنتجات</span>
+          <span>اختار الدفع</span>
+          <span>ارفع السكرين</span>
+          <span>نفذ الطلب</span>
+        </div>
+        <div class="cart-policy-v119">
+          <b>تنبيه قبل التنفيذ</b>
+          <span>راجع ID واسم الحساب والسكرين قبل تأكيد الطلب. أي ID غلط بعد التأكيد مسؤولية العميل.</span>
+        </div>
         <div id="cartBox"></div>
         <div class="total"><span>الإجمالي | Total</span><span id="total">0 جنيه</span></div>
         
@@ -567,10 +611,10 @@
 
 
 
-<script src="js/products.js?v=104"></script>
-<script src="js/router.js?v=104"></script>
-<script src="js/coupons.js?v=104"></script>
-<script src="js/cart.js?v=104"></script>
-<script src="js/pharaoh.js?v=104"></script>
+<script src="js/products.js?v=120"></script>
+<script src="js/router.js?v=120"></script>
+<script src="js/coupons.js?v=120"></script>
+<script src="js/cart.js?v=120"></script>
+<script src="js/pharaoh.js?v=120"></script>
 </body>
 </html>

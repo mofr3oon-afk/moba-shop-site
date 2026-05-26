@@ -87,14 +87,19 @@
     const a=api();
     addUser(raw);
     const i=input(); if(i)i.value='';
-    if(a&&typeof a.consumeText==='function'){
-      try{a.state=a.state||{};a.state.active=true;a.state.startedAt=Date.now()}catch(e){}
-      a.consumeText(value);
+    try{ if(a){ a.state=a.state||{}; a.state.active=true; a.state.startedAt=Date.now(); } }catch(e){}
+    if(a){
+      if(step==='id' && typeof a.askName==='function') a.askName(value);
+      else if(step==='name' && typeof a.askPayment==='function') a.askPayment(value);
+      else if(step==='phone' && typeof a.askTransfer==='function') a.askTransfer(value);
+      else if(step==='last3'){
+        if(a.state) a.state.transferLast3 = value;
+        if(typeof a.summary==='function') a.summary();
+        else if(typeof a.consumeText==='function') a.consumeText(value);
+      } else if(typeof a.consumeText==='function') a.consumeText(value);
     }
     if(step==='id')setExpected('name','normal');
-    else if(step==='name')clearExpected();
-    else if(step==='phone')clearExpected();
-    else if(step==='last3')clearExpected();
+    else clearExpected();
     return true;
   }
   function processSend(){
@@ -931,7 +936,7 @@
     }catch(e){}
   }
   loadWorkStatus();
-  setInterval(loadWorkStatus, 60000);
+  setInterval(loadWorkStatus, 120000);
 
   // Pharaoh smart Q: if user says wants to charge, ask if one ID or multiple IDs
   document.addEventListener('click', function(e){
@@ -1802,7 +1807,7 @@
   function contextText(){const p=page(); if(p==='cart')return 'انت في السلة: راجع ID والاسم واختار الدفع وارفع السكرين.'; if(p==='products')return 'انت في المنتجات: اختار باقة واكتب ID واسم الحساب.'; if(p==='orders')return 'انت في سجل الطلبات: اكتب رقم الموبايل وتابع حالة طلبك.'; if(p==='reviews')return 'انت في آراء العملاء: تقدر تشوف الثقة والتقييمات.'; return 'اختار اللعبة من هنا وفرعون يكملك خطوة بخطوة.'}
   function dashboard(){const st=statusNow(); return `<div class="pharaoh-assist-pro-card"><b>👑 فرعون Assist Pro</b><small>${st.text}</small><div class="pharaoh-wizard-step">${contextText()}</div><div class="pharaoh-assist-pro-actions"><button class="gold" data-v65-act="start">ابدأ الشحن</button><button data-v65-act="recommend">رشحلي باقة</button><button data-v65-act="track">تابع طلبي</button><button data-v65-act="problem">مشكلة في الطلب</button><button data-v65-act="payment">طرق الدفع</button><button data-v65-act="hours">مواعيد العمل</button></div></div>`}
   function recommend(amount){amount=Number(amount||0); if(!amount)return `<div class="pharaoh-assist-pro-card"><b>اكتب الميزانية</b><small>مثال: معايا 500 جنيه</small><div class="pharaoh-assist-pro-actions"><button data-v65-act="budget" data-budget="100">100ج</button><button data-v65-act="budget" data-budget="250">250ج</button><button data-v65-act="budget" data-budget="500">500ج</button><button data-v65-act="budget" data-budget="1200">1200ج</button></div></div>`; let choices=packs.filter(p=>p.price<=amount).sort((a,b)=>b.price-a.price||b.score-a.score).slice(0,3); if(!choices.length)return `اقل باقة متاحة تقريبا 50 جنيه. زود الميزانية شوية وابدأ بباقة 60 UC.`; return `<div class="pharaoh-assist-pro-card"><b>انسب ترشيح لميزانية ${money(amount)}</b><small>اخترتلك اقرب باقات تصرف الميزانية صح</small>${choices.map((c,i)=>`<div class="pharaoh-wizard-step"><b>${i+1}) ${esc(c.name)}</b> — ${money(c.price)} ${c.note?'<br><span>'+esc(c.note)+'</span>':''}</div>`).join('')}<div class="pharaoh-assist-pro-actions"><button class="gold" data-v65-act="products">افتح المنتجات</button><button data-v65-act="start">اعمل الطلب خطوة بخطوة</button></div></div>`}
-  function reply(q){const t=String(q||'').trim(),low=t.toLowerCase(),num=(t.match(/[0-9٠-٩]+/g)||[]).join('').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)); if(/معايا|ميزانية|ميزانيه|كام|رشح|باقة|باقه|budget/.test(t)&&num)return recommend(Number(num)); if(/رشح|ميزانية|ميزانيه|باقة|باقه/.test(t))return recommend(0); if(/ازدهار|growth/.test(t))return `<div class="pharaoh-critical-note"><b>تنبيه الازدهار</b><br>لازم تتأكد من اللعبة إن الازدهار متاح على الحساب قبل الطلب لأنه في الغالب مرة واحدة على الحساب في العمر كله.</div><div class="pharaoh-assist-pro-actions"><button data-v65-act="growth">افتح الازدهار</button><button data-v65-act="start">اكمل طلب</button></div>`; if(/كريستالة|كريستاله|جوهرة|crystal/.test(t))return `<div class="pharaoh-critical-note"><b>تنبيه الكريستالة</b><br>الكريستالة ليها عدد محدود حسب حسابك وبتتجدد في اللعبة. اتأكد من المتاح قبل الطلب عشان منرجعش نوقف الطلب.</div><div class="pharaoh-assist-pro-actions"><button data-v65-act="growth">افتح قسم الازدهار والكريستالة</button></div>`; if(/مشكلة|غلط|سكرين|اتأخر|اتأخر|دعم|تواصل|مش واضح|id/.test(t))return `<div class="pharaoh-assist-pro-card"><b>حل المشكلة بسرعة</b><small>اختار نوع المشكلة</small><div class="pharaoh-assist-pro-actions"><button data-v65-act="badid">ID غلط</button><button data-v65-act="badshot">سكرين غير واضح</button><button data-v65-act="late">الطلب اتأخر</button><a href="${SUPPORT}" target="_blank">الدعم المباشر</a></div></div>`; if(/فين|تابع|حالة|طلبي|طلبى|order/.test(t))return `<div class="pharaoh-assist-pro-card"><b>متابعة الطلب</b><small>اكتب رقم الموبايل اللي عملت بيه الطلب في سجل الطلبات</small><div class="pharaoh-assist-pro-actions"><button class="green" data-v65-act="track">افتح سجل الطلبات</button></div></div>`; if(/دفع|فودافون|انستا|insta|wallet|محفظة/.test(t))return `<div class="pharaoh-assist-pro-card"><b>طرق الدفع</b><div class="pharaoh-wizard-step">🟢 InstaPay<br>📱 Vodafone / Orange / Etisalat / WE Wallet</div><small>بعد التحويل ارفع سكرين واضح ولو التحويل من رقم تاني اكتب آخر 3 أرقام في الملاحظات.</small><div class="pharaoh-assist-pro-actions"><button data-v65-act="cart">افتح السلة</button></div></div>`; if(/مواعيد|وقت|شغال|مفتوح|مقفول/.test(t))return `<div class="pharaoh-assist-pro-card"><b>مواعيد العمل</b><div class="pharaoh-wizard-step">كل يوم من 12 صباحا حتى 5 الفجر<br>الاثنين والاربعاء والخميس والجمعة من 3 العصر حتى 5 الفجر</div><small>تقدر تعمل اوردر خارج المواعيد والتنفيذ اول ما الشغل يبدأ.</small></div>`; if(/اشحن|ابدأ|عايز|order|start/.test(t))return `<div class="pharaoh-assist-pro-card"><b>يلا نبدأ الطلب</b><small>امشي معايا خطوة خطوة</small><div class="pharaoh-wizard-step">1) اختار اللعبة  2) اختار الباقة  3) اكتب ID والاسم  4) ادفع وارفع السكرين</div><div class="pharaoh-assist-pro-actions"><button class="gold" data-v65-act="products">افتح المنتجات</button><button data-v65-act="use-last">استخدم آخر ID</button><button data-v65-act="cart">افتح السلة</button><button data-v65-act="track">تابع طلب قديم</button></div></div>`; return dashboard();}
+  function reply(q){const t=String(q||'').trim(),low=t.toLowerCase(),num=(t.match(/[0-9٠-٩]+/g)||[]).join('').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)); if(/(عايز|عاوز|اطلب|اشحن|ضيف|هات|محتاج).*(شدة|شدات|uc|UC)/i.test(t)&&num){return `<div class="pharaoh-assist-pro-card"><b>تمام، تقصد ${num} UC؟</b><small>افتح قسم شدات UC واختار الباقة القريبة، واكتب ID واسم الحساب بعدها.</small><div class="pharaoh-assist-pro-actions"><button class="gold" data-v65-act="products">افتح شدات UC</button><button data-v65-act="cart">افتح السلة</button></div></div>`;} if(/معايا|ميزانية|ميزانيه|كام|رشح|باقة|باقه|budget/.test(t)&&num)return recommend(Number(num)); if(/رشح|ميزانية|ميزانيه|باقة|باقه/.test(t))return recommend(0); if(/ازدهار|growth/.test(t))return `<div class="pharaoh-critical-note"><b>تنبيه الازدهار</b><br>لازم تتأكد من اللعبة إن الازدهار متاح على الحساب قبل الطلب لأنه في الغالب مرة واحدة على الحساب في العمر كله.</div><div class="pharaoh-assist-pro-actions"><button data-v65-act="growth">افتح الازدهار</button><button data-v65-act="start">اكمل طلب</button></div>`; if(/كريستالة|كريستاله|جوهرة|crystal/.test(t))return `<div class="pharaoh-critical-note"><b>تنبيه الكريستالة</b><br>الكريستالة ليها عدد محدود حسب حسابك وبتتجدد في اللعبة. اتأكد من المتاح قبل الطلب عشان منرجعش نوقف الطلب.</div><div class="pharaoh-assist-pro-actions"><button data-v65-act="growth">افتح قسم الازدهار والكريستالة</button></div>`; if(/مشكلة|غلط|سكرين|اتأخر|اتأخر|دعم|تواصل|مش واضح|id/.test(t))return `<div class="pharaoh-assist-pro-card"><b>حل المشكلة بسرعة</b><small>اختار نوع المشكلة</small><div class="pharaoh-assist-pro-actions"><button data-v65-act="badid">ID غلط</button><button data-v65-act="badshot">سكرين غير واضح</button><button data-v65-act="late">الطلب اتأخر</button><a href="${SUPPORT}" target="_blank">الدعم المباشر</a></div></div>`; if(/فين|تابع|حالة|طلبي|طلبى|order/.test(t))return `<div class="pharaoh-assist-pro-card"><b>متابعة الطلب</b><small>اكتب رقم الموبايل اللي عملت بيه الطلب في سجل الطلبات</small><div class="pharaoh-assist-pro-actions"><button class="green" data-v65-act="track">افتح سجل الطلبات</button></div></div>`; if(/دفع|فودافون|انستا|insta|wallet|محفظة/.test(t))return `<div class="pharaoh-assist-pro-card"><b>طرق الدفع</b><div class="pharaoh-wizard-step">🟢 InstaPay<br>📱 Vodafone / Orange / Etisalat / WE Wallet</div><small>بعد التحويل ارفع سكرين واضح ولو التحويل من رقم تاني اكتب آخر 3 أرقام في الملاحظات.</small><div class="pharaoh-assist-pro-actions"><button data-v65-act="cart">افتح السلة</button></div></div>`; if(/مواعيد|وقت|شغال|مفتوح|مقفول/.test(t))return `<div class="pharaoh-assist-pro-card"><b>مواعيد العمل</b><div class="pharaoh-wizard-step">كل يوم من 12 صباحا حتى 5 الفجر<br>الاثنين والاربعاء والخميس والجمعة من 3 العصر حتى 5 الفجر</div><small>تقدر تعمل اوردر خارج المواعيد والتنفيذ اول ما الشغل يبدأ.</small></div>`; if(/اشحن|ابدأ|عايز|order|start/.test(t))return `<div class="pharaoh-assist-pro-card"><b>يلا نبدأ الطلب</b><small>امشي معايا خطوة خطوة</small><div class="pharaoh-wizard-step">1) اختار اللعبة  2) اختار الباقة  3) اكتب ID والاسم  4) ادفع وارفع السكرين</div><div class="pharaoh-assist-pro-actions"><button class="gold" data-v65-act="products">افتح المنتجات</button><button data-v65-act="use-last">استخدم آخر ID</button><button data-v65-act="cart">افتح السلة</button><button data-v65-act="track">تابع طلب قديم</button></div></div>`; return dashboard();}
   function setCat(cat){
     cat = cat || 'uc';
     window.activeCat = cat;
@@ -1855,7 +1860,7 @@
     bot('حطيت آخر ID واسم محفوظين في المنتجات الظاهرة 👑 راجعهم قبل الإضافة للسلة.');
   }catch(e){bot('مش قادر اقرأ آخر ID محفوظ.')}}
   function decoratePanel(){const b=body(); if(!b||qs('.pharaoh-context-pro',b))return; const div=document.createElement('div'); div.className='pharaoh-context-pro'; div.innerHTML='👑 '+contextText(); b.prepend(div); bot(dashboard());}
-  function decorateProducts(){qsa('.product').forEach(card=>{if(qs('.pharaoh-product-helper',card))return; const title=(qs('b',card)?.textContent||'').trim(); const help=document.createElement('div'); help.className='pharaoh-product-helper'; help.innerHTML=`<button type="button" data-v65-product="${esc(title)}">اسأل فرعون</button><button type="button" data-v65-fill-last>آخر ID</button>`; card.appendChild(help); if(/ازدهار|كريستالة|Crystal|Growth/i.test(card.textContent)&&!qs('.pharaoh-critical-note',card)){const n=document.createElement('div');n.className='pharaoh-critical-note';n.innerHTML=/كريستالة/.test(card.textContent)?'اتأكد إن الكريستالة متاحة عندك في اللعبة قبل الطلب.':'اتأكد إن الازدهار متاح ومتشحنش قبل كده على الحساب.'; card.appendChild(n)}})}
+  function decorateProducts(){return; qsa('.product').forEach(card=>{if(qs('.pharaoh-product-helper',card))return; const title=(qs('b',card)?.textContent||'').trim(); const help=document.createElement('div'); help.className='pharaoh-product-helper'; help.innerHTML=`<button type="button" data-v65-product="${esc(title)}">اسأل فرعون</button><button type="button" data-v65-fill-last>آخر ID</button>`; card.appendChild(help); if(/ازدهار|كريستالة|Crystal|Growth/i.test(card.textContent)&&!qs('.pharaoh-critical-note',card)){const n=document.createElement('div');n.className='pharaoh-critical-note';n.innerHTML=/كريستالة/.test(card.textContent)?'اتأكد إن الكريستالة متاحة عندك في اللعبة قبل الطلب.':'اتأكد إن الازدهار متاح ومتشحنش قبل كده على الحساب.'; card.appendChild(n)}})}
   document.addEventListener('submit',function(e){if(e.target&&e.target.id==='pharaohChatForm'){e.preventDefault();e.stopImmediatePropagation();const q=input()?.value.trim(); if(!q)return; input().value=''; user(q); bot(reply(q));}},true);
   document.addEventListener('click',function(e){const act=e.target.closest('[data-v65-act]'); if(act){e.preventDefault();e.stopImmediatePropagation();handleAction(act.dataset.v65Act,Number(act.dataset.budget||0));return} const prod=e.target.closest('[data-v65-product]'); if(prod){e.preventDefault();e.stopImmediatePropagation();openPanel();user('اسأل عن '+prod.dataset.v65Product);bot(reply(prod.dataset.v65Product));return} if(e.target.closest('[data-v65-fill-last]')){e.preventDefault();e.stopImmediatePropagation();useLastId();return} },true);
   let idle; function reset(){clearTimeout(idle); idle=setTimeout(()=>{if(!qs('.modal.show'))showNudge('👑 '+contextText()+'<br><b>اضغط على فرعون لو محتاج مساعدة</b>')},22000)}
@@ -2434,6 +2439,7 @@
     if(ty&&ty.parentElement===b)b.insertBefore(wrap,ty); else b.appendChild(wrap);
   }
   function decorateProducts(){
+    return;
     qsa('.product').forEach(cardEl=>{
       if(qs('.pharaoh-product-smart-v85',cardEl))return;
       const title=qs('b',cardEl)?.textContent||'';
@@ -4020,5 +4026,33 @@
   mo.observe(document.body,{childList:true,subtree:true});
   document.addEventListener('DOMContentLoaded',fixButtons);
   setTimeout(fixButtons,300);
-  setInterval(fixButtons,1500);
+  setInterval(fixButtons,8000);
+})();
+
+
+/* moba-v120-pharaoh-quick-request */
+(function(){
+  if(window.__mobaV120QuickRequest)return; window.__mobaV120QuickRequest=true;
+  function qs(s,r=document){return r.querySelector(s)}
+  function body(){return qs('#pharaohChatBody')}
+  function addBot(html){
+    const b=body(); if(!b)return;
+    const m=document.createElement('div');m.className='pharaoh-msg bot pharaoh-brain-new';m.innerHTML=html;
+    const ty=qs('#pharaohTyping',b); if(ty&&ty.parentElement===b)b.insertBefore(m,ty); else b.appendChild(m);
+    b.scrollTop=b.scrollHeight;
+  }
+  function openProducts(){
+    try{document.body.dataset.page='game';document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest&&e.target.closest('[data-v120-open-products]');
+    if(btn){e.preventDefault();e.stopImmediatePropagation();openProducts();return false}
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(!(e.target&&e.target.id==='pharaohChatInput'&&e.key==='Enter'))return;
+    const t=String(e.target.value||'').trim();
+    const m=t.match(/(?:عايز|اريد|اشحن|طلب)?\s*(60|325|660|1800|3850|8100)\s*(?:uc|شدة|شده|شدات)?/i);
+    if(!m)return;
+    setTimeout(()=>addBot('<div class="pharaoh-v85-card"><b>تمام، فهمت إنك عايز '+m[1]+' UC</b><small>افتح قسم المنتجات واختار نفس الباقة، وبعدها اكتب ID واسم الحساب وضيفها للسلة.</small><div class="pharaoh-v85-actions"><button type="button" class="gold" data-v120-open-products>افتح المنتجات</button></div></div>'),60);
+  },true);
 })();

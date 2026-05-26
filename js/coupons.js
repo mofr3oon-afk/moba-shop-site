@@ -641,7 +641,7 @@
     tl.innerHTML=states.map((s,i)=>'<div class="moba-v103-step '+(i<currentIndex?'done':i===currentIndex?'active':'')+'">'+labels[s]+'</div>').join('');
     box.insertBefore(tl,box.firstChild);
   }
-  setInterval(()=>{ensureTotalCard();enhanceTrack()},900);
+  setInterval(()=>{ensureTotalCard();enhanceTrack()},5000);
   document.addEventListener('DOMContentLoaded',()=>{ensureTotalCard();refreshCouponView()});
   setTimeout(()=>{ensureTotalCard();refreshCouponView()},700);
 })();
