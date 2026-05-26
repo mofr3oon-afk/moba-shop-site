@@ -1327,6 +1327,26 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     ]
   };
 
+
+  let PRODUCT_OVERRIDES_LOADED = false;
+  async function loadProductOverrides(){
+    if(PRODUCT_OVERRIDES_LOADED) return;
+    PRODUCT_OVERRIDES_LOADED = true;
+    try{
+      const r = await fetch('/api/settings');
+      const d = await r.json();
+      const overrides = d && d.settings && d.settings.product_overrides;
+      if(overrides && typeof overrides === 'object'){
+        Object.keys(PRODUCTS).forEach(cat=>{
+          PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
+            const ov = overrides[p.name] || overrides[`${cat}:${p.name}`];
+            if(!ov || typeof ov !== 'object') return p;
+            return {...p, ...ov, hidden: Boolean(ov.hidden)};
+          }).filter(p=>!p.hidden);
+        });
+      }
+    }catch(e){}
+  }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function money(n){return Number(n||0).toLocaleString('en-US') + ' جنيه';}
   function status(msg,type){
@@ -1371,6 +1391,7 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   window.productQty = window.productQty || {};
 
   function renderProducts(){
+    loadProductOverrides().then(()=>{});
     const productList = document.getElementById('productList');
     if(!productList) return;
     const cat = window.activeCat || 'uc';
@@ -1563,6 +1584,26 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
 
 /* moba-v60-cart-total-ui-fix */
 (function(){
+
+  let PRODUCT_OVERRIDES_LOADED = false;
+  async function loadProductOverrides(){
+    if(PRODUCT_OVERRIDES_LOADED) return;
+    PRODUCT_OVERRIDES_LOADED = true;
+    try{
+      const r = await fetch('/api/settings');
+      const d = await r.json();
+      const overrides = d && d.settings && d.settings.product_overrides;
+      if(overrides && typeof overrides === 'object'){
+        Object.keys(PRODUCTS).forEach(cat=>{
+          PRODUCTS[cat] = PRODUCTS[cat].map(p=>{
+            const ov = overrides[p.name] || overrides[`${cat}:${p.name}`];
+            if(!ov || typeof ov !== 'object') return p;
+            return {...p, ...ov, hidden: Boolean(ov.hidden)};
+          }).filter(p=>!p.hidden);
+        });
+      }
+    }catch(e){}
+  }
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function getCart(){
     try{
@@ -2005,4 +2046,17 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
   if(typeof old==='function'){
     window.renderCart=function(){const r=old.apply(this,arguments);setTimeout(addCartGuides,20);return r}
   }
+})();
+
+
+/* moba-v126-success-card-helper */
+(function(){
+  window.mobaShowSuccessCard = function(data){
+    try{
+      const box=document.createElement('div');
+      box.className='modal show';
+      box.innerHTML=`<div class="modal-card"><h2>تم استلام طلبك ✅</h2><p>رقم الطلب: <b>${data.orderCode||data.orderId||'-'}</b></p><p>الإجمالي: <b>${Number(data.total||0).toLocaleString('ar-EG')} جنيه</b></p><p>احتفظ برقم المتابعة وافتح صفحة الطلبات لمتابعة الحالة.</p><div class="modal-actions"><button class="okbtn" onclick="location.hash='#trackOrder'; this.closest('.modal').remove()">متابعة الطلب</button><button class="ghost" onclick="this.closest('.modal').remove()">تمام</button></div></div>`;
+      document.body.appendChild(box);
+    }catch(e){}
+  };
 })();

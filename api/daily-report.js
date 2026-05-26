@@ -1,15 +1,7 @@
 import { json, supabaseReady, supabaseRequest } from '../lib/_utils.js';
 import { rateLimit, safeError } from '../lib/_security.js';
+import { requireAdmin } from '../lib/admin-auth.js';
 
-function requireAdmin(req){
-  const expected = process.env.ADMIN_PANEL_SECRET || process.env.SETUP_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET || '';
-  const got = String(req.query?.key || req.headers['x-admin-secret'] || '');
-  if(!expected || got !== expected){
-    const err = new Error('غير مصرح');
-    err.statusCode = 401;
-    throw err;
-  }
-}
 function startOfDayCairo(){
   const now=new Date();
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
