@@ -9,9 +9,9 @@
   <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo-256.png" />
   <link rel="apple-touch-icon" href="assets/moba-shop-logo-256.png" />
   
-  <link rel="stylesheet" href="styles/home.css?v=133">
-  <link rel="stylesheet" href="styles/cart.css?v=146">
-  <link rel="stylesheet" href="styles/pharaoh.css?v=146">
+  <link rel="stylesheet" href="styles/home.css?v=151">
+  <link rel="stylesheet" href="styles/cart.css?v=151">
+  <link rel="stylesheet" href="styles/pharaoh.css?v=151">
 </head>
 <body>
   <main class="wrap">
@@ -611,11 +611,11 @@
 
 
 
-<script src="js/products.js?v=134"></script>
-<script src="js/router.js?v=130"></script>
-<script src="js/coupons.js?v=133"></script>
-<script src="js/cart.js?v=146"></script>
-<script src="js/pharaoh.js?v=146"></script>
+<script src="js/products.js?v=151"></script>
+<script src="js/router.js?v=151"></script>
+<script src="js/coupons.js?v=151"></script>
+<script src="js/cart.js?v=151"></script>
+<script src="js/pharaoh.js?v=151"></script>
 <script id="moba-v130-client-error-logger">window.addEventListener('error',function(e){try{fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'site',message:e.message,source:e.filename,lineno:e.lineno,colno:e.colno,stack:e.error&&e.error.stack})})}catch(_){}});</script>
 
 <script>
@@ -627,7 +627,11 @@
   async function ping(){
     if(document.hidden) return;
     try{
-      await fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'visitor_ping',deviceId:id,page:location.pathname||'/'})});
+      const res=await fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'visitor_ping',deviceId:id,page:location.pathname||'/'})});
+      const data=await res.json().catch(()=>({}));
+      if(data&&data.blocked){
+        document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#070b14;color:#fff;font-family:Tahoma,Arial;padding:20px;text-align:center"><div style="max-width:460px;border:1px solid rgba(255,93,116,.35);background:rgba(255,93,116,.10);border-radius:22px;padding:24px;line-height:1.8"><h2 style="margin-top:0">تم إيقاف الوصول مؤقتًا</h2><p>'+String(data.error||'هذا الجهاز محظور من استخدام الموقع.').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</p><a style="color:#27d8ff;font-weight:900" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">تواصل مع الدعم</a></div></div>';
+      }
     }catch(e){}
   }
   ping();
