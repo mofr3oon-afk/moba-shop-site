@@ -1,0 +1,501 @@
+/* moba-v76-home-trust-clean-css */
+#trustHeroV62 .trust-actions-v62,
+#gamesHome .mini-cart-open{
+  display:none !important;
+}
+#trustHeroV62{
+  padding:20px !important;
+  border-radius:24px !important;
+}
+#trustHeroV62 .trust-hero-content{
+  display:block !important;
+}
+#trustHeroV62 h1{
+  font-size:clamp(26px,4vw,42px) !important;
+  margin:10px 0 8px !important;
+}
+#trustHeroV62 p{
+  max-width:760px;
+}
+.moba-v76-trust-orbs{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+.moba-v76-trust-orb{
+  min-height:92px;
+  border-radius:999px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:5px;
+  padding:12px 10px;
+  color:#eef8ff;
+  background:
+    radial-gradient(circle at 30% 20%,rgba(255,218,116,.25),transparent 42%),
+    linear-gradient(145deg,rgba(39,216,255,.13),rgba(255,255,255,.045));
+  border:1px solid rgba(255,218,116,.22);
+  box-shadow:0 0 24px rgba(39,216,255,.10), inset 0 1px 0 rgba(255,255,255,.10);
+}
+.moba-v76-trust-orb b{
+  font-size:13px;
+  line-height:1.25;
+  color:#fff;
+}
+.moba-v76-trust-orb span{
+  font-size:10.5px;
+  line-height:1.35;
+  color:#bfd0e7;
+}
+.moba-v76-trust-orb strong{
+  font-size:18px;
+  color:#ffe08a;
+  line-height:1;
+}
+#trustHeroV62 .trust-stats-v62{
+  display:none !important;
+}
+#trustHeroV62 .trust-mini-card-v62{
+  display:none !important;
+}
+#gamesHome .games-home-head{
+  align-items:flex-start !important;
+}
+#gamesHome .games-home-head > div{
+  width:100%;
+}
+@media(max-width:900px){
+  .moba-v76-trust-orbs{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .moba-v76-trust-orb{
+    min-height:82px;
+    border-radius:22px;
+  }
+}
+@media(max-width:520px){
+  #trustHeroV62{padding:14px !important}
+  .moba-v76-trust-orbs{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .moba-v76-trust-orb{
+    min-height:76px;
+    padding:10px 8px;
+  }
+  .moba-v76-trust-orb b{font-size:12px}
+  .moba-v76-trust-orb span{font-size:10px}
+}
+
+
+/* moba-v77-home-compact-first-css */
+body[data-page="home"] .hero.moba-view[data-page="home"],
+body[data-page="home"] #workStatusMini{
+  display:none !important;
+}
+body[data-page="home"] #gamesHome{
+  margin-top:10px !important;
+  padding:12px !important;
+  border-radius:20px !important;
+}
+body[data-page="home"] #gamesHome #trustHeroV62{
+  margin:0 0 10px !important;
+  padding:12px 14px !important;
+  border-radius:18px !important;
+  background:
+    radial-gradient(circle at 12% 18%,rgba(255,211,98,.15),transparent 30%),
+    linear-gradient(135deg,rgba(24,72,96,.62),rgba(20,22,35,.72)) !important;
+  border-color:rgba(255,211,98,.22) !important;
+  box-shadow:0 0 26px rgba(39,216,255,.08), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+body[data-page="home"] #trustHeroV62 .trust-hero-content{
+  display:grid !important;
+  grid-template-columns:minmax(190px,.72fr) minmax(0,1.28fr) !important;
+  align-items:center !important;
+  gap:10px 14px !important;
+}
+body[data-page="home"] #trustHeroV62 .trust-badge-v62{
+  justify-self:start !important;
+  padding:6px 10px !important;
+  font-size:11px !important;
+  border-radius:999px !important;
+}
+body[data-page="home"] #trustHeroV62 h1{
+  grid-column:1 !important;
+  font-size:clamp(20px,2.3vw,30px) !important;
+  line-height:1.15 !important;
+  margin:2px 0 !important;
+}
+body[data-page="home"] #trustHeroV62 p{
+  grid-column:1 !important;
+  max-width:330px !important;
+  margin:0 !important;
+  font-size:12px !important;
+  line-height:1.7 !important;
+  color:#dbe8f6 !important;
+}
+body[data-page="home"] #trustHeroV62 .moba-v76-trust-orbs{
+  grid-column:2 !important;
+  grid-row:1 / span 3 !important;
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:7px !important;
+  margin:0 !important;
+}
+body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb{
+  min-height:50px !important;
+  border-radius:14px !important;
+  padding:7px 8px !important;
+  gap:2px !important;
+  background:
+    radial-gradient(circle at 30% 12%,rgba(255,224,138,.20),transparent 42%),
+    linear-gradient(145deg,rgba(39,216,255,.12),rgba(255,255,255,.045)) !important;
+}
+body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb b{
+  font-size:11px !important;
+}
+body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb span{
+  font-size:9.2px !important;
+}
+body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb strong{
+  font-size:14px !important;
+}
+body[data-page="home"] #gamesHome .games-home-head{
+  padding:3px 2px 9px !important;
+  margin:0 !important;
+}
+body[data-page="home"] #gamesHome .games-home-badge{
+  padding:6px 10px !important;
+  font-size:10.5px !important;
+}
+body[data-page="home"] #gamesHome h2{
+  font-size:clamp(24px,3.2vw,38px) !important;
+  margin:6px 0 4px !important;
+  line-height:1.1 !important;
+}
+body[data-page="home"] #gamesHome .games-home-head p{
+  font-size:12px !important;
+  line-height:1.6 !important;
+  margin:0 !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64{
+  gap:9px !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+  min-height:150px !important;
+  border-radius:16px !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
+  inset:auto 8px 8px 8px !important;
+  padding:8px !important;
+  border-radius:13px !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content b{
+  font-size:13px !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content small{
+  font-size:9.5px !important;
+}
+@media(max-width:760px){
+  body[data-page="home"] #gamesHome{
+    padding:10px !important;
+    margin-top:8px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .trust-hero-content{
+    grid-template-columns:1fr !important;
+    gap:7px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .trust-badge-v62,
+  body[data-page="home"] #trustHeroV62 h1,
+  body[data-page="home"] #trustHeroV62 p,
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orbs{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+  body[data-page="home"] #trustHeroV62 h1{
+    font-size:22px !important;
+  }
+  body[data-page="home"] #trustHeroV62 p{
+    max-width:none !important;
+    font-size:11px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orbs{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb{
+    min-height:46px !important;
+    padding:6px !important;
+  }
+  body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+    min-height:138px !important;
+  }
+}
+@media(max-width:430px){
+  body[data-page="home"] #trustHeroV62{
+    padding:10px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orbs{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  body[data-page="home"] #gamesHome .clean-games-v64{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+  body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+    min-height:126px !important;
+  }
+}
+
+
+/* moba-v82-game-card-mini-icons-css */
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
+  min-height:76px !important;
+  padding-left:66px !important;
+  padding-right:12px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-end !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+}
+body[data-page="home"] #gamesHome .game-mini-icon-v82{
+  position:absolute !important;
+  left:10px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:46px !important;
+  height:46px !important;
+  border-radius:14px !important;
+  object-fit:cover !important;
+  z-index:2 !important;
+  border:1px solid rgba(255,218,116,.28) !important;
+  background:#101827 !important;
+  box-shadow:0 0 16px rgba(39,216,255,.18),0 0 12px rgba(255,198,75,.10),inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content b,
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content small{
+  max-width:100% !important;
+  text-align:right !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-badge{
+  z-index:3 !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+  background:linear-gradient(180deg,rgba(14,20,33,.94),rgba(7,10,18,.94)) !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-cover img{
+  filter:saturate(1.05) contrast(1.03) brightness(.92) !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card.coming .game-cover img{
+  filter:saturate(.98) contrast(1.02) brightness(.88) !important;
+}
+@media(max-width:760px){
+  body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
+    min-height:68px !important;
+    padding-left:56px !important;
+    padding-right:10px !important;
+  }
+  body[data-page="home"] #gamesHome .game-mini-icon-v82{
+    width:38px !important;
+    height:38px !important;
+    left:9px !important;
+    border-radius:12px !important;
+  }
+}
+@media(max-width:430px){
+  body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content{
+    min-height:64px !important;
+    padding-left:52px !important;
+  }
+  body[data-page="home"] #gamesHome .game-mini-icon-v82{
+    width:36px !important;
+    height:36px !important;
+  }
+}
+
+
+/* moba-v83-single-game-status-badge-css */
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card > .game-badge,
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card > .game-badge.available,
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card > .game-badge.soon{
+  display:none !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content .game-badge{
+  position:static !important;
+  align-self:flex-end !important;
+  margin:0 0 5px !important;
+  width:auto !important;
+  min-width:0 !important;
+  height:22px !important;
+  padding:0 8px !important;
+  border-radius:999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:9px !important;
+  line-height:1 !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content .game-badge + b{
+  margin-top:0 !important;
+}
+@media(max-width:760px){
+  body[data-page="home"] #gamesHome .clean-games-v64 .game-card-content .game-badge{
+    height:20px !important;
+    padding:0 7px !important;
+    font-size:8.5px !important;
+    margin-bottom:4px !important;
+  }
+}
+/* V104 split polish: home game cards + product page clarity */
+body[data-page="home"] #gamesHome .clean-games-v64{
+  align-items:stretch !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+  height:clamp(190px,22vw,230px) !important;
+  min-height:0 !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card.coming{
+  opacity:.66 !important;
+  filter:saturate(.78) contrast(.96) !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card.coming:hover{
+  opacity:.82 !important;
+}
+body[data-page="home"] #gamesHome .clean-games-v64 .cover-card.coming .game-cover img{
+  filter:saturate(.62) brightness(.72) blur(.15px) !important;
+}
+body[data-page="home"] #gamesHome .game-status-v102{
+  top:9px !important;
+  right:9px !important;
+  letter-spacing:0 !important;
+}
+.moba-v104-soon-modal{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:10020 !important;
+  display:none !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:16px !important;
+  background:rgba(0,0,0,.68) !important;
+  backdrop-filter:blur(8px) !important;
+}
+.moba-v104-soon-modal.show{display:flex !important}
+.moba-v104-soon-card{
+  width:min(390px,94vw) !important;
+  border-radius:22px !important;
+  border:1px solid rgba(255,218,116,.28) !important;
+  background:linear-gradient(180deg,#172235,#0b1020) !important;
+  box-shadow:0 26px 70px rgba(0,0,0,.52),0 0 28px rgba(255,218,116,.12) !important;
+  padding:18px !important;
+  color:#eef8ff !important;
+  text-align:center !important;
+}
+.moba-v104-soon-card b{display:block;font-size:20px;margin-bottom:8px}
+.moba-v104-soon-card p{margin:0 0 14px;color:#cbd8ea;line-height:1.7;font-size:13px}
+.moba-v104-soon-card button{
+  width:100%;
+  min-height:42px;
+  border:0;
+  border-radius:13px;
+  font-weight:900;
+  cursor:pointer;
+  color:#1a0d00;
+  background:linear-gradient(135deg,#ffd76b,#ff9f2f);
+}
+body[data-page="game"] #productsSection:before{
+  content:"اكتب ID واسم الحساب، وبعدها اختار الباقة المناسبة وضيفها للسلة.";
+  display:block;
+  margin:0 0 10px;
+  padding:10px 12px;
+  border-radius:13px;
+  border:1px solid rgba(91,231,255,.22);
+  background:linear-gradient(135deg,rgba(39,216,255,.10),rgba(255,218,116,.06));
+  color:#eaf8ff;
+  font-size:13px;
+  font-weight:900;
+  line-height:1.7;
+}
+.product .moba-v104-id-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.product .moba-v104-use-last{
+  min-height:34px;
+  border:1px solid rgba(91,231,255,.18);
+  border-radius:11px;
+  background:rgba(39,216,255,.07);
+  color:#dff8ff;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+.product .warn{
+  order:20;
+  margin:2px 0 0 !important;
+  border-color:rgba(255,218,116,.30) !important;
+  background:linear-gradient(135deg,rgba(255,218,116,.13),rgba(255,154,47,.07)) !important;
+}
+.product .btn.add{order:30}
+@media(max-width:620px){
+  body[data-page="home"] #gamesHome .clean-games-v64 .cover-card{
+    height:178px !important;
+  }
+  .product .moba-v104-id-row{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* moba-v105-home-compact-mobile */
+@media(max-width:760px){
+  body[data-page="home"] #trustHeroV62{
+    padding:8px !important;
+    border-radius:16px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .trust-badge-v62{
+    padding:5px 8px !important;
+    font-size:10px !important;
+  }
+  body[data-page="home"] #trustHeroV62 h1{
+    font-size:19px !important;
+    line-height:1.12 !important;
+    margin:2px 0 1px !important;
+  }
+  body[data-page="home"] #trustHeroV62 p{
+    font-size:10.5px !important;
+    line-height:1.55 !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orbs{
+    gap:6px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb{
+    min-height:42px !important;
+    padding:5px !important;
+    border-radius:12px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb strong{
+    font-size:13px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb b{
+    font-size:10.5px !important;
+  }
+  body[data-page="home"] #trustHeroV62 .moba-v76-trust-orb span{
+    font-size:8.8px !important;
+  }
+}
+@media(max-width:430px){
+  body[data-page="home"] #trustHeroV62 .trust-hero-content{
+    gap:6px !important;
+  }
+  body[data-page="home"] #trustHeroV62 h1{
+    font-size:18px !important;
+  }
+}
+
+/* moba-v166 dynamic categories + exclusive offers */
+.exclusive-offer-v166{display:none;margin:12px 0 14px;padding:12px;border-radius:22px;border:1px solid rgba(255,175,55,.26);background:linear-gradient(135deg,rgba(255,175,55,.13),rgba(39,216,255,.08));box-shadow:0 18px 44px rgba(0,0,0,.26);overflow:hidden;position:relative}.exclusive-offer-v166.show{display:block}.exclusive-offer-v166:before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.14),transparent 24%),radial-gradient(circle at 80% 40%,rgba(255,175,55,.12),transparent 30%);pointer-events:none}.exclusive-inner-v166{position:relative;display:grid;grid-template-columns:92px 1fr auto;gap:12px;align-items:center}.exclusive-img-v166{width:92px;height:92px;border-radius:20px;object-fit:cover;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}.exclusive-copy-v166 b{display:block;font-size:20px}.exclusive-copy-v166 p{margin:5px 0 0;color:var(--muted,#a9b7ca);line-height:1.6}.exclusive-products-v166{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.exclusive-chip-v166{border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:6px 9px;background:rgba(0,0,0,.22);font-size:12px}.exclusive-btn-v166{border:0;border-radius:14px;padding:11px 14px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#ffaf37,#ffe08a);color:#201100;white-space:nowrap}.product .old-price-v166{text-decoration:line-through;opacity:.7;font-size:12px;margin-inline-end:6px}.product .sale-badge-v166{display:inline-flex;margin-top:3px;border:1px solid rgba(255,175,55,.35);background:rgba(255,175,55,.13);border-radius:999px;padding:4px 7px;font-size:11px;font-weight:900}.product-tabs-v119.dynamic-v166{gap:7px;flex-wrap:wrap}.product-tabs-v119.dynamic-v166 .tab img{width:22px;height:22px;border-radius:7px;object-fit:cover;margin-inline-end:5px;vertical-align:middle}@media(max-width:720px){.exclusive-inner-v166{grid-template-columns:70px 1fr}.exclusive-img-v166{width:70px;height:70px;border-radius:16px}.exclusive-btn-v166{grid-column:1/-1;width:100%}.exclusive-copy-v166 b{font-size:17px}}
