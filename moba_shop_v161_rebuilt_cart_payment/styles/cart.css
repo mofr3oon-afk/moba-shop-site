@@ -6977,54 +6977,6 @@ body[data-page="game"] .product.product--compact .id-inline-wrap.compact-inline-
   font-size:17px!important;
   font-weight:900!important;
 }
-.clean-coupon-v161{
-  border:1px solid rgba(255,199,89,.24)!important;
-  background:rgba(255,199,89,.07)!important;
-  border-radius:14px!important;
-  padding:8px!important;
-  margin-top:10px!important;
-}
-.clean-coupon-toggle-v161{
-  width:100%!important;
-  min-height:38px!important;
-  border:1px solid rgba(255,199,89,.26)!important;
-  border-radius:12px!important;
-  background:rgba(255,255,255,.06)!important;
-  color:#ffe1a3!important;
-  font-weight:900!important;
-  cursor:pointer!important;
-}
-.clean-coupon-body-v161{
-  display:grid!important;
-  gap:8px!important;
-  margin-top:8px!important;
-}
-.clean-coupon-body-v161.open,
-.clean-coupon-v161:focus-within .clean-coupon-body-v161{
-  display:grid!important;
-}
-.clean-coupon-v161 .coupon-row{
-  display:grid!important;
-  grid-template-columns:1fr auto!important;
-  gap:8px!important;
-}
-.clean-coupon-v161 input{
-  min-height:40px!important;
-  border:1px solid rgba(255,255,255,.12)!important;
-  border-radius:12px!important;
-  background:#07101e!important;
-  color:#fff!important;
-  padding:9px!important;
-}
-.clean-coupon-v161 #applyCouponBtn{
-  border:0!important;
-  border-radius:12px!important;
-  background:#ffd36d!important;
-  color:#201100!important;
-  font-weight:900!important;
-  padding:0 14px!important;
-  cursor:pointer!important;
-}
 .clean-actions-v161{
   display:grid!important;
   grid-template-columns:1fr 1.3fr!important;
@@ -7126,78 +7078,6 @@ body[data-page="game"] .product.product--compact .id-inline-wrap.compact-inline-
   cursor:pointer!important;
 }
 #checkoutScreenshotNameV161{color:#bdd7ea!important;font-size:12px!important}
-.clean-success-v165{
-  border:1px solid rgba(50,229,139,.35)!important;
-  background:linear-gradient(180deg,rgba(50,229,139,.12),rgba(39,216,255,.07))!important;
-  border-radius:22px!important;
-  padding:22px!important;
-  text-align:center!important;
-  box-shadow:0 18px 60px rgba(0,0,0,.34)!important;
-}
-.clean-success-icon-v165{
-  width:64px!important;
-  height:64px!important;
-  margin:0 auto 10px!important;
-  display:grid!important;
-  place-items:center!important;
-  border-radius:50%!important;
-  background:linear-gradient(135deg,#32e58b,#9cffc5)!important;
-  color:#03170b!important;
-  font-size:34px!important;
-  font-weight:900!important;
-  box-shadow:0 0 28px rgba(50,229,139,.34)!important;
-}
-.clean-success-v165 h2{
-  margin:6px 0!important;
-  color:#eafff3!important;
-  font-size:28px!important;
-}
-.clean-success-v165 p{
-  max-width:760px!important;
-  margin:0 auto 14px!important;
-  color:#cfe3f3!important;
-  line-height:1.9!important;
-  font-size:15px!important;
-}
-.clean-success-grid-v165{
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  gap:10px!important;
-  margin:14px 0!important;
-}
-.clean-success-grid-v165 div{
-  border:1px solid rgba(255,255,255,.12)!important;
-  background:rgba(255,255,255,.06)!important;
-  border-radius:15px!important;
-  padding:12px!important;
-}
-.clean-success-grid-v165 span{
-  display:block!important;
-  color:#a8bed3!important;
-  font-size:12px!important;
-  margin-bottom:5px!important;
-}
-.clean-success-grid-v165 b{
-  color:#fff!important;
-  font-size:16px!important;
-  word-break:break-word!important;
-}
-.clean-success-actions-v165{
-  display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:10px!important;
-  max-width:520px!important;
-  margin:12px auto 0!important;
-}
-.clean-success-actions-v165 button{
-  min-height:46px!important;
-  border:0!important;
-  border-radius:14px!important;
-  font-weight:900!important;
-  cursor:pointer!important;
-}
-.clean-success-actions-v165 button:first-child{background:linear-gradient(135deg,#27d8ff,#3179ff)!important;color:#00111a!important}
-.clean-success-actions-v165 button:last-child{background:rgba(255,255,255,.08)!important;color:#eef8ff!important;border:1px solid rgba(255,255,255,.14)!important}
 .clean-empty-v161{
   text-align:center!important;
   color:#bdd0e5!important;
@@ -7205,37 +7085,9 @@ body[data-page="game"] .product.product--compact .id-inline-wrap.compact-inline-
   border-radius:14px!important;
   padding:18px!important;
 }
-/* v166: keep the new cart coupon field usable even if older coupon styles load first. */
-#cartSection.clean-cart-v161 #couponBodyV161{
-  display:grid!important;
-  grid-template-rows:1fr!important;
-  visibility:visible!important;
-  opacity:1!important;
-  max-height:none!important;
-  overflow:visible!important;
-}
-#cartSection.clean-cart-v161 #couponBodyV161 .coupon-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) auto!important;
-  gap:8px!important;
-  align-items:center!important;
-}
-#cartSection.clean-cart-v161 #couponInput,
-#cartSection.clean-cart-v161 #applyCouponBtn{
-  display:block!important;
-  pointer-events:auto!important;
-}
-body.order-modal-open-v166 .jump-nav.app-nav,
-body.order-modal-open-v166 .sticky-cart{
-  display:none!important;
-}
-body.order-modal-open-v166{
-  overflow:hidden!important;
-}
 @media(max-width:700px){
   .clean-cart-v161{padding:10px!important}
   .clean-cart-head-v161{align-items:flex-start!important;flex-direction:column-reverse!important}
   .clean-summary-v161,.clean-item-grid-v161{grid-template-columns:1fr!important}
-  .clean-success-grid-v165,.clean-success-actions-v165{grid-template-columns:1fr!important}
   .clean-actions-v161{grid-template-columns:1fr!important}
 }
