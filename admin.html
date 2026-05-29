@@ -633,4 +633,200 @@ function renderLogs(){const logs=Object.entries(settingsCache).filter(([k])=>k.s
   setTimeout(()=>{injectCss();normalizeActions()},400);
 })();
 </script>
+<script id="moba-v166-admin-stability-report-actions">
+(function(){
+  if(window.__mobaV166AdminStability)return;
+  window.__mobaV166AdminStability=true;
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money = n => Number(n||0).toLocaleString('ar-EG') + ' جنيه';
+  const label = s => ({pending:'جديد',claimed:'مستلم',processing:'جاري التنفيذ',delivered:'تم الشحن',on_hold:'تعليق',needs_fix:'محتاج تعديل',rejected:'مرفوض',cancelled:'ملغي',archived:'أرشيف',unknown:'غير محدد'}[s]||s||'-');
+  async function adminFetch(url,opt={},timeout=12000){
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=>ctrl.abort(),timeout);
+    try{
+      const res = await fetch(url,{credentials:'include',signal:ctrl.signal,...opt});
+      const data = await res.json().catch(()=>({ok:false,error:'رد غير مفهوم من السيرفر'}));
+      if(!res.ok && data.ok !== false) data.ok=false;
+      return data;
+    }finally{ clearTimeout(timer); }
+  }
+  function toast(text,ok=true){
+    try{ if(typeof msg==='function') msg(text,ok); else alert(text); }
+    catch(e){ alert(text); }
+  }
+  function showLoginSafe(){
+    try{ if(typeof showLogin==='function') showLogin(); }catch(e){}
+  }
+  window.loadOrders = async function(silent){
+    const box=$('orders'), stats=$('stats');
+    if(!box)return;
+    if(!silent)box.innerHTML='<div class="empty">جاري تحميل الطلبات...</div>';
+    const status=$('status')?.value || 'all';
+    const q=$('q')?.value || '';
+    try{
+      const d=await adminFetch('/api/admin-orders?status='+encodeURIComponent(status)+'&q='+encodeURIComponent(q)+'&limit=150',{},12000);
+      if(!d.ok)throw new Error(d.error||'تعذر تحميل الطلبات');
+      window.lastOrders=d.orders||window.lastOrders||[];
+      try{ lastOrders=d.orders||[]; }catch(e){}
+      try{
+        if(typeof renderOrders==='function') renderOrders(d.orders||[]);
+        else box.innerHTML=(d.orders||[]).length?'<div class="empty">تم تحميل الطلبات، لكن قالب العرض غير جاهز. اعمل تحديث للصفحة.</div>':'<div class="empty">لا توجد طلبات مطابقة</div>';
+      }catch(renderErr){
+        box.innerHTML='<div class="empty">حصل خطأ في عرض الطلبات: '+esc(renderErr.message||renderErr)+'</div>';
+      }
+      if(!silent)toast('تم تحميل '+(d.orders||[]).length+' طلب',true);
+    }catch(err){
+      if(stats)stats.innerHTML='';
+      box.innerHTML='<div class="empty">الطلبات لم تتحمل: '+esc(err.message||'خطأ في الاتصال')+'<br><button class="btn primary" type="button" onclick="loadOrders()">إعادة المحاولة</button></div>';
+      if(/غير مصرح|سجل دخولك|401|authenticated/i.test(String(err.message||'')))showLoginSafe();
+    }
+  };
+
+  const ACTIONS={
+    'استلام':{status:'claimed',note:'تم استلام الطلب للمراجعة.'},
+    'جاري التنفيذ':{status:'processing',note:'الطلب جاري تنفيذه الآن.'},
+    'تم الشحن':{status:'delivered',note:'تم تنفيذ الطلب وشحن المنتجات بنجاح.'},
+    'محتاج تعديل':{status:'needs_fix',ask:'اكتب سبب التعديل اللي هيظهر للعميل'},
+    'تعليق':{status:'on_hold',ask:'اكتب سبب التعليق اللي هيظهر للعميل'},
+    'إلغاء':{status:'cancelled',ask:'اكتب سبب الإلغاء اللي هيظهر للعميل'},
+    'ID غلط':{status:'needs_fix',note:'ID غلط - مطلوب كتابة ID واسم الحساب الصحيحين قبل التنفيذ.'},
+    'سكرين غير واضح':{status:'needs_fix',note:'السكرين غير واضح - ارفع صورة جديدة يظهر فيها رقم أو اسم التحويل، المبلغ، ووقت التحويل.'},
+    'المبلغ ناقص':{status:'needs_fix',note:'المبلغ ناقص أو غير مطابق - راجع التحويل أو تواصل مع الدعم لتأكيد الفرق.'},
+    'تعليق بملاحظة':{status:'on_hold',ask:'اكتب الملاحظة التي ستظهر للعميل'}
+  };
+  function orderIdFrom(btn){
+    const order=btn.closest('.order');
+    const note=order?.querySelector('textarea[id^="note_"]');
+    return note ? note.id.replace('note_','') : '';
+  }
+  function setButtonsBusy(order,busy){
+    (order?[...order.querySelectorAll('.actions .btn')]:[]).forEach(b=>b.disabled=busy);
+  }
+  window.updateOrder = async function(id,status,preset,forceNote){
+    id=String(id||'').trim();
+    if(!id)return toast('رقم الطلب غير واضح. افتح الطلب واضغط الزر مرة تانية.',false);
+    const noteEl=$('note_'+id);
+    let note=forceNote ? String(preset||'').trim() : String(noteEl?.value||preset||'').trim();
+    if(['needs_fix','on_hold','cancelled'].includes(status) && !note){
+      note=String(prompt(status==='cancelled'?'اكتب سبب الإلغاء':'اكتب سبب المشكلة أو التعليق للعميل','')||'').trim();
+      if(!note)return toast('لازم تكتب سبب واضح للعميل.',false);
+    }
+    if(noteEl)noteEl.value=note;
+    const order=noteEl?.closest('.order');
+    setButtonsBusy(order,true);
+    try{
+      const d=await adminFetch('/api/admin-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status,note})},15000);
+      if(!d.ok)throw new Error(d.error||'فشل تحديث الطلب');
+      toast('تم تحديث الطلب',true);
+      await window.loadOrders(true);
+    }catch(err){ alert(err.message||'فشل تحديث الطلب'); }
+    finally{ setButtonsBusy(order,false); }
+  };
+  window.unclaim = id => window.updateOrder(id,'pending','إلغاء استلام الطلب وإرجاعه للطلبات الجديدة',true);
+
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest&&e.target.closest('.order .actions button');
+    if(!btn)return;
+    const text=(btn.textContent||'').trim();
+    if(text==='حظر IP')return;
+    const action=ACTIONS[text];
+    if(!action && text!=='Unclaim')return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const id=orderIdFrom(btn);
+    if(text==='Unclaim')return window.unclaim(id);
+    let note=action.note||'';
+    let force=!!action.note;
+    if(action.ask){
+      note=String(prompt(action.ask,'')||'').trim();
+      if(!note)return toast('لازم تكتب ملاحظة واضحة.',false);
+      force=true;
+    }
+    return window.updateOrder(id,action.status,note,force);
+  },true);
+
+  function ensureReportControls(){
+    const box=$('reportBox');
+    if(!box||$('reportControlsV166'))return;
+    box.insertAdjacentHTML('beforebegin',`
+      <div id="reportControlsV166" class="filters">
+        <select id="reportRangeV166" class="select">
+          <option value="day">يومي</option>
+          <option value="week">أسبوعي</option>
+          <option value="month">شهري</option>
+          <option value="custom">تاريخ مخصص</option>
+        </select>
+        <input id="reportDateV166" class="input" type="date">
+        <input id="reportFromV166" class="input" type="date" style="display:none">
+        <input id="reportToV166" class="input" type="date" style="display:none">
+        <button class="btn primary" type="button" onclick="loadReport(true)">عرض التقرير</button>
+      </div>`);
+    const today=new Date().toISOString().slice(0,10);
+    $('reportDateV166').value=today;
+    $('reportFromV166').value=today;
+    $('reportToV166').value=today;
+    $('reportRangeV166').onchange=function(){
+      const custom=this.value==='custom';
+      $('reportFromV166').style.display=custom?'block':'none';
+      $('reportToV166').style.display=custom?'block':'none';
+      $('reportDateV166').style.display=custom?'none':'block';
+    };
+  }
+  function rows(obj){
+    return Object.entries(obj||{}).map(([k,v])=>'<div class="row"><span>'+esc(label(k))+'</span><b>'+esc(v)+'</b></div>').join('')||'<div class="empty">لا يوجد بيانات</div>';
+  }
+  window.loadReport = async function(){
+    ensureReportControls();
+    const box=$('reportBox'); if(!box)return;
+    box.innerHTML='<div class="empty">جاري تجهيز التقرير...</div>';
+    const range=$('reportRangeV166')?.value||'day';
+    let url='/api/daily-report?range='+encodeURIComponent(range);
+    if(range==='custom')url+='&from='+encodeURIComponent($('reportFromV166')?.value||'')+'&to='+encodeURIComponent($('reportToV166')?.value||'');
+    else url+='&date='+encodeURIComponent($('reportDateV166')?.value||'');
+    try{
+      const d=await adminFetch(url,{},12000);
+      if(!d.ok)throw new Error(d.error||'تعذر تحميل التقرير');
+      const top=(d.topProducts||[]).map(x=>'<div class="row"><span>'+esc(x.name||'-')+'</span><b>'+esc(x.count||0)+'</b></div>').join('')||'<div class="empty">لا يوجد منتجات</div>';
+      box.innerHTML=`
+        <div class="reportGrid">
+          <div class="stat"><b>${esc(d.count||0)}</b><span>طلبات</span></div>
+          <div class="stat"><b>${money(d.total||0)}</b><span>إجمالي المبيعات</span></div>
+          <div class="stat"><b>${money(d.averageOrder||0)}</b><span>متوسط الطلب</span></div>
+          <div class="stat"><b>${esc(d.needsReview||0)}</b><span>تحتاج مراجعة</span></div>
+          <div class="stat"><b>${esc(d.uniquePhones||0)}</b><span>عملاء مختلفين</span></div>
+          <div class="stat"><b>${money(d.discounts||0)}</b><span>خصومات</span></div>
+        </div>
+        <div class="grid3">
+          <div class="panel mini"><h3>حسب الحالة</h3><div class="miniTable">${rows(d.byStatus)}</div></div>
+          <div class="panel mini"><h3>حسب الدفع</h3><div class="miniTable">${rows(d.byPayment)}</div></div>
+          <div class="panel mini"><h3>الأكثر طلبًا</h3><div class="miniTable">${top}</div></div>
+        </div>
+        <div class="panel mini"><h3>الفترة</h3><div class="miniTable"><div class="row"><span>من</span><b>${esc(d.from||'-')}</b></div><div class="row"><span>إلى</span><b>${esc(d.to||'-')}</b></div></div></div>`;
+    }catch(err){
+      box.innerHTML='<div class="empty">فشل التقرير: '+esc(err.message||'خطأ')+'</div>';
+    }
+  };
+
+  const style=document.createElement('style');
+  style.textContent=`
+    .actions .btn:nth-child(1){background:linear-gradient(135deg,#22c7ff,#347cff)!important;color:#00111a!important}
+    .actions .btn:nth-child(2){background:linear-gradient(135deg,#28d8ff,#5b8cff)!important;color:#00111a!important}
+    .actions .btn:nth-child(3){background:linear-gradient(135deg,#39e98f,#9cffc5)!important;color:#03170b!important}
+    .actions .btn.danger,.actions .btn:nth-last-child(-n+4){background:linear-gradient(135deg,#ff6178,#ff9cad)!important;color:#280009!important}
+    .actions .btn.gold{background:linear-gradient(135deg,#ffb13b,#ffe38a)!important;color:#211100!important}
+    @media(max-width:760px){
+      body{overflow-x:hidden}
+      .panel{padding:12px!important;border-radius:18px!important}
+      .order{padding:12px!important}
+      .order .head,.security,.items{grid-template-columns:1fr!important}
+      .actions{grid-template-columns:1fr 1fr!important;gap:8px!important}
+      .actions .btn{min-height:38px!important;font-size:12px!important;padding:8px!important}
+      .filters{grid-template-columns:1fr!important}
+      .admin-shot-box img,.admin-shot-preview{max-height:210px!important;object-fit:contain!important}
+    }`;
+  document.head.appendChild(style);
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ensureReportControls(); if($('orders')&&/جاري تحميل/.test($('orders').textContent||''))window.loadOrders();},900));
+})();
+</script>
 </body></html>
