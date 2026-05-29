@@ -7205,33 +7205,6 @@ body[data-page="game"] .product.product--compact .id-inline-wrap.compact-inline-
   border-radius:14px!important;
   padding:18px!important;
 }
-/* v166: keep the new cart coupon field usable even if older coupon styles load first. */
-#cartSection.clean-cart-v161 #couponBodyV161{
-  display:grid!important;
-  grid-template-rows:1fr!important;
-  visibility:visible!important;
-  opacity:1!important;
-  max-height:none!important;
-  overflow:visible!important;
-}
-#cartSection.clean-cart-v161 #couponBodyV161 .coupon-row{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) auto!important;
-  gap:8px!important;
-  align-items:center!important;
-}
-#cartSection.clean-cart-v161 #couponInput,
-#cartSection.clean-cart-v161 #applyCouponBtn{
-  display:block!important;
-  pointer-events:auto!important;
-}
-body.order-modal-open-v166 .jump-nav.app-nav,
-body.order-modal-open-v166 .sticky-cart{
-  display:none!important;
-}
-body.order-modal-open-v166{
-  overflow:hidden!important;
-}
 @media(max-width:700px){
   .clean-cart-v161{padding:10px!important}
   .clean-cart-head-v161{align-items:flex-start!important;flex-direction:column-reverse!important}
