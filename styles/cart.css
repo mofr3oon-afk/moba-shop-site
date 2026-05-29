@@ -7205,6 +7205,25 @@ body[data-page="game"] .product.product--compact .id-inline-wrap.compact-inline-
   border-radius:14px!important;
   padding:18px!important;
 }
+#cartSection.clean-cart-v161 #couponBodyV161{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin-top:8px!important;
+}
+#cartSection.clean-cart-v161 #couponBodyV161 .coupon-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+#cartSection.clean-cart-v161 #couponInput,
+#cartSection.clean-cart-v161 #applyCouponBtn{
+  display:block!important;
+  pointer-events:auto!important;
+}
 @media(max-width:700px){
   .clean-cart-v161{padding:10px!important}
   .clean-cart-head-v161{align-items:flex-start!important;flex-direction:column-reverse!important}

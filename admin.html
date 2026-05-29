@@ -633,4 +633,120 @@ function renderLogs(){const logs=Object.entries(settingsCache).filter(([k])=>k.s
   setTimeout(()=>{injectCss();normalizeActions()},400);
 })();
 </script>
+<script id="moba-v167-stable-admin-reports-actions">
+(function(){
+  if(window.__mobaV167StableAdmin)return;
+  window.__mobaV167StableAdmin=true;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money=n=>Number(n||0).toLocaleString('ar-EG')+' جنيه';
+  const statusLabel=s=>({pending:'جديد',claimed:'مستلم',processing:'جاري التنفيذ',delivered:'تم الشحن',on_hold:'تعليق',needs_fix:'محتاج تعديل',cancelled:'ملغي',archived:'أرشيف',unknown:'غير محدد'}[s]||s||'-');
+  async function send(url,opt={}){
+    const r=await fetch(url,{credentials:'include',...opt});
+    const d=await r.json().catch(()=>({ok:false,error:'رد غير مفهوم من السيرفر'}));
+    if(!r.ok&&d.ok!==false)d.ok=false;
+    return d;
+  }
+  function toast(t,ok=true){try{if(typeof msg==='function')msg(t,ok);else alert(t)}catch(e){alert(t)}}
+  const QUICK={
+    'ID غلط':{status:'needs_fix',note:'ID غلط - مطلوب كتابة ID واسم الحساب الصحيحين قبل التنفيذ.'},
+    'سكرين غير واضح':{status:'needs_fix',note:'السكرين غير واضح - ارفع صورة جديدة يظهر فيها رقم أو اسم التحويل، المبلغ، ووقت التحويل.'},
+    'المبلغ ناقص':{status:'needs_fix',note:'المبلغ ناقص أو غير مطابق - راجع التحويل أو تواصل مع الدعم لتأكيد الفرق.'}
+  };
+  const ACTIONS={
+    'استلام':'claimed',
+    'جاري التنفيذ':'processing',
+    'تم الشحن':'delivered',
+    'محتاج تعديل':'needs_fix',
+    'تعليق':'on_hold',
+    'إلغاء':'cancelled'
+  };
+  function getOrderId(btn){
+    const note=btn.closest('.order')?.querySelector('textarea[id^="note_"]');
+    return note?note.id.replace('note_',''):'';
+  }
+  async function stableUpdate(id,status,note='',ask=false){
+    id=String(id||'').trim();
+    if(!id)return toast('رقم الطلب غير واضح. افتح الطلب واضغط الزر مرة تانية.',false);
+    const box=$('note_'+id);
+    if(ask&&!note){
+      note=String(prompt(status==='cancelled'?'اكتب سبب الإلغاء':'اكتب سبب المشكلة أو التعليق للعميل','')||'').trim();
+      if(!note)return toast('لازم تكتب سبب واضح للعميل.',false);
+    }
+    if(box&&note)box.value=note;
+    const order=box?.closest('.order');
+    const buttons=order?[...order.querySelectorAll('.actions button')]:[];
+    buttons.forEach(b=>b.disabled=true);
+    try{
+      const d=await send('/api/admin-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status,note:box?box.value||note:note})});
+      if(!d.ok)throw new Error(d.error||'فشل تحديث الطلب');
+      toast('تم تحديث الطلب',true);
+      if(typeof loadOrders==='function')loadOrders(true);
+    }catch(err){alert(err.message||'فشل تحديث الطلب')}
+    finally{buttons.forEach(b=>b.disabled=false)}
+  }
+  document.addEventListener('click',function(e){
+    const btn=e.target.closest&&e.target.closest('.order .actions button');
+    if(!btn)return;
+    const text=(btn.textContent||'').trim();
+    if(text==='حظر IP')return;
+    if(text==='Unclaim'){e.preventDefault();e.stopImmediatePropagation();return stableUpdate(getOrderId(btn),'pending','إرجاع الطلب للطلبات الجديدة',false)}
+    if(QUICK[text]){e.preventDefault();e.stopImmediatePropagation();return stableUpdate(getOrderId(btn),QUICK[text].status,QUICK[text].note,false)}
+    if(ACTIONS[text]){
+      e.preventDefault();e.stopImmediatePropagation();
+      return stableUpdate(getOrderId(btn),ACTIONS[text],'',['needs_fix','on_hold','cancelled'].includes(ACTIONS[text]));
+    }
+  },true);
+  function ensureReports(){
+    const box=$('reportBox');
+    if(!box||$('reportControlsV167'))return;
+    box.insertAdjacentHTML('beforebegin',`<div id="reportControlsV167" class="filters">
+      <select id="reportRangeV167" class="select"><option value="day">يومي</option><option value="week">أسبوعي</option><option value="month">شهري</option><option value="custom">تاريخ مخصص</option></select>
+      <input id="reportDateV167" class="input" type="date">
+      <input id="reportFromV167" class="input" type="date" style="display:none">
+      <input id="reportToV167" class="input" type="date" style="display:none">
+      <button class="btn primary" type="button" onclick="loadReport(true)">عرض التقرير</button>
+    </div>`);
+    const today=new Date().toISOString().slice(0,10);
+    $('reportDateV167').value=today;$('reportFromV167').value=today;$('reportToV167').value=today;
+    $('reportRangeV167').onchange=function(){
+      const custom=this.value==='custom';
+      $('reportDateV167').style.display=custom?'none':'block';
+      $('reportFromV167').style.display=custom?'block':'none';
+      $('reportToV167').style.display=custom?'block':'none';
+    };
+  }
+  function rows(obj){return Object.entries(obj||{}).map(([k,v])=>`<div class="row"><span>${esc(statusLabel(k))}</span><b>${esc(v)}</b></div>`).join('')||'<div class="empty">لا يوجد بيانات</div>'}
+  window.loadReport=async function(){
+    ensureReports();
+    const box=$('reportBox');if(!box)return;
+    box.innerHTML='<div class="empty">جاري تجهيز التقرير...</div>';
+    const range=$('reportRangeV167')?.value||'day';
+    let url='/api/daily-report?range='+encodeURIComponent(range);
+    if(range==='custom')url+='&from='+encodeURIComponent($('reportFromV167')?.value||'')+'&to='+encodeURIComponent($('reportToV167')?.value||'');
+    else url+='&date='+encodeURIComponent($('reportDateV167')?.value||'');
+    try{
+      const d=await send(url);
+      if(!d.ok)throw new Error(d.error||'تعذر تحميل التقرير');
+      const top=(d.topProducts||[]).map(x=>`<div class="row"><span>${esc(x.name||'-')}</span><b>${esc(x.count||0)}</b></div>`).join('')||'<div class="empty">لا يوجد منتجات</div>';
+      box.innerHTML=`<div class="reportGrid">
+        <div class="stat"><b>${esc(d.count||0)}</b><span>طلبات</span></div>
+        <div class="stat"><b>${money(d.total||0)}</b><span>إجمالي</span></div>
+        <div class="stat"><b>${money(d.averageOrder||0)}</b><span>متوسط الطلب</span></div>
+        <div class="stat"><b>${esc(d.needsReview||0)}</b><span>محتاج مراجعة</span></div>
+        <div class="stat"><b>${esc(d.uniquePhones||0)}</b><span>عملاء مختلفين</span></div>
+        <div class="stat"><b>${money(d.discounts||0)}</b><span>خصومات</span></div>
+      </div><div class="grid3">
+        <div class="panel mini"><h3>حسب الحالة</h3><div class="miniTable">${rows(d.byStatus)}</div></div>
+        <div class="panel mini"><h3>حسب الدفع</h3><div class="miniTable">${rows(d.byPayment)}</div></div>
+        <div class="panel mini"><h3>الأكثر طلبًا</h3><div class="miniTable">${top}</div></div>
+      </div><div class="panel mini"><h3>الفترة</h3><div class="miniTable"><div class="row"><span>من</span><b>${esc(d.from||'-')}</b></div><div class="row"><span>إلى</span><b>${esc(d.to||'-')}</b></div></div></div>`;
+    }catch(err){box.innerHTML='<div class="empty">فشل التقرير: '+esc(err.message||'خطأ')+'</div>'}
+  };
+  const style=document.createElement('style');
+  style.textContent=`@media(max-width:760px){.actions{grid-template-columns:1fr 1fr!important;gap:8px!important}.actions .btn{min-height:38px!important;font-size:12px!important;padding:8px!important}.filters{grid-template-columns:1fr!important}.panel{padding:12px!important}.order{padding:12px!important}.order .head,.security,.items{grid-template-columns:1fr!important}}`;
+  document.head.appendChild(style);
+  document.addEventListener('DOMContentLoaded',ensureReports);
+})();
+</script>
 </body></html>

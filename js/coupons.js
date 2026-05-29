@@ -390,6 +390,12 @@
     const btn=e.target && e.target.closest && e.target.closest('#applyCouponBtn');
     const inputTarget=e.target && e.target.id==='couponInput' && e.key==='Enter';
     if(!btn && !inputTarget)return;
+    if(window.__mobaCleanApplyCouponV167 && document.querySelector('#cartSection.clean-cart-v161')){
+      e.preventDefault();
+      e.stopPropagation();
+      if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+      return window.__mobaCleanApplyCouponV167();
+    }
     e.preventDefault();
     e.stopPropagation();
     if(e.stopImmediatePropagation)e.stopImmediatePropagation();

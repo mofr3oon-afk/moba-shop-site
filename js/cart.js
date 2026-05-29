@@ -3308,18 +3308,26 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     const root=qs('#cartSection'), form=qs('#orderForm',root);
     if(!root)return;
     const body=qs('#couponBodyV161',root), toggle=qs('#couponToggleV161',root);
-    if(toggle&&body)toggle.onclick=function(){body.classList.toggle('open')};
+    if(toggle&&body)toggle.onclick=function(){
+      body.classList.toggle('open');
+      if(body.classList.contains('open'))setTimeout(()=>qs('#couponInput',root)?.focus(),60);
+    };
     const applyCoupon=qs('#applyCouponBtn',root);
-    if(applyCoupon)applyCoupon.addEventListener('click',function(){setTimeout(render,900)},false);
+    if(applyCoupon)applyCoupon.addEventListener('click',applyCouponNow,false);
     const couponInput=qs('#couponInput',root);
-    if(couponInput)couponInput.addEventListener('keydown',function(e){if(e.key==='Enter')setTimeout(render,900)},false);
+    if(couponInput)couponInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();applyCouponNow()}},false);
     qsa('[data-v161-tab]',root).forEach(btn=>btn.onclick=function(){setStep(btn.dataset.v161Tab)});
     const go=qs('[data-v161-go-pay]',root);
     if(go)go.onclick=function(){if(cart().length)setStep('pay')};
     const clear=qs('[data-v161-clear]',root);
     if(clear)clear.onclick=function(){save([]);render()};
     const back=qs('[data-v161-products]',root);
-    if(back)back.onclick=function(){location.hash='productsSection';qs('#productsSection')?.scrollIntoView({behavior:'smooth'})};
+    if(back)back.onclick=function(){
+      const link=document.querySelector('[data-view="home"],a[href="#home"]');
+      if(link)link.click();
+      location.hash='productsSection';
+      setTimeout(()=>qs('#productsSection')?.scrollIntoView({behavior:'smooth',block:'start'}),120);
+    };
     qsa('[data-v161-remove]',root).forEach(btn=>btn.onclick=function(){const c=cart();c.splice(Number(btn.dataset.v161Remove),1);save(c);render()});
     qsa('[data-v161-qty]',root).forEach(btn=>btn.onclick=function(){const c=cart(),i=Number(btn.dataset.v161Qty);if(!c[i])return;c[i].qty=Math.max(1,qty(c[i])+Number(btn.dataset.dir));save(c);render()});
     qsa('[data-copy-v161]',root).forEach(btn=>btn.onclick=function(){try{navigator.clipboard.writeText(btn.dataset.copyV161)}catch(e){}});
@@ -3338,6 +3346,33 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
     };
     if(form){form.dataset.confirmed='1';form.onsubmit=submit}
   }
+  async function applyCouponNow(){
+    const root=qs('#cartSection');
+    const input=qs('#couponInput',root), status=qs('#couponStatus',root), btn=qs('#applyCouponBtn',root);
+    const code=String(input?.value||'').trim().toUpperCase();
+    const c=cart(), subtotal=total(c);
+    if(!code){if(status){status.className='coupon-status show err';status.textContent='اكتب كود الخصم الأول.'}return}
+    if(!c.length||subtotal<=0){if(status){status.className='coupon-status show err';status.textContent='السلة فاضية. ضيف منتج الأول.'}return}
+    if(btn){btn.disabled=true;btn.textContent='جاري...'}
+    try{
+      const res=await fetch('/api/coupon?code='+encodeURIComponent(code)+'&total='+encodeURIComponent(subtotal)+'&cart='+encodeURIComponent(JSON.stringify(c)),{credentials:'include',headers:{Accept:'application/json'}});
+      const data=await res.json().catch(()=>({ok:false,error:'رد غير مفهوم من السيرفر'}));
+      if(!data.ok)throw new Error(data.error||'الكوبون غير صالح');
+      const cp=data.coupon||data;
+      const saved={code:cp.code||code,discount_amount:Number(cp.discount_amount||cp.discount||0),discount_type:cp.discount_type||'fixed'};
+      window.appliedCoupon=saved;
+      try{localStorage.setItem('moba_coupon',JSON.stringify(saved))}catch(e){}
+      if(status){status.className='coupon-status show ok';status.innerHTML='تم تطبيق <b>'+esc(saved.code)+'</b> | الخصم '+saved.discount_amount.toLocaleString('en-US')+' جنيه'}
+      setTimeout(render,350);
+    }catch(err){
+      window.appliedCoupon=null;
+      try{localStorage.removeItem('moba_coupon')}catch(e){}
+      if(status){status.className='coupon-status show err';status.textContent=err.message||'الكوبون غير صالح'}
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='تطبيق'}
+    }
+  }
+  window.__mobaCleanApplyCouponV167=applyCouponNow;
   function show(msg,type){
     const st=qs('#status');
     if(st){st.className='status '+(type||'err');st.textContent=msg;try{st.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
@@ -3368,9 +3403,10 @@ const products={uc:[{name:'60 UC',type:'شحن بالايدي | ID',price:50},{n
       const data=await res.json();
       if(!data.ok)throw new Error(data.error||'حصل خطأ أثناء إرسال الطلب');
       try{localStorage.setItem('moba_last_order_success',JSON.stringify({orderCode:data.orderCode||'',orderId:data.orderId||'',phone,total:data.total||t.final,at:Date.now()}))}catch(e){}
-      show(`تم استلام طلبك بنجاح.\nرقم الطلب: ${data.orderCode||data.orderId||'MOBA'}\nالإجمالي: ${data.total?Number(data.total).toLocaleString('ar-EG')+' جنيه':total(c).toLocaleString('ar-EG')+' جنيه'}`,'ok');
       const track=qs('#trackPhone'); if(track)track.value=phone;
-      save([]); form.reset(); setTimeout(render,900);
+      save([]);
+      try{localStorage.removeItem('moba_coupon');window.appliedCoupon=null}catch(e){}
+      render();
     }catch(err){show(err.message||'حصل خطأ أثناء إرسال الطلب')}
     finally{btn.disabled=false;btn.textContent='تنفيذ الطلب'}
   }

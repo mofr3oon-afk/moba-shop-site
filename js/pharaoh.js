@@ -172,6 +172,55 @@
   },true);
 })();
 
+/* moba-v167-pharaoh-dynamic-products */
+(function(){
+  if(window.__mobaV167PharaohDynamic)return;
+  window.__mobaV167PharaohDynamic=true;
+  const state={loaded:false,items:[],seen:new Set()};
+  function qs(s,r=document){return r.querySelector(s)}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function norm(v){return String(v||'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim()}
+  async function load(){
+    if(state.loaded)return state.items;
+    state.loaded=true;
+    try{
+      const r=await fetch('/api/settings?t='+Date.now());
+      const j=await r.json();
+      const list=j?.settings?.dynamic_products;
+      state.items=Array.isArray(list)?list.filter(p=>p&&p.hidden!==true&&p.active!==false).map((p,i)=>({i,name:String(p.name||p.title||'عرض').trim(),price:Number(p.sale_price||p.price||0),section:String(p.cat||p.section||p.game||'العروض').trim()})):[];
+      window.mobaPharaohDynamicProducts=state.items;
+    }catch(e){state.items=[]}
+    return state.items;
+  }
+  function bot(html){
+    const body=qs('#pharaohChatBody');if(!body)return;
+    const m=document.createElement('div');m.className='pharaoh-msg bot pharaoh-brain-new';m.innerHTML=html;
+    const typing=qs('#pharaohTyping',body);if(typing&&typing.parentElement===body)body.insertBefore(m,typing);else body.appendChild(m);
+    body.scrollTop=body.scrollHeight;
+  }
+  function openProducts(){
+    try{document.body.dataset.page='game';location.hash='productsSection';document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
+  }
+  async function respond(text){
+    const items=await load();if(!items.length)return;
+    const t=norm(text);
+    const amount=Number((String(text).match(/[0-9٠-٩]+/g)||[]).join('').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)))||0;
+    const exact=items.filter(p=>t&&norm(p.name)&&t.includes(norm(p.name))).slice(0,4);
+    const budget=amount?items.filter(p=>p.price&&p.price<=amount).sort((a,b)=>b.price-a.price).slice(0,4):[];
+    const list=exact.length?exact:budget;
+    if(!list.length)return;
+    const key=t+'|'+list.map(p=>p.name).join(',');
+    if(state.seen.has(key))return;state.seen.add(key);
+    bot(`<div class="pharaoh-v85-card"><b>لقيتلك منتجات من لوحة الأدمن</b><small>أي منتج جديد تضيفه من لوحة التحكم فرعون يقرأه تلقائيًا.</small>${list.map(p=>`<div class="pharaoh-v85-note"><b>${esc(p.name)}</b> - ${Number(p.price||0).toLocaleString('en-US')} جنيه<br><small>${esc(p.section)}</small></div>`).join('')}<div class="pharaoh-v85-actions"><button type="button" class="gold" data-v167-open-products>افتح المنتجات</button></div></div>`);
+  }
+  document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('[data-v167-open-products]');if(b){e.preventDefault();e.stopImmediatePropagation();openProducts();return false}},true);
+  document.addEventListener('DOMContentLoaded',function(){
+    load();
+    const body=qs('#pharaohChatBody');if(!body||!('MutationObserver' in window))return;
+    new MutationObserver(muts=>muts.forEach(m=>m.addedNodes&&m.addedNodes.forEach(n=>{if(n.nodeType===1&&n.classList&&n.classList.contains('user'))respond(n.textContent||'')}))).observe(body,{childList:true});
+  });
+})();
+
 
 /* moba-v107-pharaoh-master-context-first */
 (function(){
