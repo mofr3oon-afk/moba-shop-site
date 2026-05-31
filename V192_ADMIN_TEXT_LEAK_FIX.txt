@@ -1,0 +1,1 @@
+V192 fixes admin panel text leak: all admin JS scripts are now inside valid <script> blocks before </body>, including repaired v186 image-preview script and v191 cleanup script. Verified no JavaScript remains after </html>. API count remains 12.
