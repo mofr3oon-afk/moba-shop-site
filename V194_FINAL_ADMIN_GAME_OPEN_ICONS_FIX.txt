@@ -1,1 +1,0 @@
-V194: fixed admin leaked JS text, improved game open logic for available games, faster status badges, smoother square icons. API count remains 12.
