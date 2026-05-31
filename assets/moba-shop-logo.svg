@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="MOBA SHOP">
+  <defs>
+    <radialGradient id="g1" cx="34%" cy="22%" r="78%">
+      <stop offset="0" stop-color="#ffe39b"/>
+      <stop offset=".35" stop-color="#26d8ff"/>
+      <stop offset="1" stop-color="#07111f"/>
+    </radialGradient>
+    <linearGradient id="g2" x1="20" y1="18" x2="108" y2="112">
+      <stop offset="0" stop-color="#fff3be"/>
+      <stop offset=".52" stop-color="#ffb13b"/>
+      <stop offset="1" stop-color="#33e79b"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="#07111f"/>
+  <rect x="7" y="7" width="114" height="114" rx="26" fill="url(#g1)" opacity=".95"/>
+  <path d="M26 45h14l8 20 8-20h14v42H58V63L49 87h-4l-9-24v24H26V45Z" fill="#ffffff" filter="url(#glow)"/>
+  <path d="M77 43c11 0 20 7 20 17s-9 17-20 17h-5v10H60V43h17Zm-1 24c5 0 9-3 9-7s-4-7-9-7h-4v14h4Z" fill="#06111f"/>
+  <path d="M24 34l13-13 12 10 15-18 15 18 12-10 13 13-8 14H32l-8-14Z" fill="url(#g2)" stroke="#fff3be" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="64" cy="19" r="5" fill="#fff4c7"/>
+  <path d="M33 101h62" stroke="#fff3be" stroke-width="7" stroke-linecap="round" opacity=".9"/>
+</svg>
