@@ -1,0 +1,1 @@
+v186: clickable Pharaoh recommendations, clean budget noise card, stable catalog render no flicker, image fallbacks, admin route /admin fix, status normalization for games/sections/products, admin polish toolbar. API count unchanged: 12.
