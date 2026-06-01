@@ -1,1 +1,0 @@
-V197: final one-icon-per-game-card fix, admin icon support, smoother game card display. API count remains 12.
