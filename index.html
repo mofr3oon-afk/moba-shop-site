@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOBA SHOP | Digital Store For Gamers</title>
+  <meta name="description" content="MOBA SHOP - متجرك الرقمي للجيمرز" />
+  <link rel="icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="apple-touch-icon" href="assets/moba-shop-logo-256.png" />
+  
+  <link rel="stylesheet" href="styles/home.css?v=189">
+  <link rel="stylesheet" href="styles/cart.css?v=189">
+  <link rel="stylesheet" href="styles/pharaoh.css?v=189">
+
+  <style id="moba-v187-critical-no-flicker">
+    body[data-page="home"] .moba-view[data-page="game"],
+    body[data-page="home"] .moba-view[data-page="orders"],
+    body[data-page="home"] .moba-view[data-page="reviews"]{display:none!important}
+    body[data-page="game"] .moba-view[data-page="home"],
+    body[data-page="cart"] .moba-view[data-page="home"],
+    body[data-page="orders"] .moba-view:not([data-page="orders"]),
+    body[data-page="reviews"] .moba-view:not([data-page="reviews"]){display:none!important}
+    body.moba-page-booting #gamesHome .game-cards-grid{opacity:0!important;min-height:320px;pointer-events:none}
+    body.moba-page-ready #gamesHome .game-cards-grid{opacity:1!important;transition:opacity .16s ease}
+  </style>
+
+<style id="moba-v189-critical-route-hide">
+  body.moba-page-booting .moba-view[data-page="game"],
+  body.moba-page-booting #shopWorkspace,
+  body.moba-page-booting #trackOrder,
+  body.moba-page-booting #customerReviews{display:none!important}
+  body[data-page="home"] #shopWorkspace,
+  body[data-page="home"] .moba-view[data-page="game"]{display:none!important}
+  #gamesHome .game-icon-mini,#gamesHome .game-mini-icon-v82{aspect-ratio:1/1;object-fit:cover}
+</style>
+</head>
+<body data-page="home" class="moba-page-booting">
+  <main class="wrap">
+    <div class="topbar">
+      <div class="brand-mini" dir="ltr">
+        <img class="site-logo-mark" src="assets/moba-shop-logo-512.webp" alt="MOBA SHOP" width="28" height="28">
+        <div class="brand-mini-copy">
+          <div class="brand-mini-line"><span class="brand-word">MOBA</span> <span>SHOP</span></div>
+          <small>Digital Store For Gamers</small>
+        </div>
+      </div>
+      <div class="status-pill available" id="topStatusBadge">
+        <span class="status-dot"></span>
+        <span class="status-copy"><span class="status-label">متاح الآن</span><small class="status-desc">التنفيذ شغال حاليا بشكل طبيعي.</small></span>
+      </div>
+    </div>
+    <script id="moba-v187-early-status-cache">
+    (function(){
+      try{
+        var raw=localStorage.getItem('moba_settings_cache_v187')||localStorage.getItem('moba_settings_cache');
+        if(!raw)return; var st=JSON.parse(raw); var s=st&&st.settings?st.settings:st;
+        var mode=String((s&&s.store_status)||((s&&String(s.busy_mode)==='true')?'busy':'available')).toLowerCase();
+        var msg=(s&& (s.store_status_message||s.busy_message))||'';
+        var map={available:['متاح الآن','التنفيذ شغال حاليا بشكل طبيعي.'],busy:['متاح ولكن فيه ضغط','تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.'],closed:['خارج مواعيد التنفيذ','ينفع تعمل طلبك عادي دلوقتي.'],maintenance:['صيانة مؤقتة','الطلبات الجديدة متوقفة مؤقتا.']};
+        var m=map[mode]||map.available; if(msg)m[1]=msg;
+        var el=document.getElementById('topStatusBadge'); if(el){el.className='status-pill store-status-pill '+mode; el.innerHTML='<span class="status-dot"></span><span class="status-copy"><span class="status-label">'+m[0]+'</span><small class="status-desc">'+m[1]+'</small></span>';}
+      }catch(e){}
+    })();
+    </script>
+    <nav class="jump-nav app-nav" aria-label="روابط سريعة">
+      <a class="primary" href="#home" data-view="home">🏠 الرئيسية</a>
+      <a href="#cart" data-view="cart">🛒 السلة</a>
+      <a href="#orders" data-view="orders">📦 طلباتي</a>
+      <a href="#reviews" data-view="reviews">💬 الآراء</a>
+      <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
+    </nav>
+    <section class="hero moba-view" data-page="home">
+      <div class="panel hero-main">
+        <div class="badge">⚡ Digital Store For Gamers</div>
+        <div class="logo">MOBA <span>SHOP</span></div>
+        <div class="hero-kicker">متجرك الرقمي للجيمرز | Digital Store For Gamers</div>
+        <div class="sub">جهز طلبك بسهولة من مكان واحد. اختار المنتج، ضيفه للسلة، اختار طريقة الدفع، وارفع السكرين. بيانات الدفع تظهر وقت الاختيار فقط.</div>
+        <div class="quick"><div class="chip">🛒 سلة منظمة</div><div class="chip">🛡 مراجعة آمنة</div><div class="chip">📦 متابعة بالموبايل</div><div class="chip">🎮 خدمات للجيمرز</div></div>
+        <div class="steps compact-steps">
+          <div class="step">1️⃣ اختار المنتج</div>
+          <div class="step">2️⃣ ضيف للسلة</div>
+          <div class="step">3️⃣ ادفع وارفع السكرين</div>
+        </div></div>
+    </section>
+
+    
+      <div id="workStatusMini" class="work-status-mini">🟢 الشحن متاح الآن — متوسط التنفيذ حسب ضغط الطلبات</div>
+
+    
+    
+    <section class="panel trust-hero-v62 moba-view" data-page="home" id="trustHeroV62">
+      <div class="trust-hero-content">
+        <span class="trust-badge-v62">👑 MOBA SHOP | Digital Store</span>
+        <h1>اشحن ألعابك بسهولة</h1>
+        <p>اختار لعبتك، ضيف المنتجات للسلة، وكمّل الدفع بخطوات واضحة.</p>
+        <div class="trust-stats-v62">
+          <div><b>7000+</b><span>عميل</span></div>
+          <div><b>1000+</b><span>تقييم</span></div>
+          <div><b>12+</b><span>خبرة</span></div>
+        </div>
+        <div class="trust-actions-v62">
+          <button type="button" data-view="home">🎮 اختار اللعبة</button>
+          <button type="button" data-view="orders">📦 تابع طلبك</button>
+        </div>
+      </div>
+      <div class="trust-mini-card-v62">
+        <h3>ليه MOBA SHOP؟</h3>
+        <ul>
+          <li>✅ شحن مضمون بعد مراجعة البيانات</li>
+          <li>🛒 سلة منظمة لأكتر من ID</li>
+          <li>📸 مراجعة سكرين التحويل قبل التنفيذ</li>
+          <li>📞 دعم مباشر لو في مشكلة</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel games-home-page moba-view" id="gamesHome" data-page="home">
+      <div class="games-home-head">
+        <div>
+          <span class="games-home-badge">🎮 MOBA SHOP Games</span>
+          <h2>اختار لعبتك</h2>
+          <p>اختار اللعبة اللي عايز تشحنها وبعدها هتظهرلك المنتجات الخاصة بيها بس.</p>
+        </div>
+        <button type="button" class="mini-cart-open" data-view="cart">🛒 فتح السلة</button>
+      </div>
+
+      
+      <div class="game-cards-grid premium-games-grid clean-games-v64">
+
+        <button type="button" class="game-card premium-card active cover-card" data-game="pubg">
+          <div class="game-cover"><img src="assets/game-covers/pubg-new.webp" alt="PUBG Mobile"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge available">متاح الآن</span><b>PUBG Mobile</b><small>UC | ازدهار | برايم</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="freefire">
+          <div class="game-cover"><img src="assets/game-covers/freefire-new.webp" alt="Free Fire"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Free Fire</b><small>Diamonds</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="roblox">
+          <div class="game-cover"><img src="assets/game-covers/roblox.webp" alt="Roblox"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Roblox</b><small>Robux</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="blood_mena">
+          <div class="game-cover"><img src="assets/game-covers/blood_mena.jpg" alt="Blood Strike MENA"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Blood Strike MENA</b><small>MENA Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="blood_global">
+          <div class="game-cover"><img src="assets/game-covers/blood_global.jpg" alt="Blood Strike Global"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Blood Strike Global</b><small>Global Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="kingshot">
+          <div class="game-cover"><img src="assets/game-covers/kingshot.webp" alt="King Shot"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>King Shot</b><small>Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="8ball">
+          <div class="game-cover"><img src="assets/game-covers/8ball.webp" alt="8 Ball Pool"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>8 Ball Pool</b><small>Coins / Cash</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="goal_battle">
+          <div class="game-cover"><img src="assets/game-covers/goal_battle.webp" alt="Goal Battle"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Goal Battle</b><small>Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="yalla_ludo">
+          <div class="game-cover"><img src="assets/game-covers/yalla_ludo.webp" alt="Yalla Ludo"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Yalla Ludo</b><small>Diamonds / Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="last_war">
+          <div class="game-cover"><img src="assets/game-covers/last_war.webp" alt="Last War"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Last War</b><small>Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="efootball">
+          <div class="game-cover"><img src="assets/game-covers/efootball.webp" alt="eFootball"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>eFootball</b><small>Coins / Points</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="tiktok">
+          <div class="game-cover"><img src="assets/game-covers/tiktok.webp" alt="TikTok"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>TikTok</b><small>Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="valorant">
+          <div class="game-cover"><img src="assets/game-covers/valorant.jpg" alt="Valorant"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Valorant</b><small>Points</small></div>
+        </button>
+
+      </div>
+
+    </section>
+
+    <section class="grid moba-view" data-page="game" id="shopWorkspace">
+      <div class="panel products" id="productsSection">
+        <div class="section-title products-head-v119">
+          <div class="products-title-copy">
+            <h2>المنتجات | Products</h2>
+            <small id="productCatInfo">اختار القسم المناسب، واكتب ID واسم الحساب قبل الإضافة للسلة.</small>
+          </div>
+          <div class="tabs product-tabs-v119" aria-label="Product categories">
+            <button class="tab active" data-cat="uc"><span>شدات UC</span><small>باقات الشحن</small></button>
+            <button class="tab" data-cat="growth"><span>ازدهار</span><small>عروض خاصة</small></button>
+            <button class="tab" data-cat="prime"><span>برايم</span><small>اشتراكات</small></button>
+          </div>
+        </div>
+        <div id="productList" class="product-list"></div>
+      </div>
+      <aside class="panel cart" id="cartSection" data-cart-panel="1">
+        <h2>السلة والدفع | Cart</h2>
+        <div id="cartBox"></div>
+        <div class="total"><span>الإجمالي | Total</span><span id="total">0 جنيه</span></div>
+        
+      <div class="coupon-box" id="couponBox">
+        <b>🎟️ عندك كوبون خصم؟</b>
+        <div class="coupon-row">
+          <input id="couponInput" placeholder="اكتب كود الخصم" autocomplete="off">
+          <button type="button" id="applyCouponBtn">تطبيق</button>
+        </div>
+        <div id="couponStatus" class="coupon-status"></div>
+      </div>
+
+      <form id="orderForm" class="form">
+          <div><label>📱 رقم الموبايل</label><input class="input" name="customerPhone" inputmode="numeric" placeholder="010xxxxxxxx" required /></div>
+          <div><label>💳 طريقة الدفع | Payment</label><select class="select" name="paymentMethod" id="paymentMethod" required><option value="">اختار طريقة الدفع</option><option value="InstaPay">🟢 InstaPay</option><option value="Wallet">📱 محفظة | Wallet</option></select></div>
+          <div id="paymentDetails" class="payment-details"></div>
+          <div class="verify-box">
+            <b>🔐 تأكيد التحويل</b><br>
+            <span class="notice">رقم الموبايل اللي فوق هو رقم متابعة الطلب. هل الفلوس اتحولت من نفس الرقم ده؟</span>
+            <div class="verify-options">
+              <label><input type="radio" name="transferMode" value="same" required> نفس رقم المتابعة</label>
+              <label><input type="radio" name="transferMode" value="other" required> رقم تاني أو محل دفع</label>
+            </div>
+            <div id="last3Box" class="hide" style="margin-top:10px">
+              <label>اكتب آخر 3 أرقام من الرقم اللي حولت منه</label>
+              <input class="input" name="transferLast3" id="transferLast3" inputmode="numeric" maxlength="3" placeholder="مثال: 083" />
+              <div class="notice">⚠️ لو دفعت من محل أو من موبايل شخص تاني، آخر 3 أرقام بتساعدنا نطابق التحويل بسرعة.</div>
+            </div>
+          </div>
+          <div id="checkoutScreenshotBlockV160" class="checkout-shot-block-v160">
+            <label for="checkoutScreenshotV160">📸 ارفع سكرين التحويل</label>
+            <input id="checkoutScreenshotV160" class="file checkout-shot-input-v160" name="screenshot" type="file" accept="image/*" required />
+            <small id="checkoutScreenshotNameV160">لم يتم اختيار صورة بعد</small>
+          </div>
+          <div><label>📝 ملاحظة اختيارية</label><textarea class="textarea" name="note" placeholder="اي ملاحظة للطلب"></textarea></div>
+          <button class="btn checkout" type="submit">✅ تنفيذ الشراء | Checkout</button><button class="btn ghost" type="button" id="clearCart">🗑 تفريغ السلة</button>
+          <div id="status" class="status"></div><div class="notice">⚠️ راجع كل ID كويس قبل تنفيذ الطلب. اي ID غلط بعد التأكيد مسؤولية العميل.</div>
+        </form>
+      </aside>
+    </section>
+    
+    <section class="panel order-history-panel moba-view" data-page="orders" id="trackOrder">
+      <div class="history-head">
+        <h2>سجل الطلبات</h2>
+        <p>اكتب رقم الموبايل اللي سجلت بيه الطلب، وهيظهرلك سجل طلباتك وحالة كل طلب.</p>
+      </div>
+
+      <form id="trackForm" class="track-grid phone-only-track">
+        <div>
+          <label>📱 رقم الموبايل</label>
+          <input class="input" id="trackPhone" inputmode="numeric" placeholder="010xxxxxxxx" required />
+        </div>
+        <button class="btn add" type="submit">🔎 متابعة</button>
+      </form>
+
+      <div class="history-tabs" id="historyTabs" style="display:none">
+        <button class="history-tab active" type="button" data-filter="all">الجميع</button>
+        <button class="history-tab" type="button" data-filter="open">معلق</button>
+        <button class="history-tab" type="button" data-filter="done">مكتمل</button>
+        <button class="history-tab" type="button" data-filter="cancelled">ملغي</button>
+      </div>
+
+      <div id="lastIssueAlert" class="last-issue-alert"></div>
+      <div id="trackResult" class="track-result"></div>
+      <div id="historyList" class="history-list"></div>
+      <div class="notice">اضغط على أي طلب عشان تشوف تفاصيله كاملة.</div>
+    </section>
+
+    
+    <section class="panel reviews-panel moba-view" data-page="reviews" id="customerReviews">
+      <div class="reviews-title">
+        <div>
+          <h2>💬 آراء العملاء</h2>
+          <p>اكتب رأيك في MOBA SHOP وقيّم تجربتك، وآراء العملاء هتظهر هنا للناس.</p>
+        </div>
+      </div>
+
+      <div class="reviews-stats">
+        <div class="reviews-stat"><b>+7000</b><span>عميل وثق فينا</span></div>
+        <div class="reviews-stat"><b>12+</b><span>خبرة</span></div>
+        <div class="reviews-stat"><b>+1000</b><span>تقييم ورأي</span></div>
+      </div>
+
+      <form class="review-form" id="reviewForm">
+        <input class="input" name="customerName" placeholder="اسمك" maxlength="32" required>
+        <div class="review-stars" id="reviewStars" aria-label="تقييم النجوم">
+          <button type="button" class="review-star active" data-rate="1">★</button>
+          <button type="button" class="review-star active" data-rate="2">★</button>
+          <button type="button" class="review-star active" data-rate="3">★</button>
+          <button type="button" class="review-star active" data-rate="4">★</button>
+          <button type="button" class="review-star active" data-rate="5">★</button>
+        </div>
+        <input type="hidden" name="rating" id="reviewRating" value="5">
+        <textarea class="textarea" name="reviewText" placeholder="اكتب رأيك فينا" maxlength="260" required></textarea>
+        <button class="btn add" type="submit">⭐ نشر التقييم</button>
+        <div id="reviewStatus" class="review-status"></div>
+      </form>
+
+      <div id="reviewsList" class="review-list"></div>
+    </section>
+
+    <div class="footer" id="footerSupport">MOBA SHOP | Digital Store For Gamers</div>
+  </main>
+  <div class="sticky-cart" id="stickyCart" role="button" aria-label="افتح السلة">السلة 0 منتجات | 0 جنيه</div>
+  <div id="modal" class="modal"><div class="modal-card"><h2>✅ تم اضافة المنتج للسلة</h2><p id="modalText"></p><div class="modal-actions"><button class="btn add" id="addMore">➕ إضافة منتج</button><button class="btn okbtn" id="goCheckout">✅ تنفيذ الشراء</button><button class="btn ghost" id="showCartBtn">🛒 عرض السلة</button></div></div></div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="order-details-modal" id="orderDetailsModal" data-order-modal-close>
+    <div class="order-details-card" data-order-modal-card>
+      <button class="order-details-close" type="button" data-order-modal-close-btn>×</button>
+      <div class="order-details-title">تفاصيل الطلب</div>
+      <div id="orderDetailsContent"></div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="toast-moba" id="mobaToast"></div>
+  <div class="checkout-confirm" id="checkoutConfirm">
+    <div class="checkout-confirm-card">
+      <h3>راجع الطلب قبل الإرسال</h3>
+      <div class="confirm-summary" id="checkoutConfirmSummary"></div>
+      <div class="notice">تأكد من ID واسم الحساب وبيانات الدفع قبل التأكيد.</div>
+      <div class="confirm-actions">
+        <button class="confirm-ok" type="button" id="confirmSendOrder">✅ تأكيد الطلب</button>
+        <button class="confirm-cancel" type="button" id="cancelSendOrder">رجوع للتعديل</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  
+    <div class="moba-name-badge">MOba</div>
+  </div>
+
+
+
+
+
+  <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
+    <div class="pharaoh-chat-head">
+      <div class="pharaoh-chat-title">
+        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="96" height="120" loading="lazy"></div>
+        <div>
+          <b>فرعون Assistant</b>
+          <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
+        </div>
+      </div>
+      <button class="pharaoh-close" type="button" id="pharaohClose">×</button>
+    </div>
+    <div class="pharaoh-chat-body" id="pharaohChatBody">
+      <div class="pharaoh-msg bot pharaoh-v182-home-only">
+        <div class="pharaoh-v85-card">
+          <b>أنا معاك يا بطل</b>
+          <small>اختار اللي محتاجه وفرعون يكملك خطوة بخطوة</small>
+          <div class="pharaoh-v85-note">شحن جديد، متابعة طلب، فحص طلب، أو مشكلة؟</div>
+          <div class="pharaoh-v85-actions">
+            <button type="button" class="green" data-v182-act="track">تابع طلبي</button>
+            <button type="button" class="gold" data-v182-act="start">ابدأ الشحن</button>
+            <button type="button" data-v182-act="check">افحص طلبي</button>
+            <button type="button" data-v182-act="problem">مشكلة في الطلب</button>
+          </div>
+        </div>
+      </div>
+      <div class="pharaoh-quick" style="display:none"></div>
+      <div class="pharaoh-typing" id="pharaohTyping">فرعون بيكتب...</div>
+    </div>
+    <form class="pharaoh-chat-foot" id="pharaohChatForm">
+      <input id="pharaohChatInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+      <button type="button" id="pharaohSendBtn">إرسال</button>
+    </form>
+  </div>
+
+  <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
+    <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="128" height="160" loading="lazy"></div>
+    <div class="pharaoh-name-badge">فرعون</div>
+    <div class="pharaoh-hint-bubble" id="pharaohHintBubble"></div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- V46 removed old screenshot validation script #1 -->
+
+
+
+
+
+
+
+
+
+
+<!-- V46 removed old screenshot validation script #2 -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/products.js?v=198"></script>
+<script src="js/router.js?v=198"></script>
+<script src="js/coupons.js?v=198"></script>
+<script src="js/cart.js?v=205-requested-games"></script>
+<script src="js/pharaoh.js?v=198"></script>
+<script id="moba-v130-client-error-logger">window.addEventListener('error',function(e){try{fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'site',message:e.message,source:e.filename,lineno:e.lineno,colno:e.colno,stack:e.error&&e.error.stack})})}catch(_){}});</script>
+
+<script>
+(function(){
+  if(window.__mobaVisitorPing)return; window.__mobaVisitorPing=true;
+  const KEY='moba_device_id';
+  let id=localStorage.getItem(KEY);
+  if(!id){ id='dev_'+Math.random().toString(36).slice(2)+'_'+Date.now().toString(36); localStorage.setItem(KEY,id); }
+  async function ping(){
+    if(document.hidden) return;
+    try{
+      const res=await fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'visitor_ping',deviceId:id,page:location.pathname||'/'})});
+      const data=await res.json().catch(()=>({}));
+      if(data&&data.blocked){
+        document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#070b14;color:#fff;font-family:Tahoma,Arial;padding:20px;text-align:center"><div style="max-width:460px;border:1px solid rgba(255,93,116,.35);background:rgba(255,93,116,.10);border-radius:22px;padding:24px;line-height:1.8"><h2 style="margin-top:0">تم إيقاف الوصول مؤقتًا</h2><p>'+String(data.error||'هذا الجهاز محظور من استخدام الموقع.').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</p><a style="color:#27d8ff;font-weight:900" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">تواصل مع الدعم</a></div></div>';
+      }
+    }catch(e){}
+  }
+  ping();
+  setInterval(ping,30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) ping(); });
+})();
+</script>
+
+</body>
+</html>
