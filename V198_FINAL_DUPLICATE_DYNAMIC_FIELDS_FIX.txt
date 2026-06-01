@@ -1,1 +1,0 @@
-V198: fixes duplicate game icons/cards after refresh, reliable game opening, and dynamic order fields controlled from admin.
