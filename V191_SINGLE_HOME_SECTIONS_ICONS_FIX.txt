@@ -1,1 +1,0 @@
-V191: unified home sections renderer, removes duplicate offer/home section renderers, square icons for all game cards, admin clean duplicate button. API count remains 12.
