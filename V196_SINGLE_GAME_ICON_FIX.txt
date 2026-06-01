@@ -1,0 +1,1 @@
+V196: fixed duplicated game icons by normalizing every game card to one square icon and hiding legacy icon renderers.
