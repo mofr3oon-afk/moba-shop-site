@@ -1,0 +1,1 @@
+V180 fixes explicit Vercel routes: / -> index.html and /admin -> admin.html. API count remains 12. If 404 persists, Vercel root directory/upload method is wrong; upload extracted folder root, not nested folder or zip itself.
