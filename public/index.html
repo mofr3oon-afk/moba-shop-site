@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOBA SHOP | Digital Store For Gamers</title>
+  <meta name="description" content="MOBA SHOP - متجرك الرقمي للجيمرز" />
+  <link rel="icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="shortcut icon" type="image/png" href="assets/moba-shop-logo-256.png" />
+  <link rel="apple-touch-icon" href="assets/moba-shop-logo-256.png" />
+  
+  <link rel="stylesheet" href="styles/home.css?v=189">
+  <link rel="stylesheet" href="styles/cart.css?v=189">
+  <link rel="stylesheet" href="styles/pharaoh.css?v=189">
+
+  <style id="moba-v187-critical-no-flicker">
+    body[data-page="home"] .moba-view[data-page="game"],
+    body[data-page="home"] .moba-view[data-page="orders"],
+    body[data-page="home"] .moba-view[data-page="reviews"]{display:none!important}
+    body[data-page="game"] .moba-view[data-page="home"],
+    body[data-page="cart"] .moba-view[data-page="home"],
+    body[data-page="orders"] .moba-view:not([data-page="orders"]),
+    body[data-page="reviews"] .moba-view:not([data-page="reviews"]){display:none!important}
+    body.moba-page-booting #gamesHome .game-cards-grid{opacity:0!important;min-height:320px;pointer-events:none}
+    body.moba-page-ready #gamesHome .game-cards-grid{opacity:1!important;transition:opacity .16s ease}
+  </style>
+
+<style id="moba-v189-critical-route-hide">
+  body.moba-page-booting .moba-view[data-page="game"],
+  body.moba-page-booting #shopWorkspace,
+  body.moba-page-booting #trackOrder,
+  body.moba-page-booting #customerReviews{display:none!important}
+  body[data-page="home"] #shopWorkspace,
+  body[data-page="home"] .moba-view[data-page="game"]{display:none!important}
+  #gamesHome .game-icon-mini,#gamesHome .game-mini-icon-v82{aspect-ratio:1/1;object-fit:cover}
+</style>
+</head>
+<body data-page="home" class="moba-page-booting">
+  <main class="wrap">
+    <div class="topbar">
+      <div class="brand-mini" dir="ltr">
+        <img class="site-logo-mark" src="assets/moba-shop-logo-512.webp" alt="MOBA SHOP" width="28" height="28">
+        <div class="brand-mini-copy">
+          <div class="brand-mini-line"><span class="brand-word">MOBA</span> <span>SHOP</span></div>
+          <small>Digital Store For Gamers</small>
+        </div>
+      </div>
+      <div class="status-pill available" id="topStatusBadge">
+        <span class="status-dot"></span>
+        <span class="status-copy"><span class="status-label">متاح الآن</span><small class="status-desc">التنفيذ شغال حاليا بشكل طبيعي.</small></span>
+      </div>
+    </div>
+    <script id="moba-v187-early-status-cache">
+    (function(){
+      try{
+        var raw=localStorage.getItem('moba_settings_cache_v187')||localStorage.getItem('moba_settings_cache');
+        if(!raw)return; var st=JSON.parse(raw); var s=st&&st.settings?st.settings:st;
+        var mode=String((s&&s.store_status)||((s&&String(s.busy_mode)==='true')?'busy':'available')).toLowerCase();
+        var msg=(s&& (s.store_status_message||s.busy_message))||'';
+        var map={available:['متاح الآن','التنفيذ شغال حاليا بشكل طبيعي.'],busy:['متاح ولكن فيه ضغط','تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.'],closed:['خارج مواعيد التنفيذ','ينفع تعمل طلبك عادي دلوقتي.'],maintenance:['صيانة مؤقتة','الطلبات الجديدة متوقفة مؤقتا.']};
+        var m=map[mode]||map.available; if(msg)m[1]=msg;
+        var el=document.getElementById('topStatusBadge'); if(el){el.className='status-pill store-status-pill '+mode; el.innerHTML='<span class="status-dot"></span><span class="status-copy"><span class="status-label">'+m[0]+'</span><small class="status-desc">'+m[1]+'</small></span>';}
+      }catch(e){}
+    })();
+    </script>
+    <nav class="jump-nav app-nav" aria-label="روابط سريعة">
+      <a class="primary" href="#home" data-view="home">🏠 الرئيسية</a>
+      <a href="#cart" data-view="cart">🛒 السلة</a>
+      <a href="#orders" data-view="orders">📦 طلباتي</a>
+      <a href="#reviews" data-view="reviews">💬 الآراء</a>
+      <a class="support-link" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">📞 الدعم</a>
+    </nav>
+    <section class="hero moba-view" data-page="home">
+      <div class="panel hero-main">
+        <div class="badge">⚡ Digital Store For Gamers</div>
+        <div class="logo">MOBA <span>SHOP</span></div>
+        <div class="hero-kicker">متجرك الرقمي للجيمرز | Digital Store For Gamers</div>
+        <div class="sub">جهز طلبك بسهولة من مكان واحد. اختار المنتج، ضيفه للسلة، اختار طريقة الدفع، وارفع السكرين. بيانات الدفع تظهر وقت الاختيار فقط.</div>
+        <div class="quick"><div class="chip">🛒 سلة منظمة</div><div class="chip">🛡 مراجعة آمنة</div><div class="chip">📦 متابعة بالموبايل</div><div class="chip">🎮 خدمات للجيمرز</div></div>
+        <div class="steps compact-steps">
+          <div class="step">1️⃣ اختار المنتج</div>
+          <div class="step">2️⃣ ضيف للسلة</div>
+          <div class="step">3️⃣ ادفع وارفع السكرين</div>
+        </div></div>
+    </section>
+
+    
+      <div id="workStatusMini" class="work-status-mini">🟢 الشحن متاح الآن — متوسط التنفيذ حسب ضغط الطلبات</div>
+
+    
+    
+    <section class="panel trust-hero-v62 moba-view" data-page="home" id="trustHeroV62">
+      <div class="trust-hero-content">
+        <span class="trust-badge-v62">👑 MOBA SHOP | Digital Store</span>
+        <h1>اشحن ألعابك بسهولة</h1>
+        <p>اختار لعبتك، ضيف المنتجات للسلة، وكمّل الدفع بخطوات واضحة.</p>
+        <div class="trust-stats-v62">
+          <div><b>7000+</b><span>عميل</span></div>
+          <div><b>1000+</b><span>تقييم</span></div>
+          <div><b>12+</b><span>خبرة</span></div>
+        </div>
+        <div class="trust-actions-v62">
+          <button type="button" data-view="home">🎮 اختار اللعبة</button>
+          <button type="button" data-view="orders">📦 تابع طلبك</button>
+        </div>
+      </div>
+      <div class="trust-mini-card-v62">
+        <h3>ليه MOBA SHOP؟</h3>
+        <ul>
+          <li>✅ شحن مضمون بعد مراجعة البيانات</li>
+          <li>🛒 سلة منظمة لأكتر من ID</li>
+          <li>📸 مراجعة سكرين التحويل قبل التنفيذ</li>
+          <li>📞 دعم مباشر لو في مشكلة</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel games-home-page moba-view" id="gamesHome" data-page="home">
+      <div class="games-home-head">
+        <div>
+          <span class="games-home-badge">🎮 MOBA SHOP Games</span>
+          <h2>اختار لعبتك</h2>
+          <p>اختار اللعبة اللي عايز تشحنها وبعدها هتظهرلك المنتجات الخاصة بيها بس.</p>
+        </div>
+        <button type="button" class="mini-cart-open" data-view="cart">🛒 فتح السلة</button>
+      </div>
+
+      
+      <div class="game-cards-grid premium-games-grid clean-games-v64">
+
+        <button type="button" class="game-card premium-card active cover-card" data-game="pubg">
+          <div class="game-cover"><img src="assets/game-covers/pubg-new.webp" alt="PUBG Mobile"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge available">متاح الآن</span><b>PUBG Mobile</b><small>UC | ازدهار | برايم</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="freefire">
+          <div class="game-cover"><img src="assets/game-covers/freefire-new.webp" alt="Free Fire"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Free Fire</b><small>Diamonds</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="roblox">
+          <div class="game-cover"><img src="assets/game-covers/roblox.webp" alt="Roblox"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Roblox</b><small>Robux</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="blood_mena">
+          <div class="game-cover"><img src="assets/game-covers/blood_mena.jpg" alt="Blood Strike MENA"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Blood Strike MENA</b><small>MENA Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="blood_global">
+          <div class="game-cover"><img src="assets/game-covers/blood_global.jpg" alt="Blood Strike Global"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Blood Strike Global</b><small>Global Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="kingshot">
+          <div class="game-cover"><img src="assets/game-covers/kingshot.webp" alt="King Shot"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>King Shot</b><small>Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="8ball">
+          <div class="game-cover"><img src="assets/game-covers/8ball.webp" alt="8 Ball Pool"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>8 Ball Pool</b><small>Coins / Cash</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="goal_battle">
+          <div class="game-cover"><img src="assets/game-covers/goal_battle.webp" alt="Goal Battle"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Goal Battle</b><small>Top Up</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="yalla_ludo">
+          <div class="game-cover"><img src="assets/game-covers/yalla_ludo.webp" alt="Yalla Ludo"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Yalla Ludo</b><small>Diamonds / Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="last_war">
+          <div class="game-cover"><img src="assets/game-covers/last_war.webp" alt="Last War"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Last War</b><small>Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="efootball">
+          <div class="game-cover"><img src="assets/game-covers/efootball.webp" alt="eFootball"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>eFootball</b><small>Coins / Points</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="tiktok">
+          <div class="game-cover"><img src="assets/game-covers/tiktok.webp" alt="TikTok"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>TikTok</b><small>Coins</small></div>
+        </button>
+
+        <button type="button" class="game-card premium-card coming cover-card" data-game="valorant">
+          <div class="game-cover"><img src="assets/game-covers/valorant.jpg" alt="Valorant"></div>
+          <div class="game-overlay"></div>
+          <div class="game-card-content"><span class="game-badge soon">قريبًا</span><b>Valorant</b><small>Points</small></div>
+        </button>
+
+      </div>
+
+    </section>
+
+    <section class="grid moba-view" data-page="game" id="shopWorkspace">
+      <div class="panel products" id="productsSection">
+        <div class="section-title products-head-v119">
+          <div class="products-title-copy">
+            <h2>المنتجات | Products</h2>
+            <small id="productCatInfo">اختار القسم المناسب، واكتب ID واسم الحساب قبل الإضافة للسلة.</small>
+          </div>
+          <div class="tabs product-tabs-v119" aria-label="Product categories">
+            <button class="tab active" data-cat="uc"><span>شدات UC</span><small>باقات الشحن</small></button>
+            <button class="tab" data-cat="growth"><span>ازدهار</span><small>عروض خاصة</small></button>
+            <button class="tab" data-cat="prime"><span>برايم</span><small>اشتراكات</small></button>
+          </div>
+        </div>
+        <div id="productList" class="product-list"></div>
+      </div>
+      <aside class="panel cart" id="cartSection" data-cart-panel="1">
+        <h2>السلة والدفع | Cart</h2>
+        <div id="cartBox"></div>
+        <div class="total"><span>الإجمالي | Total</span><span id="total">0 جنيه</span></div>
+        
+      <div class="coupon-box" id="couponBox">
+        <b>🎟️ عندك كوبون خصم؟</b>
+        <div class="coupon-row">
+          <input id="couponInput" placeholder="اكتب كود الخصم" autocomplete="off">
+          <button type="button" id="applyCouponBtn">تطبيق</button>
+        </div>
+        <div id="couponStatus" class="coupon-status"></div>
+      </div>
+
+      <form id="orderForm" class="form">
+          <div><label>📱 رقم الموبايل</label><input class="input" name="customerPhone" inputmode="numeric" placeholder="010xxxxxxxx" required /></div>
+          <div><label>💳 طريقة الدفع | Payment</label><select class="select" name="paymentMethod" id="paymentMethod" required><option value="">اختار طريقة الدفع</option><option value="InstaPay">🟢 InstaPay</option><option value="Wallet">📱 محفظة | Wallet</option></select></div>
+          <div id="paymentDetails" class="payment-details"></div>
+          <div class="verify-box">
+            <b>🔐 تأكيد التحويل</b><br>
+            <span class="notice">رقم الموبايل اللي فوق هو رقم متابعة الطلب. هل الفلوس اتحولت من نفس الرقم ده؟</span>
+            <div class="verify-options">
+              <label><input type="radio" name="transferMode" value="same" required> نفس رقم المتابعة</label>
+              <label><input type="radio" name="transferMode" value="other" required> رقم تاني أو محل دفع</label>
+            </div>
+            <div id="last3Box" class="hide" style="margin-top:10px">
+              <label>اكتب آخر 3 أرقام من الرقم اللي حولت منه</label>
+              <input class="input" name="transferLast3" id="transferLast3" inputmode="numeric" maxlength="3" placeholder="مثال: 083" />
+              <div class="notice">⚠️ لو دفعت من محل أو من موبايل شخص تاني، آخر 3 أرقام بتساعدنا نطابق التحويل بسرعة.</div>
+            </div>
+          </div>
+          <div id="checkoutScreenshotBlockV160" class="checkout-shot-block-v160">
+            <label for="checkoutScreenshotV160">📸 ارفع سكرين التحويل</label>
+            <input id="checkoutScreenshotV160" class="file checkout-shot-input-v160" name="screenshot" type="file" accept="image/*" required />
+            <small id="checkoutScreenshotNameV160">لم يتم اختيار صورة بعد</small>
+          </div>
+          <div><label>📝 ملاحظة اختيارية</label><textarea class="textarea" name="note" placeholder="اي ملاحظة للطلب"></textarea></div>
+          <button class="btn checkout" type="submit">✅ تنفيذ الشراء | Checkout</button><button class="btn ghost" type="button" id="clearCart">🗑 تفريغ السلة</button>
+          <div id="status" class="status"></div><div class="notice">⚠️ راجع كل ID كويس قبل تنفيذ الطلب. اي ID غلط بعد التأكيد مسؤولية العميل.</div>
+        </form>
+      </aside>
+    </section>
+    
+    <section class="panel order-history-panel moba-view" data-page="orders" id="trackOrder">
+      <div class="history-head">
+        <h2>سجل الطلبات</h2>
+        <p>اكتب رقم الموبايل اللي سجلت بيه الطلب، وهيظهرلك سجل طلباتك وحالة كل طلب.</p>
+      </div>
+
+      <form id="trackForm" class="track-grid phone-only-track">
+        <div>
+          <label>📱 رقم الموبايل</label>
+          <input class="input" id="trackPhone" inputmode="numeric" placeholder="010xxxxxxxx" required />
+        </div>
+        <button class="btn add" type="submit">🔎 متابعة</button>
+      </form>
+
+      <div class="history-tabs" id="historyTabs" style="display:none">
+        <button class="history-tab active" type="button" data-filter="all">الجميع</button>
+        <button class="history-tab" type="button" data-filter="open">معلق</button>
+        <button class="history-tab" type="button" data-filter="done">مكتمل</button>
+        <button class="history-tab" type="button" data-filter="cancelled">ملغي</button>
+      </div>
+
+      <div id="lastIssueAlert" class="last-issue-alert"></div>
+      <div id="trackResult" class="track-result"></div>
+      <div id="historyList" class="history-list"></div>
+      <div class="notice">اضغط على أي طلب عشان تشوف تفاصيله كاملة.</div>
+    </section>
+
+    
+    <section class="panel reviews-panel moba-view" data-page="reviews" id="customerReviews">
+      <div class="reviews-title">
+        <div>
+          <h2>💬 آراء العملاء</h2>
+          <p>اكتب رأيك في MOBA SHOP وقيّم تجربتك، وآراء العملاء هتظهر هنا للناس.</p>
+        </div>
+      </div>
+
+      <div class="reviews-stats">
+        <div class="reviews-stat"><b>+7000</b><span>عميل وثق فينا</span></div>
+        <div class="reviews-stat"><b>12+</b><span>خبرة</span></div>
+        <div class="reviews-stat"><b>+1000</b><span>تقييم ورأي</span></div>
+      </div>
+
+      <form class="review-form" id="reviewForm">
+        <input class="input" name="customerName" placeholder="اسمك" maxlength="32" required>
+        <div class="review-stars" id="reviewStars" aria-label="تقييم النجوم">
+          <button type="button" class="review-star active" data-rate="1">★</button>
+          <button type="button" class="review-star active" data-rate="2">★</button>
+          <button type="button" class="review-star active" data-rate="3">★</button>
+          <button type="button" class="review-star active" data-rate="4">★</button>
+          <button type="button" class="review-star active" data-rate="5">★</button>
+        </div>
+        <input type="hidden" name="rating" id="reviewRating" value="5">
+        <textarea class="textarea" name="reviewText" placeholder="اكتب رأيك فينا" maxlength="260" required></textarea>
+        <button class="btn add" type="submit">⭐ نشر التقييم</button>
+        <div id="reviewStatus" class="review-status"></div>
+      </form>
+
+      <div id="reviewsList" class="review-list"></div>
+    </section>
+
+    <div class="footer" id="footerSupport">MOBA SHOP | Digital Store For Gamers</div>
+  </main>
+  <div class="sticky-cart" id="stickyCart" role="button" aria-label="افتح السلة">السلة 0 منتجات | 0 جنيه</div>
+  <div id="modal" class="modal"><div class="modal-card"><h2>✅ تم اضافة المنتج للسلة</h2><p id="modalText"></p><div class="modal-actions"><button class="btn add" id="addMore">➕ إضافة منتج</button><button class="btn okbtn" id="goCheckout">✅ تنفيذ الشراء</button><button class="btn ghost" id="showCartBtn">🛒 عرض السلة</button></div></div></div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="order-details-modal" id="orderDetailsModal" data-order-modal-close>
+    <div class="order-details-card" data-order-modal-card>
+      <button class="order-details-close" type="button" data-order-modal-close-btn>×</button>
+      <div class="order-details-title">تفاصيل الطلب</div>
+      <div id="orderDetailsContent"></div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="toast-moba" id="mobaToast"></div>
+  <div class="checkout-confirm" id="checkoutConfirm">
+    <div class="checkout-confirm-card">
+      <h3>راجع الطلب قبل الإرسال</h3>
+      <div class="confirm-summary" id="checkoutConfirmSummary"></div>
+      <div class="notice">تأكد من ID واسم الحساب وبيانات الدفع قبل التأكيد.</div>
+      <div class="confirm-actions">
+        <button class="confirm-ok" type="button" id="confirmSendOrder">✅ تأكيد الطلب</button>
+        <button class="confirm-cancel" type="button" id="cancelSendOrder">رجوع للتعديل</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  
+    <div class="moba-name-badge">MOba</div>
+  </div>
+
+
+
+
+
+  <div class="pharaoh-chat-panel" id="pharaohChatPanel" dir="rtl">
+    <div class="pharaoh-chat-head">
+      <div class="pharaoh-chat-title">
+        <div class="pharaoh-mini"><img class="pharaoh-figure small" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="96" height="120" loading="lazy"></div>
+        <div>
+          <b>فرعون Assistant</b>
+          <span>مساعد MOBA SHOP للشحن والدعم والمتابعة</span>
+        </div>
+      </div>
+      <button class="pharaoh-close" type="button" id="pharaohClose">×</button>
+    </div>
+    <div class="pharaoh-chat-body" id="pharaohChatBody">
+      <div class="pharaoh-msg bot pharaoh-v182-home-only">
+        <div class="pharaoh-v85-card">
+          <b>أنا معاك يا بطل</b>
+          <small>اختار اللي محتاجه وفرعون يكملك خطوة بخطوة</small>
+          <div class="pharaoh-v85-note">شحن جديد، متابعة طلب، فحص طلب، أو مشكلة؟</div>
+          <div class="pharaoh-v85-actions">
+            <button type="button" class="green" data-v182-act="track">تابع طلبي</button>
+            <button type="button" class="gold" data-v182-act="start">ابدأ الشحن</button>
+            <button type="button" data-v182-act="check">افحص طلبي</button>
+            <button type="button" data-v182-act="problem">مشكلة في الطلب</button>
+          </div>
+        </div>
+      </div>
+      <div class="pharaoh-quick" style="display:none"></div>
+      <div class="pharaoh-typing" id="pharaohTyping">فرعون بيكتب...</div>
+    </div>
+    <form class="pharaoh-chat-foot" id="pharaohChatForm">
+      <input id="pharaohChatInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+      <button type="button" id="pharaohSendBtn">إرسال</button>
+    </form>
+  </div>
+
+  <div class="pharaoh-assistant-fab has-notify" id="pharaohAssistantFab" title="فرعون Assistant">
+    <div class="pharaoh-character"><span class="spark s1"></span><span class="spark s2"></span><span class="shadow"></span><img class="pharaoh-figure" src="assets/assistant/pharaoh-realistic-transparent-512.webp" alt="فرعون" width="128" height="160" loading="lazy"></div>
+    <div class="pharaoh-name-badge">فرعون</div>
+    <div class="pharaoh-hint-bubble" id="pharaohHintBubble"></div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- V46 removed old screenshot validation script #1 -->
+
+
+
+
+
+
+
+
+
+
+<!-- V46 removed old screenshot validation script #2 -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/products.js?v=198"></script>
+<script src="js/router.js?v=198"></script>
+<script src="js/coupons.js?v=198"></script>
+<script src="js/cart.js?v=205-requested-games"></script>
+<script>
+/* hard final games view: prevents old cached game cards from surviving deploy */
+(function(){
+  const games=[
+    ['pubg','PUBG Mobile','UC','assets/game-covers/pubg.webp'],
+    ['freefire','Free Fire','Diamonds','assets/game-covers/freefire-new.webp'],
+    ['blood_mena','Blood Strike MENA','MENA Top Up','assets/game-covers/blood_mena.jpg'],
+    ['mobile_legends','Mobile Legends','Diamonds','assets/game-covers/mobile_legends.svg'],
+    ['yalla_ludo','Yalla Ludo','Diamonds','assets/game-covers/yalla_ludo.webp']
+  ];
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let lastGamesHtml='';
+  function render(){
+    const grid=document.querySelector('#gamesHome .game-cards-grid'); if(!grid)return;
+    const html=games.map(g=>`<button type="button" class="moba-game-tile-hard" data-hard-game="${esc(g[0])}"><img src="${esc(g[3])}" alt="${esc(g[1])}" onerror="this.onerror=null;this.src='assets/moba-shop-logo-512.webp'"><span></span><em>متاح الآن</em><b>${esc(g[1])}</b><small>${esc(g[2])}</small></button>`).join('');
+    if(html!==lastGamesHtml){grid.innerHTML=html; lastGamesHtml=html;}
+  }
+  window.addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('[data-hard-game]'); if(!b)return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation&&e.stopImmediatePropagation();
+    window.activeGame=b.dataset.hardGame;
+    window.activeCat={pubg:'uc',freefire:'diamonds',blood_mena:'blood_diamonds',mobile_legends:'ml_diamonds',yalla_ludo:'yalla_diamonds'}[window.activeGame]||'uc';
+    if(typeof window.mobaShowView==='function')window.mobaShowView('game');
+    setTimeout(()=>{try{window.renderProducts&&window.renderProducts();}catch(_){} document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'});},80);
+    return false;
+  },true);
+  window.addEventListener('click',function(e){
+    const offer=e.target.closest&&e.target.closest('#exclusiveOfferV168,[data-v198-home-section],[data-v203-home-section],.home-sections-v198 button,.exclusive-offer-v168 button');
+    if(!offer)return;
+    e.preventDefault(); e.stopPropagation();
+    window.activeGame=offer.dataset?.v198HomeGame||offer.dataset?.v203HomeGame||window.activeGame||'pubg';
+    window.activeCat=offer.dataset?.v198HomeSection||offer.dataset?.v203HomeSection||window.activeCat||'uc';
+    if(typeof window.mobaShowView==='function')window.mobaShowView('game');
+    setTimeout(()=>{try{window.renderProducts&&window.renderProducts();}catch(_){} document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'});},80);
+    return false;
+  },true);
+  const st=document.createElement('style');
+  st.textContent=`#gamesHome .game-cards-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))!important;gap:22px!important;padding:6px 2px 12px!important;align-items:stretch!important}#gamesHome .game-card{display:none!important}#gamesHome .moba-game-tile-hard{position:relative!important;display:block!important;min-height:176px!important;aspect-ratio:16/9!important;overflow:hidden!important;border:1px solid rgba(73,219,255,.32)!important;border-radius:22px!important;background:#071321!important;color:#fff!important;text-align:start!important;padding:0!important;box-shadow:0 18px 42px rgba(0,0,0,.32),0 0 0 1px rgba(255,216,107,.08) inset!important;cursor:pointer!important;transform:translateZ(0)!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease!important}#gamesHome .moba-game-tile-hard:hover{transform:translateY(-4px) scale(1.012)!important;border-color:rgba(255,216,107,.58)!important;box-shadow:0 24px 52px rgba(0,0,0,.38),0 0 24px rgba(255,216,107,.16)!important}#gamesHome .moba-game-tile-hard:active{transform:translateY(1px) scale(.985)!important;filter:brightness(.92)!important}#gamesHome .moba-game-tile-hard img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}#gamesHome .moba-game-tile-hard span{position:absolute!important;inset:0!important;background:linear-gradient(90deg,rgba(3,8,18,.94),rgba(3,8,18,.36) 58%,rgba(3,8,18,.72))!important}#gamesHome .moba-game-tile-hard b{position:absolute!important;right:20px!important;left:20px!important;bottom:44px!important;font-size:22px!important;line-height:1.15!important;letter-spacing:0!important}#gamesHome .moba-game-tile-hard small{position:absolute!important;right:20px!important;left:20px!important;bottom:20px!important;color:#d9efff!important;font-size:13px!important}#gamesHome .moba-game-tile-hard em{position:absolute!important;right:16px!important;top:14px!important;font-style:normal!important;padding:7px 12px!important;border-radius:999px!important;background:#54e6b0!important;color:#061421!important;font-weight:900!important;font-size:12px!important}#exclusiveOfferV168,.home-sections-v198 button,[data-v198-home-section],[data-v203-home-section]{cursor:pointer!important;transition:transform .16s ease,box-shadow .16s ease!important}#exclusiveOfferV168:hover,.home-sections-v198 button:hover,[data-v198-home-section]:hover,[data-v203-home-section]:hover{transform:translateY(-2px)!important;box-shadow:0 18px 38px rgba(0,0,0,.28)!important}@media(max-width:680px){#gamesHome .game-cards-grid{grid-template-columns:1fr!important;gap:14px!important}#gamesHome .moba-game-tile-hard{min-height:140px!important;border-radius:18px!important}#gamesHome .moba-game-tile-hard b{font-size:19px!important}}`;
+  document.head.appendChild(st);
+  document.addEventListener('DOMContentLoaded',()=>{render();setTimeout(render,500);setTimeout(render,1500);});
+  window.addEventListener('load',()=>setTimeout(render,120));
+})();
+</script>
+<script src="js/pharaoh.js?v=198"></script>
+<script>
+/* moba-v206-index-final-home-shape */
+(function(){
+  if(window.__mobaV206IndexFinalHomeShape)return; window.__mobaV206IndexFinalHomeShape=true;
+  const games=[
+    ['pubg','PUBG Mobile','UC','assets/game-covers/pubg.webp'],
+    ['freefire','Free Fire','Diamonds','assets/game-covers/freefire-new.webp'],
+    ['blood_mena','Blood Strike MENA','MENA Top Up','assets/game-covers/blood_mena.jpg'],
+    ['mobile_legends','Mobile Legends','Diamonds','assets/game-covers/mobile_legends.svg'],
+    ['yalla_ludo','Yalla Ludo','Diamonds','assets/game-covers/yalla_ludo.webp']
+  ];
+  const cats={pubg:'uc',freefire:'diamonds',blood_mena:'blood_diamonds',mobile_legends:'ml_diamonds',yalla_ludo:'yalla_diamonds'};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function draw(){
+    const grid=document.querySelector('#gamesHome .game-cards-grid'); if(!grid)return;
+    const html=games.map(g=>`<button type="button" class="moba-game-tile-v206" data-v206-game="${esc(g[0])}"><img src="${esc(g[3])}" alt="${esc(g[1])}" onerror="this.onerror=null;this.src='assets/moba-shop-logo-512.webp'"><span class="shade"></span><em>متاح الآن</em><b>${esc(g[1])}</b><small>${esc(g[2])}</small></button>`).join('');
+    if(grid.innerHTML!==html){grid.innerHTML=html;}
+    document.querySelectorAll('#homeSectionsV198,#homeSectionsV195,.home-sections-v198,.home-sections-v195').forEach(box=>{
+      box.classList.add('home-offers-wide-v206');
+      box.querySelectorAll('button').forEach(btn=>btn.classList.add('home-offer-banner-v206'));
+    });
+  }
+  function openGame(game){
+    window.activeGame=game||'pubg'; window.activeCat=cats[window.activeGame]||'uc';
+    if(typeof window.mobaShowView==='function')window.mobaShowView('game');
+    setTimeout(()=>{try{window.renderProducts&&window.renderProducts();}catch(_){} document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'});},70);
+  }
+  document.addEventListener('click',function(e){
+    const game=e.target.closest&&e.target.closest('[data-v206-game]');
+    if(game){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation&&e.stopImmediatePropagation();openGame(game.dataset.v206Game);return false}
+    const offer=e.target.closest&&e.target.closest('.home-offer-banner-v206,[data-v198-home-section],[data-v203-home-section],#exclusiveOfferV168');
+    if(offer){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation&&e.stopImmediatePropagation();window.activeGame=offer.dataset?.v198HomeGame||offer.dataset?.v203HomeGame||window.activeGame||'pubg';window.activeCat=offer.dataset?.v198HomeSection||offer.dataset?.v203HomeSection||window.activeCat||cats[window.activeGame]||'uc';if(typeof window.mobaShowView==='function')window.mobaShowView('game');setTimeout(()=>{try{window.renderProducts&&window.renderProducts();}catch(_){}document.getElementById('productsSection')?.scrollIntoView({behavior:'smooth',block:'start'});},70);return false}
+  },true);
+  const st=document.createElement('style');
+  st.textContent=`
+    #gamesHome .game-card,#gamesHome .moba-game-tile-v203,#gamesHome .moba-game-tile-v204,#gamesHome .moba-game-tile-v205,#gamesHome .moba-game-tile-hard{display:none!important}
+    #gamesHome .game-cards-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))!important;gap:24px!important;padding:24px 0 10px!important;align-items:stretch!important;min-height:0!important}
+    #gamesHome .moba-game-tile-v206{position:relative!important;display:block!important;min-height:184px!important;aspect-ratio:16/9!important;overflow:hidden!important;border:1px solid rgba(73,219,255,.34)!important;border-radius:24px!important;background:#071321!important;color:#fff!important;text-align:start!important;padding:0!important;box-shadow:0 20px 48px rgba(0,0,0,.35),0 0 0 1px rgba(255,216,107,.08) inset!important;cursor:pointer!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease!important}
+    #gamesHome .moba-game-tile-v206:hover{transform:translateY(-5px)!important;border-color:rgba(255,216,107,.62)!important;box-shadow:0 28px 62px rgba(0,0,0,.43),0 0 26px rgba(255,216,107,.16)!important}
+    #gamesHome .moba-game-tile-v206:active{transform:translateY(1px) scale(.985)!important;filter:brightness(.93)!important}
+    #gamesHome .moba-game-tile-v206 img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;filter:saturate(1.08) contrast(1.05)!important}
+    #gamesHome .moba-game-tile-v206 .shade{position:absolute!important;inset:0!important;background:linear-gradient(90deg,rgba(3,8,18,.95),rgba(3,8,18,.33) 58%,rgba(3,8,18,.72))!important}
+    #gamesHome .moba-game-tile-v206 b{position:absolute!important;right:22px!important;left:22px!important;bottom:48px!important;font-size:23px!important;line-height:1.15!important;letter-spacing:0!important;text-shadow:0 3px 14px rgba(0,0,0,.72)!important}
+    #gamesHome .moba-game-tile-v206 small{position:absolute!important;right:22px!important;left:22px!important;bottom:22px!important;color:#d9efff!important;font-size:13px!important;text-shadow:0 2px 12px rgba(0,0,0,.65)!important}
+    #gamesHome .moba-game-tile-v206 em{position:absolute!important;right:16px!important;top:14px!important;font-style:normal!important;padding:8px 13px!important;border-radius:999px!important;background:#54e6b0!important;color:#061421!important;font-weight:900!important;font-size:12px!important;box-shadow:0 10px 24px rgba(0,0,0,.22)!important}
+    body.moba-page-booting #gamesHome .game-cards-grid,body:not(.moba-settings-ready) #gamesHome .game-cards-grid{opacity:1!important;pointer-events:auto!important;min-height:0!important}
+    #homeSectionsV198.home-offers-wide-v206,#homeSectionsV195.home-offers-wide-v206,.home-offers-wide-v206{display:flex!important;justify-content:flex-end!important;align-items:stretch!important;gap:16px!important;margin:22px 0 30px!important;padding:0!important;min-height:0!important;overflow:visible!important;background:transparent!important;border:0!important;box-shadow:none!important}
+    .home-offer-banner-v206{position:relative!important;width:min(100%,390px)!important;min-height:118px!important;border-radius:22px!important;overflow:hidden!important;border:1px solid rgba(73,219,255,.34)!important;background:#071321!important;color:#fff!important;text-align:right!important;padding:16px 18px!important;box-shadow:0 18px 46px rgba(0,0,0,.35),0 0 0 1px rgba(255,216,107,.10) inset!important;isolation:isolate!important;cursor:pointer!important;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important}
+    .home-offer-banner-v206:hover{transform:translateY(-4px)!important;border-color:rgba(255,216,107,.62)!important;box-shadow:0 24px 58px rgba(0,0,0,.42),0 0 28px rgba(255,216,107,.14)!important}
+    .home-offer-banner-v206 img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;opacity:.78!important;filter:saturate(1.08) contrast(1.05)!important;z-index:-2!important}
+    .home-offer-banner-v206:after{content:''!important;position:absolute!important;inset:0!important;background:linear-gradient(90deg,rgba(4,11,24,.96),rgba(4,11,24,.52),rgba(4,11,24,.18))!important;z-index:-1!important;pointer-events:none!important}
+    .home-offer-banner-v206 span,.home-offer-banner-v206 b,.home-offer-banner-v206 small{position:relative!important;z-index:1!important;display:block!important;text-shadow:0 2px 12px rgba(0,0,0,.72)!important}
+    .home-offer-banner-v206 span{width:max-content!important;margin-inline-start:auto!important;background:#54e6b0!important;color:#061421!important;border:0!important;border-radius:999px!important;padding:6px 10px!important;font-size:11px!important;font-weight:1000!important}
+    .home-offer-banner-v206 b{font-size:20px!important;margin-top:18px!important;line-height:1.15!important;font-weight:1000!important}
+    .home-offer-banner-v206 small{font-size:12px!important;color:#e8f7ff!important;margin-top:5px!important}
+    #exclusiveOfferV168{width:min(100%,520px)!important;min-height:130px!important;border-radius:22px!important;margin:22px 0 30px auto!important;overflow:hidden!important}
+    @media(max-width:680px){#gamesHome .game-cards-grid{grid-template-columns:1fr!important;gap:18px!important;padding-top:20px!important}#gamesHome .moba-game-tile-v206{min-height:154px!important;border-radius:20px!important}#gamesHome .moba-game-tile-v206 b{font-size:20px!important;right:18px!important;left:18px!important;bottom:46px!important}#gamesHome .moba-game-tile-v206 small{right:18px!important;left:18px!important}#homeSectionsV198.home-offers-wide-v206,#homeSectionsV195.home-offers-wide-v206,.home-offers-wide-v206{display:grid!important;grid-template-columns:1fr!important;margin:16px 0 24px!important;gap:14px!important}.home-offer-banner-v206{width:100%!important;min-height:112px!important;border-radius:20px!important}#exclusiveOfferV168{width:100%!important;margin:16px 0 24px!important}}
+  `;
+  document.head.appendChild(st);
+  document.addEventListener('DOMContentLoaded',()=>{draw();setTimeout(draw,300);setTimeout(draw,900);setTimeout(draw,1700);setTimeout(draw,2600);});
+  window.addEventListener('load',()=>{draw();setTimeout(draw,350);setTimeout(draw,1800);});
+  const keep=()=>{clearTimeout(window.__mobaV206HomeFixTimer);window.__mobaV206HomeFixTimer=setTimeout(draw,40)};
+  document.addEventListener('DOMContentLoaded',()=>{const grid=document.querySelector('#gamesHome .game-cards-grid'); if(grid&&!grid.__mobaV206Obs){grid.__mobaV206Obs=true; new MutationObserver(keep).observe(grid,{childList:true,subtree:false});}});
+})();
+</script>
+<script id="moba-v130-client-error-logger">window.addEventListener('error',function(e){try{fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:'site',message:e.message,source:e.filename,lineno:e.lineno,colno:e.colno,stack:e.error&&e.error.stack})})}catch(_){}});</script>
+
+<script>
+(function(){
+  if(window.__mobaVisitorPing)return; window.__mobaVisitorPing=true;
+  const KEY='moba_device_id';
+  let id=localStorage.getItem(KEY);
+  if(!id){ id='dev_'+Math.random().toString(36).slice(2)+'_'+Date.now().toString(36); localStorage.setItem(KEY,id); }
+  async function ping(){
+    if(document.hidden) return;
+    try{
+      const res=await fetch('/api/client-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'visitor_ping',deviceId:id,page:location.pathname||'/'})});
+      const data=await res.json().catch(()=>({}));
+      if(data&&data.blocked){
+        document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#070b14;color:#fff;font-family:Tahoma,Arial;padding:20px;text-align:center"><div style="max-width:460px;border:1px solid rgba(255,93,116,.35);background:rgba(255,93,116,.10);border-radius:22px;padding:24px;line-height:1.8"><h2 style="margin-top:0">تم إيقاف الوصول مؤقتًا</h2><p>'+String(data.error||'هذا الجهاز محظور من استخدام الموقع.').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</p><a style="color:#27d8ff;font-weight:900" href="https://t.me/MOFR3OON" target="_blank" rel="noopener">تواصل مع الدعم</a></div></div>';
+      }
+    }catch(e){}
+  }
+  ping();
+  setInterval(ping,30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) ping(); });
+})();
+</script>
+
+</body>
+</html>
