@@ -1,1 +1,0 @@
-V188: fixed duplicate home sections, available game opening, and admin duplicate/delete cleanup. API count remains 12.
