@@ -1,5 +1,0 @@
-V184 404 ROOT FIX
-- Uses explicit Vercel version 2 routes so / opens index.html and /admin opens admin.html.
-- Keeps exactly 12 API files.
-- Adds a public mirror of static files to protect against Vercel projects configured with Output Directory = public.
-- If 404 still appears, check Vercel Project Settings > Root Directory: it must point to the folder containing index.html, admin.html, api, assets, js, styles, vercel.json.
