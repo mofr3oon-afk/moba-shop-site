@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MOBA SHOP | Digital Store For Gamers</title>
+  <meta name="description" content="MOBA SHOP - شحن ألعاب سريع وآمن مع متابعة الطلب والدعم المباشر.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MOBA SHOP">
+  <meta property="og:description" content="شحن ألعاب سريع وآمن مع متابعة الطلب والدعم المباشر.">
+  <meta property="og:image" content="/assets/moba-shop-logo-512.webp">
+  <meta property="og:site_name" content="MOBA SHOP">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MOBA SHOP">
+  <meta name="twitter:description" content="شحن ألعاب سريع وآمن">
+  <meta name="twitter:image" content="/assets/moba-shop-logo-512.webp">
+  <meta name="theme-color" content="#07111d">
+  <link rel="icon" href="/assets/moba-shop-logo-256.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" data-link>
+      <img src="/assets/moba-shop-logo.png" alt="MOBA SHOP" onerror="this.src='/assets/moba-shop-logo-512.webp'">
+      <span><b>MOBA <em>SHOP</em></b><small>Digital Store For Gamers</small></span>
+    </a>
+    <nav class="main-nav" aria-label="التنقل">
+      <a href="/" data-link>الرئيسية</a>
+      <a href="/cart" data-link>السلة</a>
+      <a href="/track" data-link>طلباتي</a>
+      <a href="/reviews" data-link>الآراء</a>
+      <a id="supportWhatsApp" href="https://wa.me/201061707294" target="_blank" rel="noopener">الدعم</a>
+    </nav>
+  </header>
+
+  <main id="app" class="app-shell" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <a href="/policies" data-link>الشروط والسياسات</a>
+    <a href="/faq" data-link>الأسئلة الشائعة</a>
+    <a href="/offers/pubg" data-link>عروض PUBG</a>
+    <a id="footerSupportWhatsApp" href="https://wa.me/201061707294" target="_blank" rel="noopener">الدعم</a>
+    <a href="/policies" data-link>مواعيد العمل</a>
+    <a href="/track" data-link>متابعة الطلب</a>
+  </footer>
+
+  <button id="openAssistant" class="pharaoh-launcher" type="button">
+    <img src="/assets/assistant/pharaoh-user-realistic-transparent.png" alt="">
+    <span>فرعون</span>
+    <small>لو عايز مساعدة دوس عليا</small>
+  </button>
+
+  <button id="cartBubble" class="cart-bubble" type="button" aria-label="فتح السلة">
+    <span>السلة</span>
+    <b id="cartBubbleText">0 منتجات | 0 جنيه</b>
+  </button>
+
+  <aside id="assistantPanel" class="assistant-panel" aria-hidden="true">
+    <div class="assistant-head">
+      <button id="closeAssistant" type="button" aria-label="إغلاق">×</button>
+      <div>
+        <b>فرعون Assistant</b>
+        <small>مساعد الشحن والدعم والمتابعة</small>
+      </div>
+      <img src="/assets/assistant/pharaoh-user-realistic-transparent.png" alt="">
+    </div>
+    <div id="assistantMessages" class="assistant-messages"></div>
+    <form id="assistantForm" class="assistant-form">
+      <input id="assistantInput" autocomplete="off" placeholder="اكتب سؤالك هنا...">
+      <button type="submit">إرسال</button>
+    </form>
+  </aside>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
