@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "functions": {
+    "api/*.js": { "maxDuration": 30 }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/admin/?", "dest": "/admin.html" },
+    { "src": "/admin.html", "dest": "/admin.html" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/js/(.*)", "dest": "/js/$1" },
+    { "src": "/styles/(.*)", "dest": "/styles/$1" },
+    { "src": "/favicon.ico", "dest": "/assets/moba-shop-logo-256.png" },
+    { "src": "/policies/?", "dest": "/index.html" },
+    { "src": "/faq/?", "dest": "/index.html" },
+    { "src": "/offers/pubg/?", "dest": "/index.html" },
+    { "src": "/product/(.*)", "dest": "/index.html" },
+    { "src": "/(game/.*|cart|checkout|track|reviews|success)/?", "dest": "/index.html" },
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

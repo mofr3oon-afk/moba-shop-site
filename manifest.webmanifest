@@ -1,0 +1,21 @@
+{
+  "name": "MOBA SHOP",
+  "short_name": "MOBA SHOP",
+  "description": "Digital Store For Gamers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050a12",
+  "theme_color": "#07111d",
+  "icons": [
+    {
+      "src": "/assets/moba-shop-logo-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/moba-shop-logo-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}
