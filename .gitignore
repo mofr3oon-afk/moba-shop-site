@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.topup.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.bak
+.topup-data/
+coverage/
