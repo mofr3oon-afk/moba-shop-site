@@ -1,11 +1,12 @@
 import { requireTelegramSecret, rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
+import { handlePubgMessage } from '../lib/telegram-pubg.js';
+import { handleMenuMessage } from '../lib/telegram-menu.js';
 // moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_IDS = String(process.env.ADMIN_IDS || '').split(',').map(x=>x.trim()).filter(Boolean);
-const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || '';
 
 function json(res,status,obj){res.status(status).json(obj);}
 function displayOrderCode(order){ return order?.order_code || order?.id || ''; }
@@ -669,13 +670,27 @@ async function handleCallback(cb){
   }
 }
 export default async function handler(req,res){
-  try{ rateLimit(req,'telegram',120,60_000); await persistentRateLimit(req,'telegram-persistent',180,60_000); requireTelegramSecret(req); }catch(e){ return safeError(res,e,e.statusCode||401); }
+  try{ requireTelegramSecret(req); rateLimit(req,'telegram',120,60_000); await persistentRateLimit(req,'telegram-persistent',180,60_000); }catch(e){ return safeError(res,e,e.statusCode||401); }
   try{
     if(req.method!=='POST') return json(res,200,{ok:true});
-    const qSecret=req.query?.secret || '';
-    if(WEBHOOK_SECRET && qSecret !== WEBHOOK_SECRET) return json(res,403,{ok:false,error:'bad secret'});
     const update=req.body || {};
-    if(update.message && update.message.text) await handleCommand(update.message);
+    if(update.message && update.message.text){
+      const menuHandled=await handleMenuMessage(update.message,{
+        send:tg,runCommand:handleCommand,admin:isAdmin(update.message.from?.id),
+        botId:String(BOT_TOKEN || '').split(':')[0]
+      });
+      const handled = menuHandled || await handlePubgMessage(update.message,{
+        send:tg,
+        admin:isAdmin(update.message.from?.id),
+        botId:String(BOT_TOKEN || '').split(':')[0],
+        limit:async userId=>{
+          const userReq = {headers:{'x-forwarded-for':`telegram-user-${userId}`}};
+          rateLimit(userReq,'pubg-lookup',6,60_000);
+          await persistentRateLimit(userReq,'pubg-lookup',6,60_000);
+        }
+      });
+      if(!handled) await handleCommand(update.message);
+    }
     if(update.callback_query) await handleCallback(update.callback_query);
     return json(res,200,{ok:true});
   }catch(e){

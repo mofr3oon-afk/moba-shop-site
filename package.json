@@ -5,6 +5,7 @@
   "type": "module",
   "description": "MOBA SHOP gamer digital store order system with Telegram admin actions and phone-only order status",
   "scripts": {
+    "test": "node --test",
     "dev": "vercel dev",
     "start": "vercel dev"
   },
