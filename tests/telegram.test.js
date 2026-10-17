@@ -55,14 +55,17 @@ test('wrong secret rejected before any network or database call',async()=>{
   assert.equal(calls.length,0);
 });
 test('admin help and order-ID search remain available',async()=>{
-  await invoke(msg('/admin',111));assert.match(telegramCalls().at(-1).body.text,/أوامر MOBA SHOP/);
+  await invoke(msg('/admin',111));assert.match(telegramCalls().at(-1).body.text,/لوحة MOBA SHOP/);
+  await invoke(msg('/commands',111));assert.match(telegramCalls().at(-1).body.text,/أوامر MOBA SHOP/);
   await invoke(msg('/find_id 5285527481',111));
   assert.ok(calls.some(x=>x.url.includes('/orders?items=')));
   assert.equal(calls.filter(x=>x.url.startsWith('https://gopay.co.id/')).length,0);
 });
 test('non-admin cannot use order administration',async()=>{
   await invoke(msg('/admin'));await invoke(msg('/find_id 5285527481'));
-  assert.equal(telegramCalls().length,0);assert.equal(calls.filter(x=>x.url.includes('/orders')).length,0);
+  assert.equal(telegramCalls().length,1);
+  assert.match(telegramCalls()[0].body.text,/خاصة بمسؤول/);
+  assert.equal(calls.filter(x=>x.url.includes('/orders')).length,0);
 });
 test('existing and legacy admin order buttons still update the order',async()=>{
   for(const data of ['delivered:order-1','web_delivered_order-1']){
