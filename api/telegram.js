@@ -1,6 +1,7 @@
 import { requireTelegramSecret, rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
 import { handlePubgMessage } from '../lib/telegram-pubg.js';
 import { handleMenuMessage } from '../lib/telegram-menu.js';
+import { forwardTopupUpdate } from '../lib/topup-bridge.js';
 // moba-v40-security
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -674,6 +675,7 @@ export default async function handler(req,res){
   try{
     if(req.method!=='POST') return json(res,200,{ok:true});
     const update=req.body || {};
+    if(await forwardTopupUpdate(update)) return json(res,200,{ok:true});
     if(update.message && update.message.text){
       const menuHandled=await handleMenuMessage(update.message,{
         send:tg,runCommand:handleCommand,admin:isAdmin(update.message.from?.id),
