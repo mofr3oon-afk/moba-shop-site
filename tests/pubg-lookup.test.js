@@ -80,10 +80,11 @@ test('rate limit prevents provider call',async()=>{
   await handlePubgMessage(message('5285527481'),s.options);
   assert.equal(s.queried.length,0);assert.match(s.sent[0].text,/6 محاولات/);
 });
-test('nickname remains plain text and cancel restores the keyboard',async()=>{
+test('nickname is escaped for display and copied verbatim; cancel restores one button',async()=>{
   const s=setup({lookup:async id=>({id,nickname:'<b>Name & Player</b>'})});
   await handlePubgMessage(message('5285527481'),s.options);
-  assert.equal(s.sent[0].parse_mode,undefined);assert.match(s.sent[0].text,/<b>Name & Player<\/b>/);
+  assert.equal(s.sent[0].parse_mode,'HTML');assert.match(s.sent[0].text,/&lt;b&gt;Name &amp; Player&lt;\/b&gt;/);
+  assert.deepEqual(s.sent[0].reply_markup.inline_keyboard,[[{text:'📋 نسخ اسم اللاعب',copy_text:{text:'<b>Name & Player</b>'}}]]);
   await handlePubgMessage(message('/cancel'),s.options);
-  assert.equal(s.sent[1].reply_markup.keyboard[0][0].text,PUBG_LOOKUP_BUTTON);
+  assert.equal(s.sent.at(-1).reply_markup.keyboard[0][0].text,PUBG_LOOKUP_BUTTON);
 });
