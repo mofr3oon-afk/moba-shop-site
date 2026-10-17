@@ -40,9 +40,11 @@ const telegramCalls=()=>calls.filter(x=>x.url.startsWith('https://api.telegram.o
 
 test('header-authenticated webhook accepts public start and ID lookup',async()=>{
   assert.equal((await invoke(msg('/start'))).code,200);
-  assert.match(telegramCalls()[0].body.reply_markup.keyboard[0][0].text,/معرفة اسم لاعب PUBG/);
+  assert.equal(telegramCalls()[0].body.reply_markup.keyboard[0][0].text,'🔎 فحص PUBG ID');
   assert.equal((await invoke(msg('5285527481'))).code,200);
-  assert.match(telegramCalls().at(-1).body.text,/MOĪFR3OON/);
+  const result=telegramCalls().find(x=>x.body.reply_markup?.inline_keyboard);
+  assert.match(result.body.text,/MOĪFR3OON/);
+  assert.equal(result.body.reply_markup.inline_keyboard[0][0].copy_text.text,'MOĪFR3OON');
   assert.equal(calls.filter(x=>x.url.includes('/orders')).length,0);
 });
 test('legacy query secret still works',async()=>{
@@ -55,7 +57,7 @@ test('wrong secret rejected before any network or database call',async()=>{
   assert.equal(calls.length,0);
 });
 test('admin help and order-ID search remain available',async()=>{
-  await invoke(msg('/admin',111));assert.match(telegramCalls().at(-1).body.text,/لوحة MOBA SHOP/);
+  await invoke(msg('/admin',111));assert.match(telegramCalls().at(-1).body.text,/فحص PUBG Mobile/);
   await invoke(msg('/commands',111));assert.match(telegramCalls().at(-1).body.text,/أوامر MOBA SHOP/);
   await invoke(msg('/find_id 5285527481',111));
   assert.ok(calls.some(x=>x.url.includes('/orders?items=')));
