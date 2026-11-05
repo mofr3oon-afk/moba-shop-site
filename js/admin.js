@@ -1,5 +1,7 @@
 ﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog } from './catalog.js';
 import { money, toast } from './store.js';
+import { customerWhatsAppUrl } from './contact-links.js';
+import { cairoDayStart, cairoDayEnd, cairoDateKey } from './cairo-time.js';
 
 let tab='orders';
 let settings={};
@@ -61,6 +63,9 @@ async function verifyOtp(){
 }
 async function loadSettings(){
   try{ const d=await api('/api/settings?admin=1'); settings=d.settings||{}; }catch{ settings={}; }
+  if(Array.isArray(settings.dynamic_products))local.products=settings.dynamic_products;
+  if(Array.isArray(settings.dynamic_sections))local.sections=settings.dynamic_sections.map(s=>({...s,slug:s.slug||s.key,name:s.name||s.title}));
+  if(settings.game_settings)local.games=Object.values(settings.game_settings);
   local.brand = settings.brand_settings && Object.keys(settings.brand_settings).length ? settings.brand_settings : (local.brand || {});
   local.coupons = Array.isArray(settings.coupon_rules) ? settings.coupon_rules : (local.coupons || []);
   local.offers = settings.exclusive_offer && Array.isArray(settings.exclusive_offer.items) ? settings.exclusive_offer.items : (local.offers || DEFAULT_CATALOG.offers || []);
@@ -172,8 +177,9 @@ function orderHtmlCompact(o){
   </details>`;
 }
 async function updateOrder(card, status, fallbackNote){
+  if(status==='delivered'&&!confirm('هل تأكدت من وصول المبلغ فعليًا ونفذت الشحنة؟ صورة التحويل وحدها ليست تأكيدًا للدفع.'))return;
   const note=card.querySelector('.order-note').value.trim() || fallbackNote || '';
-  try{ await api('/api/admin-orders',{method:'POST',body:JSON.stringify({id:card.dataset.order,status,note})}); toast('تم تحديث الطلب'); renderOrders(); }
+  try{ await api('/api/admin-orders',{method:'POST',body:JSON.stringify({id:card.dataset.order,status,note,paymentVerified:status==='delivered'})}); toast('تم تحديث الطلب'); renderOrders(); }
   catch(e){ toast(e.message,'err'); }
 }
 
@@ -236,6 +242,7 @@ function saveProductDraft(id){
   document.querySelectorAll(`[data-prod="${id}"]`).forEach(i=>{
     const f=i.dataset.prodField;
     if(i.type==='checkbox') p[f]=i.checked;
+    else if(f==='cost')p[f]=i.value.trim()===''?null:Number(i.value);
     else if(['price','salePrice','order','amount'].includes(f)) p[f]=Number(i.value||0);
     else p[f]=i.value.trim();
   });
@@ -383,7 +390,7 @@ function renderVisitorsLegacy(){
 function productEditorHtml(p){
   return `<div class="admin-card product-admin-card" data-product-row="${p.id}">
     <div class="row">
-      <div class="field"><label>اسم المنتج</label><input data-prod="${p.id}" data-prod-field="name" value="${p.name||''}"></div>
+      <div class="field"><label>اسم المنتج</label><input data-prod="${p.id}" data-prod-field="name" value="${escAdmin(p.name||'')}"></div>
       <div class="field"><label>السعر الأساسي</label><input data-prod="${p.id}" data-prod-field="price" value="${p.price||0}" inputmode="numeric"></div>
       <div class="field"><label>سعر العرض</label><input data-prod="${p.id}" data-prod-field="salePrice" value="${p.salePrice||0}" inputmode="numeric"></div>
       <div class="field"><label>ترتيب المنتج</label><input data-prod="${p.id}" data-prod-field="order" value="${p.order||99}" inputmode="numeric"></div>
@@ -392,7 +399,7 @@ function productEditorHtml(p){
       <div class="field"><label>القسم</label><input data-prod="${p.id}" data-prod-field="section" value="${p.section||''}"></div>
       <div class="field"><label>الوحدة</label><input data-prod="${p.id}" data-prod-field="unit" value="${p.unit||''}"></div>
       <div class="field"><label>الكمية/القيمة</label><input data-prod="${p.id}" data-prod-field="amount" value="${p.amount||0}" inputmode="numeric"></div>
-      <div class="field"><label>حالة المنتج</label><select data-prod="${p.id}" data-prod-field="status"><option value="available">ظاهر</option><option value="soon">قريبا</option><option value="hidden">مخفي</option></select></div>
+      <div class="field"><label>طريقة إتمام الطلب</label><select data-prod="${escAdmin(p.id)}" data-prod-field="checkoutMethod"><option value="direct" ${(p.checkoutMethod||p.checkout_method||'direct')==='direct'?'selected':''}>مباشر مع مراجعة التحويل</option><option value="manual" ${(p.checkoutMethod||p.checkout_method)==='manual'?'selected':''}>شات واتساب / تليجرام</option></select></div><div class="field"><label>التكلفة الداخلية (اختياري)</label><input data-prod="${escAdmin(p.id)}" data-prod-field="cost" value="${p.cost??''}" inputmode="decimal"></div><div class="field"><label>حالة المنتج</label><select data-prod="${p.id}" data-prod-field="status"><option value="available" ${(p.status||'available')==='available'?'selected':''}>ظاهر</option><option value="soon" ${p.status==='soon'?'selected':''}>قريبا</option><option value="disabled" ${p.status==='disabled'?'selected':''}>موقوف</option><option value="hidden" ${p.status==='hidden'?'selected':''}>مخفي</option></select></div>
     </div>
     <div class="admin-actions">
       <label><input type="checkbox" data-prod="${p.id}" data-prod-field="hot" ${p.hot?'checked':''}> Hot</label>
@@ -598,7 +605,7 @@ function renderReports(){
   <div id="reportsBox" class="admin-list"><div class="message">اضغط عرض التقرير.</div></div>`;
 }
 
-async function loadReports(){
+async function loadReportsLegacyUnused(){
   const box=document.querySelector('#reportsBox'); box.innerHTML='<div class="message">جاري حساب التقرير...</div>';
   try{
     const d=await api('/api/admin-orders?limit=150'); const orders=(d.orders||[]).filter(o=>!isTestOrderV218(o));
@@ -616,6 +623,21 @@ async function loadReports(){
     box.innerHTML=`<div class="summary-grid"><div class="summary-box"><b>${list.length}</b><span>طلبات</span></div><div class="summary-box"><b>${money(list.reduce((s,o)=>s+Number(o.total||0),0))}</b><span>إجمالي</span></div><div class="summary-box"><b>${Object.keys(byStatus).length}</b><span>حالات مختلفة</span></div></div>
     <div class="admin-list">${Object.entries(byStatus).map(([k,v])=>`<div class="admin-card"><b>${k}</b><span>${v} طلب</span></div>`).join('') || '<div class="notice">لا توجد بيانات للفترة.</div>'}</div>`;
   }catch(e){box.innerHTML=`<div class="message err">${safeAdminErrorMessage(e.message)}</div>`;}
+}
+
+async function loadReports(){
+  const box=document.querySelector('#reportsBox');box.textContent='جاري حساب التقرير...';
+  try{
+    const range=document.querySelector('#reportRange')?.value||'1';
+    const now=new Date();let from,to;
+    if(range==='custom'){
+      from=cairoDayStart(document.querySelector('#reportFrom').value);
+      to=cairoDayEnd(document.querySelector('#reportTo').value);
+    }else{to=now;from=new Date(+now-Number(range)*86400000);}
+    const params=new URLSearchParams({report:'1',from:from.toISOString(),to:to.toISOString()});
+    const {report:r}=await api('/api/admin-orders?'+params);
+    box.innerHTML=`<div class="summary-grid"><div class="summary-box"><b>${r.count}</b><span>طلبات الفترة</span></div><div class="summary-box"><b>${r.deliveredCount}</b><span>مكتملة</span></div><div class="summary-box"><b>${money(r.revenue)}</b><span>إيراد الطلبات المكتملة</span></div><div class="summary-box"><b>${money(r.knownCostProfit)}</b><span>فرق البيع والتكلفة المعلومة فقط</span></div></div><p>طلبات مكتملة بدون تكلفة معروفة: ${r.unknownCostOrders}. لا يشمل الحساب المصروفات الخارجية أو طلبات غير مكتملة.</p>${r.truncated?'<div class="message warn">النتائج مقصورة على 10000 طلب. قلل فترة التقرير.</div>':''}`;
+  }catch(e){box.textContent=safeAdminErrorMessage(e.message);}
 }
 
 function renderPayments(){
@@ -647,7 +669,7 @@ function renderHealth(){
 
 function renderAdminLog(){
   const rows=Object.entries(settings||{}).filter(([k])=>k.startsWith('admin_log_')).map(([k,v])=>({k,...(typeof v==='object'?v:{value:v})})).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||''))).slice(0,80);
-  view.innerHTML=`<div class="page-title"><div><h1>Admin Login</h1><p>محاولات الدخول والـ OTP والـ IP والجهاز.</p></div></div><div class="admin-list">${rows.map(r=>`<div class="admin-card"><b>${r.type||r.k}</b><p>Username: ${r.username||'-'} | Role: ${r.role||'-'}</p><p>IP: ${r.ip||'-'}</p><p>Device: ${r.deviceId||'-'}</p><p>${r.at||''}</p></div>`).join('')||'<div class="notice">لا توجد سجلات دخول محفوظة.</div>'}</div>`;
+  view.innerHTML=`<div class="page-title"><div><h1>Admin Login</h1><p>محاولات الدخول والـ OTP والـ IP والجهاز.</p></div></div><div class="admin-list">${rows.map(r=>`<div class="admin-card"><b>${escAdmin(r.type||r.k)}</b><p>Username: ${escAdmin(r.username||'-')} | Role: ${r.role||'-'}</p><p>IP: ${escAdmin(r.ip||'-')}</p><p>Device: ${escAdmin(r.deviceId||'-')}</p><p>${escAdmin(r.at||'')}</p></div>`).join('')||'<div class="notice">لا توجد سجلات دخول محفوظة.</div>'}</div>`;
 }
 
 function renderVisitors(){
@@ -680,7 +702,7 @@ function filteredAdminOrders(){
   });
 }
 function adminSummaryHtml(rows){
-  const today=new Date().toISOString().slice(0,10);
+  const today=cairoDateKey(new Date());
   const todayRows=(rows||[]).filter(o=>String(o.created_at||'').slice(0,10)===today);
   const byGame={}; rows.forEach(o=>{const g=orderGame(o)||'غير محدد'; byGame[g]=(byGame[g]||0)+1;});
   const top=Object.entries(byGame).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
@@ -689,14 +711,14 @@ function adminSummaryHtml(rows){
     <div class="summary-box"><b>${rows.filter(o=>o.status==='processing').length}</b><span>قيد التنفيذ</span></div>
     <div class="summary-box"><b>${rows.filter(o=>o.status==='delivered').length}</b><span>مكتملة</span></div>
     <div class="summary-box"><b>${rows.filter(o=>['rejected','cancelled'].includes(o.status)).length}</b><span>مرفوضة/ملغية</span></div>
-    <div class="summary-box"><b>${money(todayRows.reduce((s,o)=>s+Number(o.total||0),0))}</b><span>مبيعات اليوم</span></div>
+    <div class="summary-box"><b>${money(todayRows.filter(o=>o.status==='delivered').reduce((s,o)=>s+Number(o.total||0),0))}</b><span>إيراد المكتمل اليوم</span></div>
     <div class="summary-box"><b>${escAdmin(top)}</b><span>أكثر لعبة</span></div>
   </div>`;
 }
 const renderOrdersV217 = async function(){
   view.innerHTML='<div class="message">جاري تحميل الطلبات...</div>';
   try{
-    const d=await api('/api/admin-orders?limit=150');
+    const d=await api('/api/admin-orders?limit=150&q='+encodeURIComponent(adminOrderFilters.q||''));
     adminOrdersCache=d.orders||[];
     renderAdminOrdersList();
   }catch(e){ view.innerHTML=`<div class="message err">${escAdmin(safeAdminErrorMessage(e.message))}</div>`; }
@@ -708,7 +730,7 @@ function renderAdminOrdersList(){
   view.innerHTML=`<div class="page-title"><div><h1>الطلبات</h1><p>${adminOrdersCache.length} طلب | المستخدم: ${escAdmin(currentAdmin?.username||loginUser||'-')} | الصلاحية: ${escAdmin(currentAdmin?.role||loginRole||'-')}</p></div><div class="admin-actions"><button class="primary" id="refreshOrders">تحديث</button><button class="ghost-btn" id="exportOrdersCsv">Export CSV</button></div></div>
     ${adminSummaryHtml(adminOrdersCache)}
     <div class="admin-filters">
-      <input id="adminOrderSearch" placeholder="بحث برقم الطلب / رقم العميل / ID" value="${escAdmin(adminOrderFilters.q)}">
+      <input id="adminOrderSearch" placeholder="بحث برقم الطلب / رقم العميل" value="${escAdmin(adminOrderFilters.q)}">
       <select id="adminStatusFilter"><option value="all">كل الحالات</option>${['pending','claimed','processing','needs_fix','on_hold','delivered','rejected','cancelled','archived'].map(s=>`<option value="${s}" ${adminOrderFilters.status===s?'selected':''}>${s}</option>`).join('')}</select>
       <select id="adminGameFilter"><option value="all">كل الألعاب</option>${games.map(g=>`<option value="${escAdmin(g)}" ${adminOrderFilters.game===g?'selected':''}>${escAdmin(g)}</option>`).join('')}</select>
       <select id="adminPaymentFilter"><option value="all">كل طرق الدفع</option>${pays.map(p=>`<option value="${escAdmin(p)}" ${adminOrderFilters.payment===p?'selected':''}>${escAdmin(p)}</option>`).join('')}</select>
@@ -725,15 +747,17 @@ const orderHtmlCompactV217 = function(o){
   const telegram=o.raw_data?.telegramOk===false?'فشل/معلق':(o.telegram_message_id?'وصل':'غير مؤكد');
   return `<details class="order-card compact-order" data-order="${escAdmin(o.id)}">
     <summary><b>${escAdmin(o.order_code||o.id)}</b><span>${escAdmin(o.phone||'-')}</span><span>${money(o.total)}</span><span class="badge">${escAdmin(o.status_text||o.status)}</span><small>Telegram: ${escAdmin(telegram)}</small></summary>
-    <div class="admin-card order-meta"><b>بيانات الطلب</b><p>الدفع: ${escAdmin(o.payment_method||'-')} | الوقت: ${escAdmin(o.created_at||'-')} | العمر: ${orderAgeMinutes(o)} دقيقة</p><p>المستلم: ${escAdmin(o.claimed_by_name||o.handler||'-')} | آخر تعديل: ${escAdmin(o.last_status_by||'-')}</p><p>IP: ${escAdmin(ip)} | Device: ${escAdmin(dev)}</p></div>
-    <div class="admin-card">${items || 'لا توجد منتجات'}</div>
+    <div class="admin-card order-meta"><b>بيانات الطلب</b><p>طريقة الإتمام: ${escAdmin(o.raw_data?.checkoutMethod||'direct')} | وسيلة الشات: ${escAdmin(o.raw_data?.channel||'-')} | تأكيد الدفع: ${o.raw_data?.paymentVerified===true?'تمت المراجعة':'غير مؤكد'}</p><p>الدفع: ${escAdmin(o.payment_method||'-')} | الوقت: ${escAdmin(o.created_at||'-')} | العمر: ${orderAgeMinutes(o)} دقيقة</p><p>المستلم: ${escAdmin(o.claimed_by_name||o.handler||'-')} | آخر تعديل: ${escAdmin(o.last_status_by||'-')}</p><p>IP: ${escAdmin(ip)} | Device: ${escAdmin(dev)}</p></div>
+    <div class="admin-card">${items || 'لا توجد منتجات'}${o.security_note?`<p>${escAdmin(o.security_note)}</p>`:''}</div>
+    ${o.raw_data?.receiptPath?`<div class="admin-card"><a class="ghost-btn" href="/api/admin-orders?receipt=${encodeURIComponent(o.id)}" target="_blank" rel="noopener">عرض إثبات التحويل الخاص</a></div>`:''}
+    <button class="mini" data-issue-access="${escAdmin(o.id)}">إصدار مفتاح متابعة خاص</button>
     ${o.telegram_photo_file_id?`<div class="admin-card screenshot-card"><img src="/api/admin-orders?screenshot=${encodeURIComponent(o.telegram_photo_file_id)}" alt="screenshot"><a class="ghost-btn" href="/api/admin-orders?screenshot=${encodeURIComponent(o.telegram_photo_file_id)}" target="_blank">فتح كامل</a></div>`:''}
     <div class="admin-card"><b>سجل العميل</b><p>عدد طلبات هذا الرقم داخل القائمة الحالية: ${adminOrdersCache.filter(x=>String(x.phone)===String(o.phone)).length}</p><p>إجمالي مشتريات ظاهرة: ${money(adminOrdersCache.filter(x=>String(x.phone)===String(o.phone)).reduce((s,x)=>s+Number(x.total||0),0))}</p></div>
     <textarea class="order-note" placeholder="ملاحظة أو سبب المشكلة للعميل" rows="2" style="width:100%;margin-top:10px"></textarea>
     <div class="order-actions">
       <button class="mini" data-copy="${escAdmin(firstId)}">نسخ ID</button>
       <button class="mini" data-copy="${escAdmin(o.phone||'')}">نسخ رقم العميل</button>
-      <a class="mini" href="https://wa.me/2${escAdmin(String(o.phone||'').replace(/^0/,''))}" target="_blank">واتساب</a>
+      ${customerWhatsAppUrl(o.phone)?`<a class="mini" href="${customerWhatsAppUrl(o.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}
       <button class="st-claimed" data-status="claimed">استلام</button>
       <button class="st-pending" data-status="pending" data-note="سحب الاستلام من المسؤول الحالي">سحب الاستلام</button>
       <button class="st-processing" data-status="processing">جاري التنفيذ</button>
@@ -855,7 +879,7 @@ document.addEventListener('input',e=>{
   if(e.target.id==='adminOrderSearch'){
     adminOrderFilters.q=e.target.value||'';
     clearTimeout(window.__adminSearchTimer);
-    window.__adminSearchTimer=setTimeout(renderAdminOrdersList,120);
+    window.__adminSearchTimer=setTimeout(renderOrders,400);
   }
 });
 document.addEventListener('keydown',e=>{
@@ -864,6 +888,8 @@ document.addEventListener('keydown',e=>{
   else if(!document.querySelector('#otpStep')?.hidden){ e.preventDefault(); verifyOtp(); }
 });
 checkLogin();
+// The archive uses the same escaped renderer as the active order list.
+orderHtml=orderHtmlCompact;
 
 // V218 launch hardening: compact final admin tools without changing the core workflow.
 function isTestOrderV218(o){ return o?.order_type === 'test' || o?.raw_data?.testOrder === true; }
@@ -900,7 +926,7 @@ renderAdminOrdersList = function(){
   _v218RenderAdminOrdersList();
   const actions = document.querySelector('.page-title .admin-actions');
   if(actions && !document.getElementById('deleteTestOrders')){
-    actions.insertAdjacentHTML('beforeend', `<a class="ghost-btn" href="/?test=1" target="_blank">فتح طلب TEST</a><button class="danger" id="deleteTestOrders">حذف طلبات TEST</button>`);
+    actions.insertAdjacentHTML('beforeend', `<button class="danger" id="deleteTestOrders">حذف طلبات TEST</button>`);
   }
 };
 renderHealth = async function(){
@@ -914,7 +940,7 @@ renderHealth = async function(){
     <div class="summary-grid">
       ${card('Supabase reachable', checks.supabaseReachable, checks.supabaseReachable?'Orders table reachable':'راجع إعدادات Supabase')}
       ${card('Telegram reachable', checks.telegramReachable, checks.telegramConfigured?'Configured':'not configured')}
-      ${card('Storage/upload ready', checks.storageReady, 'Telegram screenshot stream / upload check')}
+      ${card('Private receipt storage', checks.storageReady, 'Supabase bucket configured and private')}
       ${card('Payment methods configured', checks.paymentConfigured, checks.paymentDetail || '')}
       ${card('Required ENV', !missing.length, missing.length ? missing.join(', ') : 'No required ENV missing')}
       ${card('Admin session', true, currentAdmin?.username || loginUser || '-')}
@@ -925,6 +951,17 @@ renderHealth = async function(){
   }
 };
 document.addEventListener('click', async e=>{
+  const accessButton=e.target.closest('[data-issue-access]');
+  if(accessButton){
+    if(!confirm('إصدار مفتاح جديد يلغي المفتاح السابق. تأكد من هوية العميل قبل مشاركته.'))return;
+    try{
+      const result=await api('/api/admin-orders',{method:'POST',body:JSON.stringify({action:'issue_tracking_key',id:accessButton.dataset.issueAccess})});
+      const block=document.createElement('div');block.className='message ok';
+      const label=document.createElement('label');label.textContent='مفتاح متابعة خاص — يُرسل لصاحب الطلب فقط';
+      const field=document.createElement('input');field.value=result.trackingToken;field.readOnly=true;
+      block.append(label,field);accessButton.after(block);
+    }catch(e){toast(e.message,'err');}return;
+  }
   const vipBtn=e.target.closest('[data-vip-toggle]');
   if(vipBtn){
     try{

@@ -1,5 +1,12 @@
 const CART_KEY = 'moba_clean_cart';
 const DEVICE_KEY = 'moba_device_id';
+export function rememberOrder(data){
+  if(!data.orderId||!data.trackingToken)return;
+  const saved=readOrderAccess();
+  saved[data.orderId]={token:data.trackingToken,phone:data.phone||'',orderCode:data.orderCode||data.orderId};
+  localStorage.setItem('moba_order_access',JSON.stringify(saved));
+}
+export function readOrderAccess(){try{return JSON.parse(localStorage.getItem('moba_order_access')||'{}');}catch{return {};}}
 export function money(n){ return `${Number(n||0).toLocaleString('en-US')} جنيه`; }
 export function readCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]')}catch{return []} }
 export function saveCart(cart){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); window.dispatchEvent(new Event('cart:changed')); }

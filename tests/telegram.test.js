@@ -69,12 +69,15 @@ test('non-admin cannot use order administration',async()=>{
   assert.match(telegramCalls()[0].body.text,/خاصة بمسؤول/);
   assert.equal(calls.filter(x=>x.url.includes('/orders')).length,0);
 });
-test('existing and legacy admin order buttons still update the order',async()=>{
+test('current and legacy delivery buttons require explicit payment and shipment confirmation',async()=>{
   for(const data of ['delivered:order-1','web_delivered_order-1']){
     const res=await invoke({callback_query:{id:'cb',from:{id:111},message:{chat:{id:111},message_id:7},data}});
     assert.equal(res.code,200);
   }
-  assert.equal(calls.filter(x=>x.method==='PATCH' && x.body.status==='delivered').length,2);
+  assert.equal(calls.filter(x=>x.method==='PATCH' && x.body.status==='delivered').length,0);
+  await invoke({callback_query:{id:'confirmed',from:{id:111},message:{chat:{id:111},message_id:7},data:'confirm_delivered:order-1'}});
+  const updates=calls.filter(x=>x.method==='PATCH'&&x.body.status==='delivered');
+  assert.equal(updates.length,1);assert.equal(updates[0].body.raw_data.paymentVerified,true);
   assert.ok(telegramCalls().some(x=>x.url.endsWith('/editMessageReplyMarkup')));
 });
 test('public lookup rate limit survives clearing the local instance cache',async()=>{

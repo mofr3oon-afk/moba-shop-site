@@ -69,6 +69,7 @@ function normalizeSection(raw){
 }
 function normalizeProduct(raw){
   return {
+    checkoutMethod:raw.checkoutMethod||raw.checkout_method||'direct',
     id:raw.id || `p_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
     game:raw.game,
     section:raw.section || raw.cat,
@@ -76,7 +77,7 @@ function normalizeProduct(raw){
     unit:raw.unit || raw.type || '',
     amount:Number(raw.amount || raw.uc || 0),
     price:Number(raw.price || 0),
-    salePrice:Number(raw.salePrice || raw.sale_price || 0),
+    salePrice:Number(raw.salePrice ?? raw.sale_price ?? 0),
     description:raw.description || raw.desc || '',
     order:Number(raw.order ?? raw.sort_order ?? 99),
     noQty:!!raw.noQty || !!raw.no_qty,
@@ -116,7 +117,7 @@ export async function loadCatalog(){
     const data = await r.json();
     if(data.ok) remote = data.settings || {};
   }catch{}
-  const local = readLocalCatalog();
+  const local = {}; // Customer prices never use admin drafts left in localStorage.
   const dynamicGames = Object.values(remote.game_settings || {}).map(normalizeGame).filter(g=>g.slug);
   const games = mergeById(DEFAULT_CATALOG.games, [...dynamicGames, ...(local.games || []).map(normalizeGame)], 'slug')
     .filter(g=>g.status !== 'hidden').sort((a,b)=>a.order-b.order);

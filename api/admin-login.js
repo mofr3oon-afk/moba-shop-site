@@ -1,13 +1,12 @@
-import { json } from '../lib/_utils.js';
+import { json, escapeHtml } from '../lib/_utils.js';
+import { readJsonBody } from '../lib/request-body.js';
 import { rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
 import { currentAdminSession, setSessionCookie, clearSessionCookie, makeSession, checkFailedLock, recordLoginAttempt, getAdminSecret, timingSafeEquals, otpEnabled, createOtpChallenge, verifyOtp, sendAdminTelegram, logAdminEvent, resolveAdminRole, readTrustedAdminSettings, shouldForceOtpForDevice, trustAdminDevice } from '../lib/admin-auth.js';
 
 const LOGIN_ERROR = 'بيانات الدخول غير صحيحة';
+export const config = { api:{bodyParser:false} };
 const LOGIN_LOCK_ERROR = 'محاولات كثيرة، جرب بعد قليل';
 
-async function readBody(req){
-  return await new Promise((resolve,reject)=>{let s=''; req.on('data',c=>s+=c); req.on('end',()=>{try{resolve(JSON.parse(s||'{}'))}catch(e){reject(e)}}); req.on('error',reject);});
-}
 export default async function handler(req,res){
   try{
     rateLimit(req,'admin-login',20,15*60_000);
@@ -17,7 +16,9 @@ export default async function handler(req,res){
       return json(res,200,{ok:true,authenticated:!!s,session:s?{role:s.role,username:s.username,deviceId:s.deviceId,exp:s.exp,ip:s.ip}:null,otpEnabled:otpEnabled()});
     }
     if(req.method !== 'POST') return json(res,405,{ok:false,error:'Method not allowed'});
-    const body = await readBody(req);
+    if(!/^application\/json(?:\s*;|$)/i.test(String(req.headers['content-type']||'')))return json(res,415,{ok:false,error:'JSON request required'});
+    if(req.headers.origin&&new URL(req.headers.origin).host!==String(req.headers.host||''))return json(res,403,{ok:false,error:'مصدر الطلب غير مسموح'});
+    const body = await readJsonBody(req);
     if(body.action === 'logout'){
       clearSessionCookie(res);
       await logAdminEvent('logout',req,{});
@@ -30,14 +31,13 @@ export default async function handler(req,res){
     const trustDevice = Boolean(body.trustDevice);
 
     if(body.challenge){
-      const username = String(body.username || '').trim();
-      const okOtp = verifyOtp(body.challenge, body.otp);
+      const verified = await verifyOtp(req,body.challenge,body.otp);
+      const okOtp = Boolean(verified);
       recordLoginAttempt(req, okOtp);
       if(!okOtp){ await logAdminEvent('otp_failed',req,{deviceId}); return json(res,401,{ok:false,error:LOGIN_ERROR}); }
-      const role = String(body.role || 'owner');
-      const session = makeSession(req,{role,username,deviceId});
+      const {role,username,deviceId:verifiedDeviceId} = verified;
+      const session = makeSession(req,{role,username,deviceId:verifiedDeviceId});
       setSessionCookie(res, session);
-      if(trustDevice && deviceId) await trustAdminDevice(deviceId, req);
       await logAdminEvent('login_success_otp',req,{role,username,deviceId});
       return json(res,200,{ok:true,authenticated:true,session});
     }
@@ -57,11 +57,11 @@ export default async function handler(req,res){
     const trusted = await readTrustedAdminSettings();
     const needsOtp = shouldForceOtpForDevice({deviceId, ip:req.headers['x-forwarded-for'], trusted});
     if(needsOtp){
-      const {challenge,code} = createOtpChallenge(req);
+      const {challenge,code} = await createOtpChallenge(req,{role,username,deviceId});
       await sendAdminTelegram(`🔐 <b>MOBA SHOP Admin Login Code</b>
 الكود: <code>${code}</code>
 الصلاحية: <b>${role}</b>
-Device: <code>${deviceId || '-'}</code>
+Device: <code>${escapeHtml(deviceId || '-')}</code>
 ينتهي خلال 5 دقائق.`);
       await logAdminEvent('otp_sent',req,{role,username,deviceId});
       return json(res,200,{ok:true,needsOtp:true,challenge,role,message:'تم إرسال كود الدخول على تليجرام'});

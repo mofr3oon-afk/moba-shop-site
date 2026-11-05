@@ -1,9 +1,13 @@
+import { validateCouponServer } from '../lib/coupons.js';
 import { rateLimit, persistentRateLimit, safeError, getClientIp } from '../lib/_security.js';
 // moba-v40-security
 export const config = { api: { bodyParser: false } };
 import crypto from 'node:crypto';
 import { json, escapeHtml, supabaseReady, supabaseRequest, telegramForm, telegramKeyboard, buildTelegramText, cairoDateKey, STATUS_LABELS, OPEN_STATUSES } from '../lib/_utils.js';
-import { DEFAULT_CATALOG } from '../js/catalog.js';
+import { getServerProducts as loadServerProducts, pricedCart, cartAmount } from '../lib/server-catalog.js';
+import { readRawBody as boundedBody, validateImageBytes, parseForm } from '../lib/request-body.js';
+import { orderIdentity, fingerprint, readExistingOrder, replayResponse } from '../lib/idempotency.js';
+import { saveReceipt } from '../lib/receipts.js';
 
 async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
 
@@ -31,6 +35,7 @@ function fail(status, message){
 function publicOrderError(res, error){
   const msg = String(error?.message || '');
   const status = Number(error?.statusCode || 0);
+  if(status>=500)return safeError(res,error,status);
   if(status >= 400 && status < 500) return json(res,status,{ok:false,error:msg || 'راجع بيانات الطلب'});
   const internal = /missing|supabase|telegram|fetch|network|service_role|bot_token|order_group_id|unexpected|syntax|json/i.test(msg);
   if(internal) return safeError(res,error,500);
@@ -50,7 +55,7 @@ async function supabaseWriteWithSchemaFallback(path, payload, options={}){
       return await supabaseRequest(path,{...options,body:JSON.stringify(clean)});
     }catch(err){
       const col=missingColumnFromSupabaseError(err);
-      if(col && Object.prototype.hasOwnProperty.call(clean,col)){
+      if(col && col!=='raw_data' && Object.prototype.hasOwnProperty.call(clean,col)){
         removed.push(col);
         delete clean[col];
         if(clean.raw_data && typeof clean.raw_data==='object') clean.raw_data.schemaFallbackRemoved=removed;
@@ -65,31 +70,6 @@ async function supabaseWriteWithSchemaFallback(path, payload, options={}){
 
 function itemQty(item){ return Math.max(1, Number(item.qty || 1)); }
 function itemLineTotal(item){ return Number(item.price||0) * itemQty(item); }
-
-async function getServerProducts(){
-  let dynamic=[];
-  if(supabaseReady()){
-    const rows=await supabaseRequest('settings?key=eq.dynamic_products&select=value&limit=1').catch(()=>[]);
-    const value=rows?.[0]?.value;
-    dynamic=Array.isArray(value)?value:[];
-  }
-  const map=new Map();
-  [...(DEFAULT_CATALOG.products||[]), ...dynamic].forEach(p=>{
-    if(!p?.id) return;
-    map.set(String(p.id), {
-      id:String(p.id),
-      game:p.game,
-      section:p.section || p.cat,
-      name:p.name,
-      unit:p.unit || p.type || '',
-      amount:Number(p.amount || p.uc || 0),
-      price:Number(Number(p.salePrice || p.sale_price || 0)>0 ? (p.salePrice || p.sale_price) : p.price || 0),
-      noQty:!!p.noQty || !!p.no_qty,
-      status:p.status || 'available'
-    });
-  });
-  return map;
-}
 
 function looksFakeDigits(value, kind='number'){
   const v=String(value||'').replace(/\D/g,'');
@@ -197,6 +177,7 @@ async function enforceBlacklist({phone,clientIp,deviceId,cart}){
 }
 
 function validateScreenshotFile(file){
+  validateImageBytes(file);
   if(!file || !file.buffer || file.buffer.length < 2000) throw new Error('ارفع سكرين تحويل واضح بحجم مناسب');
   const type=String(file.contentType||'').toLowerCase();
   const name=String(file.filename||'').toLowerCase();
@@ -204,7 +185,7 @@ function validateScreenshotFile(file){
   const okExt=['.jpg','.jpeg','.png','.webp'].some(ext=>name.endsWith(ext));
   if(!okType || !okExt) throw new Error('السكرين لازم يكون صورة فقط JPG أو PNG أو WEBP');
   const max=Number(process.env.MAX_SCREENSHOT_SIZE || 5*1024*1024);
-  if(file.buffer.length > max) throw new Error('حجم السكرين كبير. ارفع صورة أقل من 5MB');
+  if(file.buffer.length > max) throw new Error('حجم السكرين كبير. ارفع صورة أقل من 3MB');
 }
 function screenshotHash(file){
   return file?.buffer ? crypto.createHash('sha256').update(file.buffer).digest('hex') : '';
@@ -234,18 +215,6 @@ function enforceSpamRules(rows,{clientIp,deviceId,phone,cart,shotHash}){
   }
 }
 
-function readRawBody(req){return new Promise((resolve,reject)=>{const chunks=[];req.on('data',c=>chunks.push(c));req.on('end',()=>resolve(Buffer.concat(chunks)));req.on('error',reject);});}
-function parseMultipart(buffer,contentType){
-  const m=/boundary=(?:(?:"([^"]+)")|([^;]+))/i.exec(contentType||''); if(!m) return {fields:{},files:{}};
-  const boundary=m[1]||m[2], bb=Buffer.from(`--${boundary}`); const fields={}, files={}; let start=buffer.indexOf(bb);
-  while(start!==-1){start+=bb.length; if(buffer[start]===45&&buffer[start+1]===45) break; if(buffer[start]===13&&buffer[start+1]===10) start+=2;
-    const he=buffer.indexOf(Buffer.from('\r\n\r\n'),start); if(he===-1) break; const ht=buffer.slice(start,he).toString('utf8'); const ps=he+4; let nb=buffer.indexOf(bb,ps); if(nb===-1) break; let pe=nb; if(buffer[pe-2]===13&&buffer[pe-1]===10) pe-=2; const content=buffer.slice(ps,pe);
-    const nm=/name="([^"]+)"/i.exec(ht), fm=/filename="([^"]*)"/i.exec(ht), tm=/Content-Type:\s*([^\r\n]+)/i.exec(ht);
-    if(nm){const name=nm[1]; if(fm&&fm[1]) files[name]={filename:fm[1],contentType:tm?tm[1].trim():'application/octet-stream',buffer:content}; else fields[name]=content.toString('utf8');}
-    start=nb;
-  }
-  return {fields,files};
-}
 async function nextDailyIdentity(){
   const orderDate=cairoDateKey(); let dailyNumber=1001;
   if(supabaseReady()){
@@ -272,87 +241,22 @@ async function findOpenOrderByPubgId(cart){
 
 
 
-function normalizeCouponProduct(p){ return String(p || '').toLowerCase().replace(/\s+/g,' ').trim(); }
-function couponItemQty(item){ return Math.max(1, Number(item.qty || 1)); }
-function couponItemLineTotal(item){ return Number(item.price || 0) * couponItemQty(item); }
-function couponScopeMatches(item, productScopes){
-  if(!productScopes || !Array.isArray(productScopes) || !productScopes.length) return true;
-  const product = normalizeCouponProduct(item.product);
-  return productScopes.some(scope => {
-    const s = normalizeCouponProduct(scope);
-    return s && (product.includes(s) || s.includes(product));
-  });
-}
-async function readCouponRuleFromSettings(code){
-  try{
-    const rows = await supa('settings?key=eq.coupon_rules&select=value&limit=1');
-    const raw = rows && rows[0] && rows[0].value;
-    const list = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : [];
-    const found = Array.isArray(list) ? list.find(x=>String(x.code||'').trim().toUpperCase()===code) : null;
-    if(!found) return null;
-    return {
-      code: String(found.code||'').trim().toUpperCase(),
-      is_active: found.active !== false,
-      discount_type: found.type === 'percent' ? 'percent' : 'fixed',
-      discount_value: Number(found.value||0),
-      discount_amount: Number(found.value||0),
-      min_order_amount: Number(found.min||0),
-      product_scopes: Array.isArray(found.products) ? found.products : [],
-      expires_at: found.expires_at || null,
-      first_order_only: found.firstOrderOnly === true || found.first_order_only === true
-    };
-  }catch(e){ return null; }
-}
-async function validateCouponServer(code,total,cart=[],phone=''){
-  code = String(code || '').trim().toUpperCase();
-  if(!code) return null;
-  const settingsCoupon = await readCouponRuleFromSettings(code);
-  const rows = await supa(`coupons?code=eq.${encodeURIComponent(code)}&select=*&limit=1`).catch(()=>[]);
-  let c = settingsCoupon || (rows && rows[0]);
-  if(!c) throw new Error('الكود ده غير موجود. راجع الكتابة أو جرّب كود تاني');
-  if(c.is_active === false || c.active === false) throw new Error('كود الخصم متوقف حاليا');
-  if(c.expires_at && new Date(c.expires_at).getTime() < Date.now()) throw new Error('كود الخصم منتهي');
-  if(c.first_order_only && phone && supabaseReady()){
-    const used = await supabaseRequest(`orders?phone=eq.${encodeURIComponent(phone)}&select=id&limit=1`).catch(()=>[]);
-    if(used?.[0]) throw new Error('الكوبون ده لأول طلب فقط، ورقم الموبايل استخدم قبل كده');
-  }
-  if(Number(c.min_order_amount || 0) > total) throw new Error(`الكوبون يحتاج طلب بقيمة ${c.min_order_amount} جنيه على الأقل`);
-  const scopes = Array.isArray(c.product_scopes) ? c.product_scopes : [];
-  const eligibleItems = (Array.isArray(cart) ? cart : []).filter(item => couponScopeMatches(item, scopes));
-  const eligibleTotal = Array.isArray(cart) && cart.length ? eligibleItems.reduce((s,item)=>s+couponItemLineTotal(item),0) : total;
-  if(scopes.length && eligibleTotal <= 0) throw new Error(`الكوبون ده مش مناسب للمنتجات الموجودة في السلة حاليًا${scopes.length ? ' — ينفع على: ' + scopes.join(' / ') : ''}`);
-  const base = scopes.length ? eligibleTotal : total;
-  let discount = 0;
-  if(c.discount_type === 'percent'){
-    discount = Math.floor(base * Number(c.discount_value || 0) / 100);
-    if(Number(c.max_discount_amount || 0) > 0) discount = Math.min(discount, Number(c.max_discount_amount));
-  }else{
-    discount = Number(c.discount_amount || c.discount_value || 0);
-  }
-  discount = Math.min(discount, base, total);
-  if(discount <= 0) throw new Error('قيمة الخصم غير صحيحة');
-  return {code:c.code, discount_amount:discount};
-}
-
-
-
-async function hasOpenOrderForPhone(phone){
-  if(!phone) return false;
-  const rows = await supa(`orders?phone=eq.${encodeURIComponent(phone)}&status=in.(pending,claimed,processing,on_hold,needs_fix)&select=id,order_code,status&limit=1`);
-  return rows && rows[0] ? rows[0] : null;
-}
-
 export default async function handler(req,res){
   try{ rateLimit(req,'order',5,10*60_000); }catch(e){ return safeError(res,e,e.statusCode||429); }
   if(req.method!=='POST') return json(res,405,{ok:false,error:'Method not allowed'});
   try{
     await persistentRateLimit(req,'order-persistent',8,10*60_000);
+    if(!supabaseReady())throw fail(503,'تسجيل الطلبات متوقف مؤقتا. تواصل مع الدعم.');
     const groupId=process.env.ORDER_GROUP_ID; if(!groupId) throw fail(500,'ORDER_GROUP_ID missing');
-    const raw=await readRawBody(req); const {fields,files}=parseMultipart(raw,req.headers['content-type']);
+    const raw=await boundedBody(req); const {fields,files}=await parseForm(raw,req.headers['content-type']);
+    const access=orderIdentity(req.headers['idempotency-key'],'WEB');
+    const requestHash=fingerprint({fields,screenshotHash:screenshotHash(files.screenshot)});
+    const existing=await readExistingOrder(access.id);
+    if(existing)return json(res,200,replayResponse(existing,access,requestHash));
     const clientIp=getClientIp(req) || 'unknown';
     const deviceId=String(fields.deviceId||'').trim().slice(0,80);
-    const cart=JSON.parse(fields.cart||'[]');
-    const testOrder = String(fields.testOrder||'') === 'true';
+    let cart=JSON.parse(fields.cart||'[]');
+    const testOrder = false; // Public clients cannot label real orders as disposable test data.
     const customerPhone=String(fields.customerPhone||'').trim();
     const paymentMethod=String(fields.paymentMethod||'').trim();
     const customerName='غير محدد';
@@ -361,7 +265,7 @@ export default async function handler(req,res){
     const transferLast3=String(fields.transferLast3||'').trim();
     let total=0;
     if(!/^01\d{9}$/.test(customerPhone) || looksFakeDigits(customerPhone,'phone')) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح أو شكله عشوائي'});
-    if(!paymentMethod) return json(res,400,{ok:false,error:'اختار طريقة الدفع'});
+    if(!['Wallet','InstaPay'].includes(paymentMethod)) return json(res,400,{ok:false,error:'اختار طريقة دفع صحيحة'});
     if(String(fields.termsAccepted||'')!=='true') return json(res,400,{ok:false,error:'لازم توافق على شروط الشحن وسياسة الاسترجاع قبل تنفيذ الطلب'});
     const storeSettings = await getStoreSettings();
     enforceStoreOpen(storeSettings);
@@ -371,11 +275,12 @@ export default async function handler(req,res){
     if(transferMode==='other' && !/^\d{3}$/.test(transferLast3)) return json(res,400,{ok:false,error:'اكتب آخر 3 أرقام من رقم التحويل عشان نقدر نراجع الدفع'});
 
     if(!Array.isArray(cart)||!cart.length) return json(res,400,{ok:false,error:'سلة الطلبات فاضية'});
-    const serverProducts=await getServerProducts();
+    const serverProducts=await loadServerProducts();
+    cart=pricedCart(cart,serverProducts);
     for(const item of cart){
       const productId=String(item.productId||'').trim();
       const serverProduct=serverProducts.get(productId);
-      if(!productId || !serverProduct || serverProduct.status==='hidden') return json(res,400,{ok:false,error:'منتج غير موجود أو غير متاح. حدث الصفحة وجرب تاني'});
+      if(!productId || !serverProduct || !serverProduct.enabled) return json(res,400,{ok:false,error:'منتج غير موجود أو غير متاح. حدث الصفحة وجرب تاني'});
       item.qty = itemQty(item);
       if(serverProduct.noQty) item.qty = 1;
       item.productId = serverProduct.id;
@@ -391,8 +296,8 @@ export default async function handler(req,res){
       if(!item.product || !validGameAccountId(id) || name.length<2) return json(res,400,{ok:false,error:'راجع المنتج و ID الحساب واسم الحساب في السلة'});
       if(item.qty>20) return json(res,400,{ok:false,error:'الكمية كبيرة جدا. راجع السلة أو كلم الدعم'});
     }
-    total = cart.reduce((s,item)=>s+itemLineTotal(item),0);
-    if(total<=0) return json(res,400,{ok:false,error:'إجمالي الطلب غير صحيح'});
+    total = cartAmount(cart);
+    if(!Number.isFinite(total)||total<=0||!Number.isSafeInteger(Math.round(total*100))) return json(res,400,{ok:false,error:'إجمالي الطلب غير صحيح'});
     const coupon_code = String(fields.coupon_code || '').trim().toUpperCase();
     let coupon_discount = 0;
     if(coupon_code){
@@ -411,7 +316,9 @@ export default async function handler(req,res){
     const openPubgId=await findOpenOrderByPubgId(cart);
     if(openPubgId) return json(res,409,{ok:false,error:'في طلب مفتوح بالفعل لنفس ID الحساب. تابع الطلب القديم الأول أو كلم الدعم'});
 
-    const identity=await nextDailyIdentity();
+    const dailyIdentity=await nextDailyIdentity();
+    const identity={...dailyIdentity,id:access.id};
+    const receiptPath=await saveReceipt(identity.id,files.screenshot);
     const order={
       id:identity.id, order_code:identity.order_code, order_date:identity.order_date, daily_number:identity.daily_number,
       phone:customerPhone, customer_phone:customerPhone, customer_name:customerName, payment_method:paymentMethod, payment_destination:paymentSnapshot.dest, payment_settings_snapshot:paymentSnapshot.data, total,
@@ -423,6 +330,12 @@ export default async function handler(req,res){
       raw_data:{userAgent:req.headers['user-agent']||'',clientIp,deviceId,screenshotHash:shotHash,antiSpam:'v118',termsAccepted:true,paymentKey:paymentSnapshot.key,paymentDestination:paymentSnapshot.dest,storeStatus:storeSettings.store_status||'available',storeMessage:storeSettings.store_message||storeSettings.store_status_message||'',testOrder}, status_history:[{status:'pending',label:STATUS_LABELS.pending,at:new Date().toISOString(),by:'website'}]
     };
     const message=buildTelegramText(order); order.telegram_text=message; order.order_summary=`${identity.order_code} | ${customerPhone} | ${total}`;
+    order.raw_data.trackingTokenHash=access.hash;
+    order.raw_data.requestHash=requestHash;
+    order.raw_data.receiptPath=receiptPath;
+    order.raw_data.paymentVerified=false;
+    order.raw_data.checkoutMethod='direct';
+    order.raw_data.costTotal=cart.every(i=>Number.isFinite(serverProducts.get(i.productId)?.cost))?cart.reduce((s,i)=>s+serverProducts.get(i.productId).cost*i.qty,0):null;
     if(supabaseReady()){
       let saved=false;
       for(let attempt=0; attempt<4 && !saved; attempt++){
@@ -430,9 +343,11 @@ export default async function handler(req,res){
           await supabaseWriteWithSchemaFallback('orders', order, {method:'POST',headers:{Prefer:'return=minimal'}});
           saved=true;
         }catch(saveErr){
+          const concurrent=await readExistingOrder(access.id);
+          if(concurrent)return json(res,200,replayResponse(concurrent,access,requestHash));
           if(attempt>=3 || !isDailyNumberDuplicateError(saveErr)) throw saveErr;
           const next=await nextDailyIdentity();
-          order.id=next.id;
+          order.id=access.id;
           order.order_code=next.order_code;
           order.order_date=next.order_date;
           order.daily_number=next.daily_number;
@@ -452,13 +367,14 @@ export default async function handler(req,res){
 
     const photoForm=new FormData(); photoForm.append('chat_id',groupId); if(messageId) photoForm.append('reply_to_message_id',String(messageId)); photoForm.append('caption',`📸 Screenshot for ${order.order_code}`); photoForm.append('photo',new Blob([files.screenshot.buffer],{type:files.screenshot.contentType}),files.screenshot.filename||'screenshot.jpg');
     const photoData=await telegramFormWithRetry('sendPhoto',()=>photoForm,3);
-    if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString(),raw_data:{...(order.raw_data||{}),telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg'}}, {method:'PATCH',headers:{Prefer:'return=minimal'}});
+    if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {telegram_photo_file_id:photoData?.result?.photo?.slice(-1)?.[0]?.file_id||null,screenshot_file_name:files.screenshot.filename||'screenshot.jpg',updated_at:new Date().toISOString()}, {method:'PATCH',headers:{Prefer:'return=minimal'}});
     telegramOk = true;
     }catch(telegramError){
       console.error('[TELEGRAM_DELIVERY_FAILED]', telegramError);
-      if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {updated_at:new Date().toISOString(),raw_data:{...(order.raw_data||{}),telegramOk:false,telegramPending:true,telegramError:String(telegramError?.message||telegramError).slice(0,220),screenshot_file_name:files.screenshot.filename||'screenshot.jpg'}}, {method:'PATCH',headers:{Prefer:'return=minimal'}}).catch(()=>null);
+      if(supabaseReady()) await supabaseWriteWithSchemaFallback(`orders?id=eq.${encodeURIComponent(order.id)}`, {updated_at:new Date().toISOString(),security_note:'تعذر تسليم إشعار Telegram بالكامل. إثبات التحويل محفوظ في التخزين الخاص.'}, {method:'PATCH',headers:{Prefer:'return=minimal'}}).catch(()=>null);
     }
 
-    return json(res,200,{ok:true,telegramOk,statusTracking:supabaseReady(),orderCode:order.order_code,orderId:order.id,total:order.total,phone:order.phone});
+    res.setHeader('Cache-Control','no-store');
+    return json(res,200,{ok:true,telegramOk,statusTracking:supabaseReady(),orderCode:order.order_code,orderId:order.id,total:order.total,phone:order.phone,trackingToken:access.token});
   }catch(error){return publicOrderError(res,error);}
 }

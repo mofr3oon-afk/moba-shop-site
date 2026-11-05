@@ -1,6 +1,8 @@
 ﻿import { loadCatalog } from './catalog.js';
 import { addCartItem, cartTotal, cartUnits, clearCart, deviceId, money, readCart, removeCartItem, saveCart, toast, updateCartItem } from './store.js';
 import { SITE_CONTENT } from './site-content.js';
+import { rememberOrder, readOrderAccess } from './store.js';
+import { renderManualCheckout, checkoutAttempt } from './manual-checkout.js';
 
 let catalog = { games: [], sections: [], products: [], offers: [] };
 let route = location.pathname;
@@ -34,7 +36,14 @@ function setActiveNav(){
     a.classList.toggle('active', href === route || (href==='/' && route==='/'));
   });
 }
-function page(html){ app.innerHTML = html; app.focus({preventScroll:true}); setActiveNav(); updateCartBubble(); }
+function page(html){
+  app.innerHTML = html; app.focus({preventScroll:true}); setActiveNav(); updateCartBubble();
+  const product=route.startsWith('/product/')?catalog.products.find(p=>String(p.id)===decodeURIComponent(route.slice(9))):null;
+  document.title=`${product?.name||app.querySelector('h1')?.textContent||'شحن الألعاب'} | MOBA SHOP`;
+  let robots=document.querySelector('meta[name="robots"]');
+  if(!robots){robots=document.createElement('meta');robots.name='robots';document.head.append(robots);}
+  robots.content=['/checkout','/cart','/track','/success'].includes(route)?'noindex,nofollow':'index,follow';
+}
 function renderSkeleton(label='جاري تحميل بيانات MOBA SHOP...'){
   app.innerHTML = `<section class="section skeleton-shell" aria-live="polite" aria-busy="true">
     <div class="skeleton-head">
@@ -123,10 +132,10 @@ function renderHome(){
         <p>${heroCopy}</p>
       </div>
       <div class="trust-grid">
-        <div class="trust-card"><b>7000+</b><span>عميل تعامل معنا</span></div>
-        <div class="trust-card"><b>1000+</b><span>تقييم وتجربة</span></div>
-        <div class="trust-card"><b>12 سنة</b><span>خبرة في الشحن</span></div>
-        <div class="trust-card"><b>دعم مباشر</b><span>تواصل في أي وقت</span></div>
+        <div class="trust-card"><b>بدون حساب</b><span>اختار الباقة المناسبة</span></div>
+        <div class="trust-card"><b>طلب واضح</b><span>التفاصيل والإجمالي قبل الإرسال</span></div>
+        <div class="trust-card"><b>شحن يدوي</b><span>مراجعة الدفع قبل التنفيذ</span></div>
+        <div class="trust-card"><b>دعم مباشر</b><span>تواصل للاستفسار عن طلبك</span></div>
         <div class="trust-card"><b>متابعة</b><span>كل تحديث أول بأول</span></div>
         <div class="trust-card"><b>أمان</b><span>مراجعة قبل التنفيذ</span></div>
       </div>
@@ -188,7 +197,7 @@ function renderGame(slug=currentGameSlug()){
         <div>
           <span class="badge">${esc(game.name)}</span>
           <h1>${esc(game.name)}</h1>
-          <p>اكتب البيانات المطلوبة مرة واحدة، وبعدها اختار الباقة المناسبة.</p>
+          <p>${products.every(p=>p.checkoutMethod==='manual')?'اختار الباقة والكمية، وكمل التفاصيل يدويًا في الشات.':'اكتب البيانات المطلوبة مرة واحدة، وبعدها اختار الباقة المناسبة.'}</p>
         </div>
         <button class="ghost-btn" data-go="/">رجوع للرئيسية</button>
       </div>
@@ -199,7 +208,7 @@ function renderGame(slug=currentGameSlug()){
         ${sections.map(s=>`<button type="button" data-section="${esc(s.slug)}" class="${s.slug===active?'active':''}">${esc(s.name)}</button>`).join('')}
       </aside>
       <div>
-        <div class="fields-grid" id="accountFields">
+        <div class="fields-grid" id="accountFields" style="display:${products.every(p=>p.checkoutMethod==='manual')?'none':'grid'}">
           <div class="field"><label>${esc(game.idLabel)}</label><input id="accountId" inputmode="numeric" placeholder="${esc(game.idPlaceholder)}"></div>
           <div class="field"><label>${esc(game.nameLabel)}</label><input id="accountName" placeholder="${esc(game.namePlaceholder)}"></div>
           ${(game.fields||[]).map(f=>`<div class="field"><label>${esc(f.label)}</label><input data-extra-field="${esc(f.key)}" ${f.type==='number'?'inputmode="numeric"':''} placeholder="${esc(f.placeholder||f.label)}" ${f.required?'data-required="1"':''}></div>`).join('')}
@@ -260,9 +269,9 @@ function renderCart(){
 function cartItem(item,i){
   return `<article class="cart-item">
     <div>
-      <h3>${item.product}</h3>
-      <p>ID: ${item.pubgId} | Name: ${item.pubgName}</p>
-      ${item.extraFields ? `<p>${Object.entries(item.extraFields).map(([k,v])=>`${k}: ${v}`).join(' | ')}</p>` : ''}
+      <h3>${esc(item.product)}</h3>
+      <p>ID: ${esc(item.pubgId)} | Name: ${esc(item.pubgName)}</p>
+      ${item.extraFields ? `<p>${Object.entries(item.extraFields).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(' | ')}</p>` : ''}
       <b>${money(item.price)} × ${item.qty}</b>
     </div>
     <div class="qty">
@@ -313,8 +322,21 @@ function checkoutPoliciesHtml(cart){
   <div class="checkout-info-card policies-mini" style="grid-column:1/-1"><div class="page-title"><div><h3>الشروط والسياسات</h3><p>ملخص سريع قبل تأكيد الطلب.</p></div><a href="/policies" data-link class="ghost-btn">عرض كل الشروط</a></div>${policiesCards()}</div>
   <label class="terms-check" style="grid-column:1/-1"><input type="checkbox" name="termsAccepted" value="true" required> ${esc(SITE_CONTENT.termsCheckbox)}</label>`;
 }
-function renderCheckout(){
-  const cart=readCart(); const total=cartTotal(cart); const discount=Number(coupon?.discount_amount||0);
+async function renderCheckout(){
+  let cart=readCart();
+  if(!catalog.games.length)return page('<section class="section">جاري تحميل المنتجات...</section>');
+  if(!cart.length)return page('<section class="section"><h1>السلة فاضية</h1><button class="primary" data-go="/">اختار باقة</button></section>');
+  const methods=new Set(cart.map(i=>catalog.products.find(p=>p.id===i.productId)?.checkoutMethod||'direct'));
+  if(methods.size>1)return page('<section class="section"><h1>افصل طلب الشات عن الطلب المباشر</h1><p>السلة تحتوي طرق شحن مختلفة. أكمل نوعًا واحدًا في كل طلب.</p><button class="primary" data-go="/cart">راجع السلة</button></section>');
+  if(methods.has('manual'))return renderManualCheckout({page,cart,rememberOrder,clearCart,money});
+  page('<section class="section" aria-live="polite">جاري مراجعة الأسعار على الخادم...</section>');
+  try{
+    const r=await fetch('/api/public?action=quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,coupon_code:coupon?.code||'',phone:localStorage.getItem('moba_last_phone')||''})});
+    const quote=await r.json();if(!r.ok||!quote.ok)throw new Error(quote.error||'تعذر مراجعة السعر');
+    if(route!=='/checkout')return;
+    cart=quote.items;saveCart(cart);coupon=quote.coupon;
+  }catch(e){return page(`<section class="section"><h1>راجع السلة قبل الدفع</h1><p>${esc(e.message)}</p><button class="primary" data-go="/cart">الرجوع للسلة</button></section>`);}
+  const total=cartTotal(cart); const discount=Number(coupon?.discount_amount||0);
   const pay = catalog.payment || {};
   const instapay = {user:'mofr3oon1',phone:'01061707294',name:'مؤمن',link:'https://ipn.eg/S/mofr3oon1/instapay/3ALZfx',...(pay.instapay||{})};
   const wallet = {phone:'01061707294',name:'مؤمن',message:'Vodafone / Orange / Etisalat / WE',...(pay.wallet||{})};
@@ -392,10 +414,10 @@ async function submitCheckout(form){
   if(!confirm(`تأكيد إرسال الطلب؟\n${summary}`)) return;
   const btn=form.querySelector('button[type="submit"]'); btn.disabled=true; btn.textContent='جاري إرسال الطلب...';
   try{
-    const res = await fetch('/api/order',{method:'POST',body:fd});
+    const res = await fetch('/api/order',{method:'POST',headers:{'idempotency-key':checkoutAttempt(cart)},body:fd});
     const data = await res.json();
     if(!data.ok) throw new Error(data.error || 'تعذر تنفيذ الطلب');
-    clearCart(); coupon=null; checkoutFile=null;
+    rememberOrder(data); clearCart(); coupon=null; checkoutFile=null;
     sessionStorage.setItem('last_invoice', JSON.stringify(data));
     navigate('/success');
   }catch(e){ checkoutMessage(e.message || 'تعذر تنفيذ الطلب', 'err'); btn.disabled=false; btn.textContent='تنفيذ الشراء'; }
@@ -417,8 +439,18 @@ function renderSuccess(){
   </div></section>`);
 }
 function renderTrack(){
-  page(`<section class="section"><div class="page-title"><div><h1>متابعة الطلب</h1><p>اكتب رقم الموبايل وشوف آخر حالة للطلب.</p></div></div></section>
-    <section class="section"><form id="trackForm" class="fields-grid"><div class="field"><label>رقم الموبايل</label><input name="phone" inputmode="tel" placeholder="010xxxxxxxx"></div><button class="primary">بحث</button></form><div id="trackResult"></div></section>`);
+  const saved=Object.entries(readOrderAccess());
+  page(`<section class="section"><div class="page-title"><div><h1>متابعة الطلب</h1><p>بدون حساب: استخدم رقم الطلب ومفتاح المتابعة الخاص بك. الطلبات القديمة أو المفتاح المفقود عبر الدعم.</p></div></div></section>
+    <section class="section"><form id="trackForm" class="fields-grid">
+    <div class="field"><label>طلب محفوظ على الجهاز</label><select id="savedOrder"><option value="">اختار طلبًا أو اكتب بياناته</option>${saved.map(([id,o])=>`<option value="${esc(id)}">${esc(o.orderCode)}</option>`).join('')}</select></div>
+    <div class="field"><label>رقم الطلب الكامل</label><input name="orderId" required autocomplete="off"></div>
+    <div class="field"><label>رقم الموبايل</label><input name="phone" inputmode="tel" placeholder="اختياري لطلبات الشات"></div>
+    <div class="field"><label>مفتاح المتابعة الخاص</label><input name="trackingToken" required type="password" autocomplete="off"></div>
+    <button class="primary">بحث</button></form><div id="trackResult"></div></section>`);
+  $('#savedOrder').addEventListener('change',e=>{
+    const access=readOrderAccess()[e.target.value];if(!access)return;
+    const form=$('#trackForm');form.elements.orderId.value=e.target.value;form.elements.phone.value=access.phone;form.elements.trackingToken.value=access.token;
+  });
 }
 function renderPolicies(){
   page(`<section class="section policies-page">
@@ -428,7 +460,9 @@ function renderPolicies(){
 }
 async function trackOrder(phone){
   const box=$('#trackResult'); box.innerHTML='<div class="message">جاري البحث...</div>';
-  try{ const r=await fetch('/api/public?action=status&history=1&phone='+encodeURIComponent(phone)); const d=await r.json(); if(!d.ok) throw new Error(d.error||'لا يوجد طلب');
+  const form=$('#trackForm');const orderId=form?.elements.orderId.value;const token=form?.elements.trackingToken.value;
+  try{ const r=await fetch('/api/public?action=status',{method:'POST',headers:{'Content-Type':'application/json','x-order-token':token},body:JSON.stringify({history:'1',phone,orderId})}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'لا يوجد طلب');
+    rememberOrder({orderId,trackingToken:token,phone,orderCode:d.orders?.[0]?.order_code});
     const orders=d.orders||[];
     const groups={all:orders,fix:orders.filter(o=>['needs_fix','on_hold','pending'].includes(o.status)),done:orders.filter(o=>o.status==='delivered'),cancel:orders.filter(o=>['cancelled','rejected'].includes(o.status))};
     box.innerHTML = `<div class="track-tabs"><button class="active" data-track-filter="all">الكل <small>${groups.all.length}</small></button><button data-track-filter="fix">محتاج تعديل/معلق <small>${groups.fix.length}</small></button><button data-track-filter="done">مكتمل <small>${groups.done.length}</small></button><button data-track-filter="cancel">ملغي <small>${groups.cancel.length}</small></button></div><div id="trackOrders">${orders.map(o=>trackCard(o,phone)).join('')}</div>`;
@@ -445,7 +479,7 @@ function trackCard(o,phone){
       <div><b>الإجمالي</b><span>${money(o.total)}</span></div>
     </div>
     <div class="track-items">${(o.items||[]).map(i=>`<article><b>${esc(i.product)}</b><span>ID: ${esc(i.pubgId||'-')}</span><span>Name: ${esc(i.pubgName||'-')}</span><span>Qty: ${esc(i.qty||1)}</span></article>`).join('')}</div>
-    ${fix?`<form class="fix-form" data-fix-form><input type="hidden" name="orderId" value="${o.id}"><input type="hidden" name="phone" value="${phone}"><div class="field"><label>اكتب التعديل المطلوب</label><textarea name="fixValue" rows="3" placeholder="ID الجديد / الرقم الصحيح / ملاحظة المبلغ الناقص"></textarea></div><div class="field"><label>ارفع سكرين جديد لو المشكلة تخص الدفع أو السكرين</label><input type="file" name="fixFile" accept="image/png,image/jpeg,image/webp"></div><button class="primary" type="submit">إرسال التعديل</button><a class="ghost-btn" href="https://wa.me/201061707294" target="_blank">التواصل مع الدعم</a></form>`:''}
+    ${fix?`<form class="fix-form" data-fix-form><input type="hidden" name="orderId" value="${esc(o.id)}"><input type="hidden" name="phone" value="${esc(phone)}"><div class="field"><label>اكتب التعديل المطلوب</label><textarea name="fixValue" rows="3" placeholder="ID الجديد / الرقم الصحيح / ملاحظة المبلغ الناقص"></textarea></div><div class="field"><label>ارفع سكرين جديد لو المشكلة تخص الدفع أو السكرين</label><input type="file" name="fixFile" accept="image/png,image/jpeg,image/webp"></div><button class="primary" type="submit">إرسال التعديل</button><a class="ghost-btn" href="https://wa.me/201061707294" target="_blank">التواصل مع الدعم</a></form>`:''}
   </details>`;
 }
 async function renderReviews(){
@@ -535,10 +569,10 @@ document.addEventListener('click', e=>{
   const game=e.target.closest('[data-game]'); if(game){ const g=gameBySlug(game.dataset.game); if(g.status==='available') navigate('/game/'+g.slug); else toast('اللعبة دي هتتوفر قريبًا'); return; }
   const offer=e.target.closest('[data-offer-game]'); if(offer){ selectedSection[offer.dataset.offerGame]=offer.dataset.offerSection || selectedSection[offer.dataset.offerGame]; const ids=(offer.dataset.offerProducts||'').split(',').map(x=>x.trim()).filter(Boolean); selectedOfferProducts[offer.dataset.offerGame]=ids.length?ids:null; navigate('/game/'+offer.dataset.offerGame); return; }
   const section=e.target.closest('[data-section]'); if(section){ selectedOfferProducts[currentGameSlug()]=null; selectedSection[currentGameSlug()]=section.dataset.section; renderGame(); return; }
-  const plus=e.target.closest('[data-qty-plus]'); if(plus){ const q=plus.closest('.product-card').querySelector('[data-qty]'); q.textContent=Number(q.textContent)+1; return; }
+  const plus=e.target.closest('[data-qty-plus]'); if(plus){ const q=plus.closest('.product-card').querySelector('[data-qty]'); q.textContent=Math.min(20,Number(q.textContent)+1); return; }
   const minus=e.target.closest('[data-qty-minus]'); if(minus){ const q=minus.closest('.product-card').querySelector('[data-qty]'); q.textContent=Math.max(1,Number(q.textContent)-1); return; }
   const add=e.target.closest('[data-add-product]'); if(add) return addProduct(add.dataset.addProduct, add.closest('.product-card'));
-  const cp=e.target.closest('[data-cart-plus]'); if(cp){ const i=Number(cp.dataset.cartPlus); const cart=readCart(); if(cart[i]?.noQty){toast('هذا المنتج كمية واحدة فقط'); renderCart(); return;} updateCartItem(i,{qty:Number(cart[i].qty||1)+1}); renderCart(); return; }
+  const cp=e.target.closest('[data-cart-plus]'); if(cp){ const i=Number(cp.dataset.cartPlus); const cart=readCart(); if(cart[i]?.noQty){toast('هذا المنتج كمية واحدة فقط'); renderCart(); return;} updateCartItem(i,{qty:Math.min(20,Number(cart[i].qty||1)+1)}); renderCart(); return; }
   const cm=e.target.closest('[data-cart-minus]'); if(cm){ const i=Number(cm.dataset.cartMinus); const cart=readCart(); updateCartItem(i,{qty:Math.max(1,Number(cart[i].qty||1)-1)}); renderCart(); return; }
   const cr=e.target.closest('[data-cart-remove]'); if(cr){ removeCartItem(Number(cr.dataset.cartRemove)); renderCart(); return; }
   if(e.target.id==='toggleCoupon'){ const f=$('#couponForm'); f.hidden=!f.hidden; return; }
@@ -554,7 +588,7 @@ function addProduct(id, card){
   const accId=$('#accountId')?.value.trim(); const accName=$('#accountName')?.value.trim();
   const extras={}; let missing=false;
   document.querySelectorAll('[data-extra-field]').forEach(inp=>{ extras[inp.dataset.extraField]=inp.value.trim(); if(inp.dataset.required && !inp.value.trim()) missing=true; });
-  if(!accId || !accName || missing) return toast('اكتب كل بيانات الحساب المطلوبة الأول.', 'err');
+  if(product.checkoutMethod!=='manual'&&(!accId || !accName || missing)) return toast('اكتب كل بيانات الحساب المطلوبة الأول.', 'err');
   const qty=Number(card?.querySelector('[data-qty]')?.textContent || 1);
   addCartItem({ productId:product.id, product:product.name, game:game.name, price:Number(product.salePrice||0)>0?Number(product.salePrice):product.price, qty, noQty:product.noQty, pubgId:accId, pubgName:accName, extraFields:extras });
   toast('تمت إضافة المنتج للسلة');
@@ -628,7 +662,8 @@ async function submitReview(form){
 async function submitFix(form){
   const btn=form.querySelector('button'); btn.disabled=true; btn.textContent='جاري الإرسال...';
   try{
-    const r=await fetch('/api/public?action=fix-order',{method:'POST',body:new FormData(form)});
+    const credentials=readOrderAccess()[form.elements.orderId.value];
+    const r=await fetch('/api/public?action=fix-order',{method:'POST',headers:{'x-order-token':credentials?.token||''},body:new FormData(form)});
     const d=await r.json(); if(!d.ok) throw new Error(d.error||'تعذر إرسال التعديل');
     form.innerHTML='<div class="message ok">تم إرسال التعديل للمتجر للمراجعة.</div>';
   }catch(e){ btn.disabled=false; btn.textContent='إرسال التعديل'; form.insertAdjacentHTML('beforeend',`<div class="message err">${esc(customerErrorMessage(e))}</div>`); }
@@ -697,8 +732,8 @@ renderHome = function(){
   _v217RenderHome();
 };
 const _v217RenderCheckout = renderCheckout;
-renderCheckout = function(){
-  _v217RenderCheckout();
+renderCheckout = async function(){
+  await _v217RenderCheckout();
   const section=$('.checkout-section');
   if(section && !section.querySelector('.store-status-card')) section.insertAdjacentHTML('afterbegin', storeStatusCard(true));
   const phone=$('[name="customerPhone"]');
@@ -916,10 +951,11 @@ submitCheckout = async function(form){
     const btn=form.querySelector('button[type="submit"]');
     btn.disabled=true;
     btn.textContent='جاري إرسال الطلب...';
-    const res = await fetch('/api/order',{method:'POST',body:fd});
+    const res = await fetch('/api/order',{method:'POST',headers:{'idempotency-key':checkoutAttempt(cart)},body:fd});
     const data = await res.json().catch(()=>({ok:false,error:'حصلت مشكلة مؤقتة، جرب مرة تانية أو تواصل معنا.'}));
     if(!data.ok) throw new Error(data.error || 'تعذر تنفيذ الطلب');
-    clearCart(); coupon=null; checkoutFile=null;
+    rememberOrder(data);
+    rememberOrder(data); clearCart(); coupon=null; checkoutFile=null;
     sessionStorage.setItem('last_invoice', JSON.stringify(data));
     navigate('/success');
   }catch(e){
@@ -942,6 +978,8 @@ renderSuccess = function(){
         <div class="summary-box"><b>${money(data.total || 0)}</b><span>الإجمالي</span></div>
       </div>
       <div class="message ok">احتفظ برقم الطلب أو رقم الموبايل لمتابعة طلبك.</div>
+      <div class="field"><label>رقم الطلب الكامل</label><input readonly value="${esc(data.orderId||'')}"></div>
+      <div class="field"><label>مفتاح المتابعة الخاص — احتفظ به ولا تشاركه علنًا</label><input readonly value="${esc(data.trackingToken||'')}"></div>
       <div class="success-actions">
         <button class="primary" data-go="/track">متابعة الطلب</button>
         ${supportLinks()}

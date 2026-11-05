@@ -28,6 +28,14 @@ function normalizeValue(v){
 }
 function serializeValue(v){ return Array.isArray(v) || (v && typeof v==='object') ? JSON.stringify(v) : String(v ?? ''); }
 
+function publicCatalogSettings(settings){
+  const fields=new Set(['id','game','section','cat','name','unit','type','amount','uc','price','salePrice','sale_price','description','desc','order','sort_order','noQty','no_qty','status','hidden','image','hot','featured','bestSeller','best_seller','startsAt','starts_at','endsAt','ends_at','warning','id_label','id_placeholder','id_type','id_required','name_label','name_placeholder','name_required','require_id','require_name','custom_fields','fields','checkoutMethod','checkout_method']);
+  const project=p=>Object.fromEntries(Object.entries(p||{}).filter(([k])=>fields.has(k)));
+  if(Array.isArray(settings.dynamic_products))settings.dynamic_products=settings.dynamic_products.map(project);
+  if(settings.product_overrides&&typeof settings.product_overrides==='object')settings.product_overrides=Object.fromEntries(Object.entries(settings.product_overrides).map(([id,p])=>[id,project(p)]));
+  return settings;
+}
+
 function textKey(v){
   return String(v||'').trim().toLowerCase()
     .replace(/[\u064B-\u065F\u0670]/g,'')
@@ -111,7 +119,7 @@ function cleanCatalogInput(input){
       const name=String(raw.name||'').trim();
       if(!name) continue;
       let game=String(raw.game||'pubg').trim() || 'pubg';
-      let cat=keyify(raw.cat||firstByGame[game]||'uc','cat');
+      let cat=keyify(raw.section||raw.cat||firstByGame[game]||'uc','cat');
       if(validSections.size && !validSections.has(game+'|'+cat)){
         const fallback=sections.find(s=>String(s.game||'pubg')===game) || sections[0];
         if(fallback){ game=String(fallback.game||game); cat=String(fallback.key||cat); }
@@ -123,8 +131,8 @@ function cleanCatalogInput(input){
         game,
         cat,
         price: Number(raw.price||0),
-        sale_price: Number(raw.sale_price||raw.discount_price||0),
-        cost: Number(raw.cost||0),
+        sale_price: Number(raw.salePrice??raw.sale_price??raw.discount_price??0),
+        cost: raw.cost==null||raw.cost===''?null:Number(raw.cost),
         uc: Number(raw.uc||0),
         sort_order: Number(raw.sort_order||0),
         status: raw.status || 'available',
@@ -164,9 +172,11 @@ function cleanCatalogInput(input){
 }
 
 async function readSettings(all=false){
-  const rows = await supa('settings?select=key,value');
+  const path=all?'settings?and=(key.not.like.otp_*,key.not.like.rl_*,key.not.like.idem_*)&select=key,value':`settings?key=in.(${PUBLIC_KEYS.join(',')})&select=key,value`;
+  const rows = await supa(path);
   const settings = {};
   for(const r of rows || []){
+    if(/^(otp_|rl_|idem_)/.test(r.key))continue;
     if(!all && !PUBLIC_KEYS.includes(r.key)) continue;
     settings[r.key] = normalizeValue(r.value);
   }
@@ -196,6 +206,8 @@ export default async function handler(req,res){
       let settings = await readSettings(wantsAdmin);
       // v195: even on GET, hide/dedupe legacy duplicated home sections before sending to site/admin.
       settings = cleanCatalogInput(settings || {});
+      if(!wantsAdmin)settings=publicCatalogSettings(settings);
+      res.setHeader('Cache-Control','no-store');
       return json(res,200,{ok:true,settings});
     }
     if(req.method === 'POST'){

@@ -648,10 +648,14 @@ async function handleCallback(cb){
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'جاري عرض سجل العميل'});
     return tg('sendMessage',{chat_id:chatId,text:await customerHistoryText(order.phone),reply_to_message_id:msgId});
   }
+  if(action==='delivered'){
+    await tg('answerCallbackQuery',{callback_query_id:cb.id,text:'راجع وصول المبلغ وتنفيذ الشحنة أولا'});
+    return tg('sendMessage',{chat_id:chatId,text:'هل تأكدت من وصول المبلغ فعليا ونفذت الشحنة؟ صورة التحويل وحدها ليست تأكيدا للدفع.',reply_markup:{inline_keyboard:[[{text:'نعم — تم الدفع والشحن',callback_data:`confirm_delivered:${id}`}],[{text:'إلغاء',callback_data:`noop:${id}`}]]}});
+  }
   const map={
     claim:['claimed','تم استلام الطلب بواسطة مسؤول'],
     processing:['processing','جاري تنفيذ الطلب'],
-    delivered:['delivered','تم الشحن بنجاح'],
+    confirm_delivered:['delivered','تم الشحن بنجاح'],
     hold:['on_hold','الطلب معلق مؤقتا'],
     bad_id:['needs_fix','ID غير صحيح - مطلوب تعديل من العميل',{fix_type:'bad_id',fix_count:Number(order.fix_count||0)}],
     bad_screen:['needs_fix','السكرين غير واضح - مطلوب رفع سكرين جديد من العميل',{fix_type:'bad_screen',fix_count:Number(order.fix_count||0)}],
@@ -660,6 +664,7 @@ async function handleCallback(cb){
   };
   if(map[action]){
     const [status,label,extra={}] = map[action];
+    if(status==='delivered')extra.raw_data={...(order.raw_data||{}),paymentVerified:true,paymentVerifiedBy:String(adminId),paymentVerifiedAt:new Date().toISOString()};
     const updated=await setStatus(order,status,label,adminId,extra);
     await tg('answerCallbackQuery',{callback_query_id:cb.id,text:label});
     await tg('sendMessage',{chat_id:chatId,text:`✅ تم تحديث حالة الطلب:\n${label}\n👨‍💻 بواسطة: ${adminPublic()}`,reply_to_message_id:msgId});

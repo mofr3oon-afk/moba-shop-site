@@ -1,6 +1,11 @@
 import { json, supabaseReady, supabaseRequest, STATUS_LABELS, OPEN_STATUSES } from '../lib/_utils.js';
 import { rateLimit, safeError } from '../lib/_security.js';
 import { requireAdmin, requireRole, logAdminEvent } from '../lib/admin-auth.js';
+import { readJsonBody } from '../lib/request-body.js';
+import { loadReceipt } from '../lib/receipts.js';
+import { newOrderAccess } from '../lib/customer-access.js';
+import { adminReport } from '../lib/admin-report.js';
+export const config = { api:{bodyParser:false} };
 
 function orderByRecent(a,b){ return new Date(b.created_at||0)-new Date(a.created_at||0); }
 function issueTypeFromNote(note){
@@ -65,6 +70,15 @@ export default async function handler(req,res){
   try{
     if(!supabaseReady()) return json(res,200,{ok:false,error:'Supabase غير مفعل'});
     if(req.method === 'GET'){
+      res.setHeader('Cache-Control','no-store');
+      if(req.query?.report==='1')return json(res,200,{ok:true,report:await adminReport(req.query.from,req.query.to)});
+      if(req.query?.receipt){
+        const orders=await supabaseRequest(`orders?id=eq.${encodeURIComponent(String(req.query.receipt))}&select=raw_data&limit=1`);
+        const image=await loadReceipt(orders?.[0]?.raw_data?.receiptPath);
+        res.setHeader('Content-Type',image.headers.get('content-type')||'image/jpeg');
+        res.setHeader('X-Content-Type-Options','nosniff');
+        return res.end(Buffer.from(await image.arrayBuffer()));
+      }
       const screenshotId = String(req.query?.screenshot || '').trim();
       if(screenshotId) return await streamTelegramPhoto(res, screenshotId);
       const status = String(req.query?.status || '').trim();
@@ -72,7 +86,13 @@ export default async function handler(req,res){
       const limit = Math.min(150, Math.max(20, Number(req.query?.limit || 80)));
       let path = `orders?select=*&order=created_at.desc&limit=${limit}`;
       if(status && status !== 'all') path = `orders?status=eq.${encodeURIComponent(status)}&select=*&order=created_at.desc&limit=${limit}`;
-      let rows = await supabaseRequest(path).catch(()=>[]);
+      if(q){
+        const safe=q.replace(/[^\p{L}\p{N}\s_-]/gu,'').slice(0,80);
+        if(!safe)return json(res,400,{ok:false,error:'اكتب رقم طلب أو هاتف صحيح'});
+        const term=encodeURIComponent(safe);
+        path+=`&or=(order_code.ilike.*${term}*,id.ilike.*${term}*,phone.ilike.*${term}*)`;
+      }
+      let rows = await supabaseRequest(path);
       if(q){
         const low=q.toLowerCase();
         rows=(rows||[]).filter(o=>String(o.order_code||o.id||'').toLowerCase().includes(low) || String(o.phone||'').includes(q) || JSON.stringify(o.items||[]).toLowerCase().includes(low));
@@ -82,8 +102,16 @@ export default async function handler(req,res){
     }
     if(req.method === 'POST'){
       requireRole(admin, ['owner','staff']);
-      const body = await new Promise((resolve,reject)=>{let s='';req.on('data',c=>s+=c);req.on('end',()=>{try{resolve(JSON.parse(s||'{}'))}catch(e){reject(e)}});req.on('error',reject);});
+      const body = await readJsonBody(req);
       const action=String(body.action||'').trim();
+      if(action==='issue_tracking_key'){
+        const rows=await supabaseRequest(`orders?id=eq.${encodeURIComponent(String(body.id||''))}&select=*&limit=1`);
+        const order=rows?.[0];if(!order)return json(res,404,{ok:false,error:'الطلب غير موجود'});
+        const access=newOrderAccess();
+        await supabaseRequest(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:'PATCH',body:JSON.stringify({raw_data:{...(order.raw_data||{}),trackingTokenHash:access.hash},updated_at:new Date().toISOString()})});
+        await logAdminEvent('tracking_key_issued',req,{orderId:order.id});
+        return json(res,200,{ok:true,trackingToken:access.token,orderId:order.id});
+      }
       if(action === 'archive_delivered'){
         requireRole(admin, ['owner','staff']);
         const rows=await supabaseRequest(`orders?status=eq.delivered&select=id,status`);
@@ -165,6 +193,10 @@ export default async function handler(req,res){
       history.push({status,label:STATUS_LABELS[status]||status,at:new Date().toISOString(),by:adminName,role:admin?.role||'owner',username:admin?.username||''});
       const customerText=customerStatusText(status,note);
       const patch={status,status_text:STATUS_LABELS[status]||status,admin_status_text:STATUS_LABELS[status]||status,customer_status_text:customerText,last_status_by: `${adminName} (${admin?.role||'owner'})`,last_status_at:new Date().toISOString(),updated_at:new Date().toISOString(),status_history:history.slice(-50)};
+      if(status==='delivered'){
+        if(body.paymentVerified!==true)return json(res,400,{ok:false,error:'أكد وصول المبلغ فعليا قبل تسجيل الشحن.'});
+        patch.raw_data={...(order.raw_data||{}),paymentVerified:true,paymentVerifiedBy:adminName,paymentVerifiedAt:new Date().toISOString()};
+      }
       if(status === 'claimed' || status === 'processing'){
         patch.handler = adminName;
         patch.handler_id = admin?.deviceId || '';

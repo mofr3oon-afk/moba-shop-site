@@ -3,8 +3,10 @@
   "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "MOBA SHOP gamer digital store order system with Telegram admin actions and phone-only order status",
+  "description": "MOBA SHOP manual fulfillment store with protected guest tracking and server-priced checkout",
   "scripts": {
+    "check": "node scripts/check.mjs",
+    "sync-public": "node scripts/sync-public.mjs",
     "test": "node --test",
     "dev": "vercel dev",
     "start": "vercel dev"

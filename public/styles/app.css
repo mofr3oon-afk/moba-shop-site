@@ -337,3 +337,7 @@ img{max-width:100%}
   .product-card h3{font-size:15px}
   .cart-bubble{left:50%;right:auto;transform:translateX(-50%);font-size:11px}
 }
+
+/* Keep long order references readable on narrow screens. */
+.invoice-card h2,.invoice-card h1,.order-card summary b{overflow-wrap:anywhere;word-break:break-word}
+.invoice-card input,.invoice-card textarea{max-width:100%;min-width:0;box-sizing:border-box}

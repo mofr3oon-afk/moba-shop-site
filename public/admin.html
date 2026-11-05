@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MOBA SHOP Admin</title>
+  <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/assets/moba-shop-logo-256.png">
   <link rel="stylesheet" href="/styles/app.css">
   <style>
@@ -29,13 +30,13 @@
   <main class="admin-shell">
     <section id="loginBox" class="login-screen">
       <div class="login-card">
-        <img src="/assets/moba-shop-logo.png" alt="" onerror="this.src='/assets/moba-shop-logo-512.webp'">
+        <img src="/assets/moba-shop-logo.png" alt="">
         <h1>MOBA SHOP Admin</h1>
         <p>سجل الدخول لفتح لوحة التحكم</p>
         <div id="credentialsStep">
           <div class="field"><label>Username</label><input id="adminUsername" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="اسم المستخدم"></div>
           <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="كلمة المرور"></div>
-          <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="trustAdminDevice" type="checkbox" checked> اعتبر الجهاز ده موثوق لنهاية اليوم</label>
+          <p>التحقق الإضافي مطلوب لكل دخول من مصدر غير موثوق.</p>
           <button class="primary" id="loginBtn" style="width:100%;margin-top:12px">دخول</button>
         </div>
         <div id="otpStep" hidden>
