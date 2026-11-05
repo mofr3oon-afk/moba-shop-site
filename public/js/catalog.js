@@ -42,6 +42,7 @@ function normalizeGame(raw){
     name: String(raw.name || raw.title || '').trim(),
     subtitle: String(raw.subtitle || '').trim(),
     cover: String(raw.cover || raw.image || '').trim(),
+    accent: /^#[0-9a-f]{6}$/i.test(raw.accent||'')?raw.accent:'',
     status: raw.status || 'available',
     order: Number(raw.order ?? raw.sort_order ?? 99),
     defaultSection: raw.defaultSection || raw.default_section || 'main',

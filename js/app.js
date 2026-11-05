@@ -1,5 +1,6 @@
 import { matchesGame, productIsAvailable, normalizeDigits } from './interface-utils.js';
 import { collectAccountDetails } from './product-dialog.js';
+import { gameTile, imageSource } from './catalog-presentation.js';
 const accountDrafts=new Map();
 ﻿import { loadCatalog } from './catalog.js';
 import { addCartItem, cartTotal, cartUnits, clearCart, deviceId, money, readCart, removeCartItem, saveCart, toast, updateCartItem } from './store.js';
@@ -116,16 +117,14 @@ function applyBrand(){
 function renderHome(){
   const store=catalog.store||{};
   const state=storeStatusInfo();
-  const highlight=catalog.games.find(g=>g.status==='available')||catalog.games[0];
   const mainOffer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
   page(`<section class="hero">
     <div class="hero-copy"><span class="status-pill store-${esc(store.status||'available')}">${esc(state.title)}</span>
-      <h1>شحن ألعابك.<br><span>أسهل من أول خطوة.</span></h1>
-      <p>اختار لعبتك وباقتك، وراجع السعر والتفاصيل قبل الإرسال. نراجع الدفع ونكمل الشحن معاك يدويًا، بكل وضوح.</p>
+      <h1>اختار لعبتك. <span>وابدأ الشحن.</span></h1>
+      <p>باقات واضحة، سعر بالجنيه، ومتابعة لطلبك خطوة بخطوة.</p>
       <div class="hero-actions"><a class="primary" href="#games">اختار لعبتك <span aria-hidden="true">←</span></a><button class="ghost-btn" type="button" data-go="/track">متابعة طلب</button></div>
       <p class="hero-note">${esc(store.message||state.message)}${store.workHours?' · مواعيد العمل: '+esc(store.workHours):''}</p>
     </div>
-    <div class="hero-visual"><img src="${esc(highlight?.cover||'/assets/game-covers/pubg-new.webp')}" alt="${esc(highlight?.name||'MOBA SHOP')}" width="600" height="420" fetchpriority="high"><span class="badge">MOBA SHOP · شحن يدوي</span><div class="hero-visual-copy"><strong>لعبتك. باقتك. اختيارك.</strong><span>التفاصيل واضحة، والطلب تحت مراجعة المسؤول.</span></div></div>
   </section>
   <div class="purchase-path" aria-label="خطوات الطلب"><div><b>01</b><span><strong>اختار اللعبة والباقة</strong><small>الأسعار والكميات قدامك</small></span></div><div><b>02</b><span><strong>راجع تفاصيل طلبك</strong><small>بدون إنشاء حساب</small></span></div><div><b>03</b><span><strong>كمل الشحن وتابع طلبك</strong><small>مراجعة يدوية للدفع والتنفيذ</small></span></div></div>
   <section class="section games-section" id="games" aria-labelledby="gamesTitle"><div class="games-heading"><div><span class="eyebrow">ابدأ من هنا</span><h2 id="gamesTitle">اختار لعبتك</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب · كل باقة موضح لها طريقة إتمام الطلب</p></div><label class="game-search"><span aria-hidden="true">⌕</span><input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="ابحث عن لعبتك…" autocomplete="off"></label></div>
@@ -155,12 +154,7 @@ function offerHtml(o){
   </button>`;
 }
 function gameCard(g){
-  const soon = g.status !== 'available';
-  return `<button class="game-card ${soon?'soon':''}" data-game="${esc(g.slug)}" type="button">
-    <img src="${esc(g.cover)}" alt="" loading="lazy" decoding="async">
-    <span class="game-status">${soon?'قريبًا':'متاح الآن'}</span>
-    <div class="game-info"><h3>${esc(g.name)}</h3><p>${esc(g.subtitle || '')}</p></div>
-  </button>`;
+  return gameTile(g,{count:catalog.products.filter(p=>p.game===g.slug).length});
 }
 
 function renderGame(slug=currentGameSlug()){
@@ -207,7 +201,7 @@ function productCard(p){
   const section=catalog.sections.find(s=>s.game===p.game&&s.slug===p.section);
   const available=productIsAvailable({...p,startsAt:p.startsAt||section?.startsAt,endsAt:p.endsAt||section?.endsAt})&&(gameBySlug(p.game)?.status||'available')==='available'&&(!section||(section.status||'available')==='available');
   return `<article class="product-card ${available?'':'is-unavailable'}" data-product="${esc(p.id)}">
-  ${p.image?`<img class="product-thumb" src="${esc(p.image)}" alt="" loading="lazy" decoding="async">`:''}
+  <div class="package-art">${p.image?`<img class="product-thumb" src="${esc(imageSource(p.image))}" alt="" loading="lazy" decoding="async">`:'<span class="package-symbol" aria-hidden="true">◇</span>'}<small>${esc(gameBySlug(p.game)?.name||p.unit||'باقة شحن')}</small></div>
   <div><h3>${esc(p.name)}</h3><span class="small-note">${p.checkoutMethod==='manual'?'استكمال الشحن في الشات':'شحن ببيانات الحساب'}</span></div>
   ${p.description?`<p class="product-desc">${esc(p.description)}</p>`:''}
   <div class="price">${Number(p.salePrice)>0?`<small>${money(p.price)}</small> `:''}${money(price)}</div>

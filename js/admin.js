@@ -1,4 +1,5 @@
 import { ORDER_STATUS_TEXT } from './interface-utils.js';
+import { mountVisualCatalog } from './visual-catalog-editor.js';
 ﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog } from './catalog.js';
 import { money, toast } from './store.js';
 import { customerWhatsAppUrl } from './contact-links.js';
@@ -6,6 +7,7 @@ import { cairoDayStart, cairoDayEnd, cairoDateKey } from './cairo-time.js';
 
 let tab='orders';
 let settings={};
+let settingsLoaded=false;
 let local=readLocalCatalog();
 let loginChallenge=null;
 let loginRole='owner';
@@ -63,7 +65,7 @@ async function verifyOtp(){
   }catch(e){ toast(e.status===429 ? TOO_MANY_LOGIN_ERROR : GENERIC_LOGIN_ERROR,'err'); }
 }
 async function loadSettings(){
-  try{ const d=await api('/api/settings?admin=1'); settings=d.settings||{}; }catch{ settings={}; }
+  try{ const d=await api('/api/settings?admin=1'); settings=d.settings||{}; settingsLoaded=true; }catch{ settingsLoaded=false; settings={}; }
   if(Array.isArray(settings.dynamic_products))local.products=settings.dynamic_products;
   if(Array.isArray(settings.dynamic_sections))local.sections=settings.dynamic_sections.map(s=>({...s,slug:s.slug||s.key,name:s.name||s.title}));
   if(settings.game_settings)local.games=Object.values(settings.game_settings);
@@ -420,6 +422,14 @@ function productEditorHtml(p){
 }
 
 function renderCatalog(){
+  if(!settingsLoaded){view.innerHTML='<div class="notice">تعذر تحميل الكتالوج من الموقع. حدّث الصفحة قبل تعديل أي أسعار.</div>';return;}
+  mountVisualCatalog(view,{local,onDraft:()=>saveLocalCatalog(local),onAdvanced:()=>renderCatalogAdvanced(),onSave:async()=>{
+    const game_settings=Object.fromEntries((local.games||[]).map(g=>[g.slug,g]));
+    await api('/api/settings',{method:'POST',body:JSON.stringify({settings:{game_settings,dynamic_sections:local.sections||[],dynamic_products:local.products||[]}})});
+    saveLocalCatalog(local);toast('تم تحديث الكتالوج على الموقع');
+  }});
+}
+function renderCatalogAdvanced(){
   const c=combinedCatalog();
   view.innerHTML=`<div class="page-title"><div><h1>إدارة الأقسام والمنتجات</h1><p>اختار لعبة، ثم تحكم في الأقسام والمنتجات داخلها. كل خانة هنا تؤثر على الموقع بعد الحفظ.</p></div><div class="admin-actions"><button class="primary" id="saveCatalog">حفظ التغييرات</button><button class="ghost-btn" id="addGame">إضافة لعبة</button></div></div>
   <div class="admin-grid"><aside class="admin-list">${c.games.map(g=>`<button class="ghost-btn game-admin-pick" data-edit-game="${g.slug}"><b>${g.name}</b><small>${g.status||'available'} | ترتيب ${g.order||99}</small></button>`).join('')}</aside><div id="gameEditor" class="admin-card">اختار لعبة لتعديل أقسامها ومنتجاتها.</div></div>`;
