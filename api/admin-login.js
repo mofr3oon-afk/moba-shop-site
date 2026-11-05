@@ -1,7 +1,7 @@
 import { json, escapeHtml } from '../lib/_utils.js';
 import { readJsonBody } from '../lib/request-body.js';
 import { rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
-import { currentAdminSession, setSessionCookie, clearSessionCookie, makeSession, checkFailedLock, recordLoginAttempt, getAdminSecret, timingSafeEquals, otpEnabled, createOtpChallenge, verifyOtp, sendAdminTelegram, logAdminEvent, resolveAdminRole, readTrustedAdminSettings, shouldForceOtpForDevice, trustAdminDevice } from '../lib/admin-auth.js';
+import { currentAdminSession, setSessionCookie, clearSessionCookie, makeSession, checkFailedLock, recordLoginAttempt, getAdminSecret, timingSafeEquals, otpEnabled, createOtpChallenge, verifyOtp, sendAdminTelegram, logAdminEvent, shouldForceOtpForDevice, isAllowedAdminUsername } from '../lib/admin-auth.js';
 
 const LOGIN_ERROR = 'بيانات الدخول غير صحيحة';
 export const config = { api:{bodyParser:false} };
@@ -28,11 +28,10 @@ export default async function handler(req,res){
     const expected = getAdminSecret();
     if(!expected) return json(res,500,{ok:false,error:'حصلت مشكلة مؤقتة، جرب مرة تانية أو تواصل مع الدعم.'});
     const deviceId = String(body.deviceId || '').slice(0,120);
-    const trustDevice = Boolean(body.trustDevice);
 
     if(body.challenge){
       const verified = await verifyOtp(req,body.challenge,body.otp);
-      const okOtp = Boolean(verified);
+      const okOtp = Boolean(verified&&isAllowedAdminUsername(verified.username));
       recordLoginAttempt(req, okOtp);
       if(!okOtp){ await logAdminEvent('otp_failed',req,{deviceId}); return json(res,401,{ok:false,error:LOGIN_ERROR}); }
       const {role,username,deviceId:verifiedDeviceId} = verified;
@@ -42,28 +41,31 @@ export default async function handler(req,res){
       return json(res,200,{ok:true,authenticated:true,session});
     }
 
-    const username = String(body.username || '').trim();
+    const username = String(body.username || '').trim().toLowerCase();
     const password = String(body.password || body.secret || '');
-    const allowedUsers = String(process.env.ADMIN_USERS || '').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
-    if(!username || (allowedUsers.length && !allowedUsers.includes(username.toLowerCase()))){
+    if(!isAllowedAdminUsername(username)){
       recordLoginAttempt(req, false);
       await logAdminEvent('login_failed',req,{deviceId});
       return json(res,401,{ok:false,error:LOGIN_ERROR});
     }
-    const role = resolveAdminRole(password);
-    const ok = Boolean(role);
+    const role = 'owner';
+    const ok = timingSafeEquals(password,expected);
     recordLoginAttempt(req, ok);
     if(!ok){ await logAdminEvent('login_failed',req,{deviceId}); return json(res,401,{ok:false,error:LOGIN_ERROR}); }
-    const trusted = await readTrustedAdminSettings();
-    const needsOtp = shouldForceOtpForDevice({deviceId, ip:req.headers['x-forwarded-for'], trusted});
+    const needsOtp = shouldForceOtpForDevice();
     if(needsOtp){
       const {challenge,code} = await createOtpChallenge(req,{role,username,deviceId});
-      await sendAdminTelegram(`🔐 <b>MOBA SHOP Admin Login Code</b>
+      let delivery;
+      try{delivery=await sendAdminTelegram(`🔐 <b>MOBA SHOP Admin Login Code</b>
 الكود: <code>${code}</code>
+المستخدم: <b>${escapeHtml(username)}</b>
 الصلاحية: <b>${role}</b>
 Device: <code>${escapeHtml(deviceId || '-')}</code>
-ينتهي خلال 5 دقائق.`);
-      await logAdminEvent('otp_sent',req,{role,username,deviceId});
+ينتهي خلال 5 دقائق.`);}catch(error){
+        await logAdminEvent('otp_delivery_failed',req,{username,reason:error.reason||'unavailable'});
+        throw error;
+      }
+      await logAdminEvent('otp_sent',req,{role,username,deviceId,accepted:delivery.accepted,recipients:delivery.total});
       return json(res,200,{ok:true,needsOtp:true,challenge,role,message:'تم إرسال كود الدخول على تليجرام'});
     }
     const session = makeSession(req,{role,username,deviceId});
@@ -72,6 +74,7 @@ Device: <code>${escapeHtml(deviceId || '-')}</code>
     return json(res,200,{ok:true,authenticated:true,role,session});
   }catch(e){
     if(e.statusCode === 429) return json(res,429,{ok:false,error:LOGIN_LOCK_ERROR});
+    if(['OTP_DELIVERY_NOT_CONFIGURED','OTP_DELIVERY_FAILED'].includes(e.code))return json(res,503,{ok:false,code:e.code,error:'تعذر إرسال كود التحقق على تليجرام. راجع إعدادات البوت وحساب الاستقبال.'});
     return safeError(res,e,e.statusCode||500);
   }
 }

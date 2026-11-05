@@ -31,7 +31,7 @@ function safeAdminErrorMessage(message){
 async function api(path, opts={}){
   const r=await fetch(path,{headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts});
   const d=await r.json().catch(()=>({ok:false,error:'رد غير مفهوم'}));
-  if(!d.ok){ const err = new Error(safeAdminErrorMessage(d.error||'حدث خطأ')); err.status = r.status; throw err; }
+  if(!d.ok){ const err = new Error(safeAdminErrorMessage(d.error||'حدث خطأ')); err.status = r.status; err.code=d.code; throw err; }
   return d;
 }
 async function checkLogin(){
@@ -52,7 +52,7 @@ async function login(){
     currentAdmin=d.session||{username:loginUser,role:d.role||loginRole};
     content.hidden=false; loginBox.hidden=true; loginBox.style.display='none'; await loadSettings(); render();
   }
-  catch(e){ document.querySelector('#adminPassword').value = ''; toast(e.status===429 ? TOO_MANY_LOGIN_ERROR : GENERIC_LOGIN_ERROR,'err'); }
+  catch(e){ document.querySelector('#adminPassword').value = ''; toast(e.code?.startsWith('OTP_DELIVERY_')?e.message:e.status===429 ? TOO_MANY_LOGIN_ERROR : GENERIC_LOGIN_ERROR,'err'); }
 }
 async function verifyOtp(){
   try{

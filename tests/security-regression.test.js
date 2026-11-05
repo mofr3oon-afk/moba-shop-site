@@ -10,7 +10,7 @@ const {default:publicApi}=await import('../api/public.js');
 const {default:settingsApi}=await import('../api/settings.js');
 const {default:orderApi}=await import('../api/order.js');
 const {default:manualApi,handoffDetails}=await import('../api/manual-order.js');
-const {makeSession,setSessionCookie}=await import('../lib/admin-auth.js');
+const {makeSession,setSessionCookie,createOtpChallenge}=await import('../lib/admin-auth.js');
 const {newOrderAccess}=await import('../lib/customer-access.js');
 const {default:adminOrders}=await import('../api/admin-orders.js');
 const {cairoDayStart,cairoDayEnd}=await import('../js/cairo-time.js');
@@ -82,10 +82,9 @@ function checkout(qty=1,extra={},image={}){return multipart({customerPhone:'0109
 const formOptions={type:'multipart/form-data; boundary=fixture'};
 
 test('OTP cannot upgrade viewer to owner using client role',async()=>{
-  const start=await invoke(login,{username:'viewer',password:'viewer-test',deviceId:'test-device'});
-  assert.equal(start.data.needsOtp,true);assert.ok(code);
-  const done=await invoke(login,{challenge:start.data.challenge,otp:code,role:'owner',username:'forged'});
-  assert.equal(done.data.session.role,'viewer');assert.equal(done.data.session.username,'viewer');
+  const start=await createOtpChallenge({headers:{'x-forwarded-for':'127.0.0.1','user-agent':'test'}},{username:'basant',role:'viewer',deviceId:'test-device'});
+  const done=await invoke(login,{challenge:start.challenge,otp:start.code,role:'owner',username:'forged'});
+  assert.equal(done.data.session.role,'viewer');assert.equal(done.data.session.username,'basant');
 });
 test('phone alone cannot reveal customer order history',async()=>{
   const res=await invoke(publicApi,undefined,{method:'GET',query:{action:'status',phone:fixture.phone,history:'1'}});
@@ -130,7 +129,7 @@ test('Telegram outage leaves receipt and order available in admin',async()=>{
   failTelegram=true;const res=await invoke(orderApi,checkout(),formOptions);assert.equal(res.statusCode,200);assert.equal(res.data.telegramOk,false);assert.ok(orders[0].raw_data.receiptPath);
 });
 test('OTP survives instance cache reset and cannot be replayed',async()=>{
-  const start=await invoke(login,{username:'viewer',password:'viewer-test'});const otp=code;globalThis.__MOBA_ADMIN_OTP__.clear();
+  const start=await invoke(login,{username:'moamen',password:'owner-test'});const otp=code;globalThis.__MOBA_ADMIN_OTP__.clear();
   assert.equal((await invoke(login,{challenge:start.data.challenge,otp})).statusCode,200);assert.equal((await invoke(login,{challenge:start.data.challenge,otp})).statusCode,401);
 });
 test('invalid quantities are rejected without saving',async()=>{
@@ -153,7 +152,7 @@ test('wrong tracking token cannot modify the order',async()=>{
   assert.equal(res.statusCode,401);assert.equal(calls.some(c=>c.method==='PATCH'&&c.url.includes('/orders')),false);
 });
 test('viewer cannot moderate reviews',async()=>{
-  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'viewer',username:'viewer'}));
+  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'viewer',username:'basant'}));
   const res=await invoke(publicApi,{id:1,action:'approve'},{method:'PATCH',headers:{cookie:cookieRes.headers['Set-Cookie'].split(';')[0]},query:{action:'reviews'}});assert.equal(res.statusCode,403);
 });
 test('manual orders use server prices without account or OTP and remain unpaid',async()=>{
@@ -180,7 +179,7 @@ test('handoff links omit account IDs, customer phone, tracking secrets and proof
 
 test('a viewer cannot update an order and cross-site owner updates are denied',async()=>{
   for(const role of ['viewer','owner']){
-    const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role,username:role}));
+    const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role,username:role==='owner'?'moamen':'basant'}));
     const headers={cookie:cookieRes.headers['Set-Cookie'].split(';')[0]};
     if(role==='owner')Object.assign(headers,{host:'shop.test',origin:'https://attacker.test'});
     const res=await invoke(adminOrders,{id:fixture.id,status:'delivered',paymentVerified:true},{headers});
@@ -188,7 +187,7 @@ test('a viewer cannot update an order and cross-site owner updates are denied',a
   }
 });
 test('admin cannot mark delivery without confirming payment',async()=>{
-  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'owner',username:'owner'}));
+  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'owner',username:'moamen'}));
   const headers={cookie:cookieRes.headers['Set-Cookie'].split(';')[0]};
   const denied=await invoke(adminOrders,{id:fixture.id,status:'delivered'},{headers});assert.equal(denied.statusCode,400);
   const allowed=await invoke(adminOrders,{id:fixture.id,status:'delivered',paymentVerified:true},{headers});assert.equal(allowed.statusCode,200);assert.equal(fixture.raw_data.paymentVerified,true);
