@@ -55,6 +55,7 @@ function normalizeGame(raw){
 function normalizeSection(raw){
   return {
     game:raw.game,
+    customFields:raw.custom_fields||raw.fields,
     slug:raw.slug || raw.key,
     name:raw.name || raw.title,
     order:Number(raw.order ?? raw.sort_order ?? 99),
@@ -69,6 +70,7 @@ function normalizeSection(raw){
 }
 function normalizeProduct(raw){
   return {
+    customFields:raw.custom_fields||raw.fields,
     checkoutMethod:raw.checkoutMethod||raw.checkout_method||'direct',
     id:raw.id || `p_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
     game:raw.game,

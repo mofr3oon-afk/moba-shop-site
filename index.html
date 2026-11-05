@@ -18,8 +18,9 @@
   <link rel="icon" href="/assets/moba-shop-logo-256.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/interface.css">
 </head>
-<body>
+<body class="shop-page">
   <header class="topbar">
     <a class="brand" href="/" data-link>
       <img src="/assets/moba-shop-logo-512.webp" alt="MOBA SHOP">
@@ -29,7 +30,6 @@
       <a href="/" data-link>الرئيسية</a>
       <a href="/cart" data-link>السلة</a>
       <a href="/track" data-link>طلباتي</a>
-      <a href="/reviews" data-link>الآراء</a>
       <a id="supportWhatsApp" href="https://wa.me/201061707294" target="_blank" rel="noopener">الدعم</a>
     </nav>
   </header>
@@ -55,6 +55,7 @@
   </main>
 
   <footer class="site-footer">
+    <a href="/reviews" data-link>آراء العملاء</a>
     <a href="/policies" data-link>الشروط والسياسات</a>
     <a href="/faq" data-link>الأسئلة الشائعة</a>
     <a href="/offers/pubg" data-link>عروض PUBG</a>
@@ -63,9 +64,9 @@
     <a href="/track" data-link>متابعة الطلب</a>
   </footer>
 
-  <button id="openAssistant" class="pharaoh-launcher" type="button">
+  <button aria-label="فتح المساعدة" id="openAssistant" class="pharaoh-launcher" type="button">
     <img src="/assets/assistant/pharaoh-realistic-transparent-512.webp" alt="">
-    <span>فرعون</span>
+    <span>مساعدة</span>
     <small>لو عايز مساعدة دوس عليا</small>
   </button>
 

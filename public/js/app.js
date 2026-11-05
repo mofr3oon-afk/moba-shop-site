@@ -1,3 +1,6 @@
+import { matchesGame, productIsAvailable, normalizeDigits } from './interface-utils.js';
+import { collectAccountDetails } from './product-dialog.js';
+const accountDrafts=new Map();
 ﻿import { loadCatalog } from './catalog.js';
 import { addCartItem, cartTotal, cartUnits, clearCart, deviceId, money, readCart, removeCartItem, saveCart, toast, updateCartItem } from './store.js';
 import { SITE_CONTENT } from './site-content.js';
@@ -37,6 +40,7 @@ function setActiveNav(){
   });
 }
 function page(html){
+  document.querySelector('.product-dialog')?.close();
   app.innerHTML = html; app.focus({preventScroll:true}); setActiveNav(); updateCartBubble();
   const product=route.startsWith('/product/')?catalog.products.find(p=>String(p.id)===decodeURIComponent(route.slice(9))):null;
   document.title=`${product?.name||app.querySelector('h1')?.textContent||'شحن الألعاب'} | MOBA SHOP`;
@@ -85,7 +89,9 @@ function currentGameSlug(){
 }
 function updateCartBubble(){
   const cart=readCart();
-  $('#cartBubbleText').textContent = `${cartUnits(cart)} منتجات | ${money(cartTotal(cart))}`;
+  $('#cartBubbleText').textContent = `${cartUnits(cart)} منتجات · ${money(cartTotal(cart))}`;
+  $('#cartBubble').hidden=!cart.length||['/cart','/checkout','/success'].includes(route);
+  const cartLink=document.querySelector('.main-nav a[href="/cart"]');if(cartLink)cartLink.textContent=cart.length?`السلة (${cartUnits(cart)})`:'السلة';
 }
 function applyBrand(){
   const brand = catalog.brand || {};
@@ -100,7 +106,7 @@ function applyBrand(){
     name.innerHTML = `${esc(parts[0] || 'MOBA')} <em>${esc(parts.slice(1).join(' ') || 'SHOP')}</em>`;
   }
   const tagline = document.querySelector('.brand small');
-  if(tagline) tagline.textContent = brand.tagline || 'Digital Store For Gamers';
+  if(tagline) tagline.textContent = brand.tagline || 'متجر شحن الألعاب';
   const favicon = document.querySelector('link[rel="icon"]');
   if(favicon) favicon.href = icon;
   const supportPhone = String(catalog.store?.supportPhone || '201061707294').replace(/\D/g,'');
@@ -108,52 +114,27 @@ function applyBrand(){
 }
 
 function renderHome(){
-  const mainOffer = catalog.offers.find(o=>!o.placement || o.placement==='home' || o.placement==='both');
-  const store = catalog.store || {};
-  const statusText = store.status==='maintenance' ? 'صيانة مؤقتة' : store.status==='busy' ? 'مزدحم ولكن شغال' : store.status==='closed' ? 'مغلق حاليا ويقبل طلبات' : 'متاح الآن';
-  const statusMsg = store.message || (store.status==='closed' ? `التنفيذ يبدأ في مواعيد العمل${store.workHours ? ': '+store.workHours : ''}` : store.status==='busy' ? 'تقدر تعمل الأوردر عادي لكن التنفيذ ممكن يتأخر شوية.' : 'التنفيذ شغال حاليا بشكل طبيعي.');
-  const heroCopy = store.status==='closed'
-    ? 'تقدر تسجل طلبك دلوقتي، وهنبدأ مراجعته مع بداية مواعيد العمل.'
-    : store.status==='busy'
-      ? 'فيه ضغط بسيط، لكن الطلبات بتتسجل وبتتنفذ بالترتيب.'
-      : store.status==='maintenance'
-        ? 'بنجهز تحسينات سريعة. الطلبات متوقفة مؤقتا لسلامة التنفيذ.'
-        : 'اختار لعبتك وكمل طلبك بخطوات واضحة وسريعة.';
-  page(`
-    <section class="section hero">
-      <div>
-        <span class="status-pill store-${store.status||'available'}">${statusText}</span>
-        <div class="store-alert store-${store.status||'available'}">
-          <b>${statusText}</b>
-          <span>${statusMsg}</span>
-          ${store.workHours ? `<small>مواعيد العمل: ${store.workHours}</small>` : ''}
-        </div>
-        <h1>ليه تستخدم موبا شوب؟</h1>
-        <p>${heroCopy}</p>
-      </div>
-      <div class="trust-grid">
-        <div class="trust-card"><b>بدون حساب</b><span>اختار الباقة المناسبة</span></div>
-        <div class="trust-card"><b>طلب واضح</b><span>التفاصيل والإجمالي قبل الإرسال</span></div>
-        <div class="trust-card"><b>شحن يدوي</b><span>مراجعة الدفع قبل التنفيذ</span></div>
-        <div class="trust-card"><b>دعم مباشر</b><span>تواصل للاستفسار عن طلبك</span></div>
-        <div class="trust-card"><b>متابعة</b><span>كل تحديث أول بأول</span></div>
-        <div class="trust-card"><b>أمان</b><span>مراجعة قبل التنفيذ</span></div>
-      </div>
-    </section>
-    <section class="section">
-      <div class="page-title">
-        <div>
-          <span class="badge">MOBA SHOP Games</span>
-          <h1>اختار لعبتك</h1>
-          <p>اختار اللعبة، اكتب بيانات الحساب، وبعدها ضيف الباقة للسلة بخطوات واضحة.</p>
-        </div>
-      </div>
-      ${mainOffer ? offerHtml(mainOffer) : ''}
-      <div class="games-grid">
-        ${catalog.games.map(gameCard).join('')}
-      </div>
-    </section>
-  `);
+  const store=catalog.store||{};
+  const state=storeStatusInfo();
+  const highlight=catalog.games.find(g=>g.status==='available')||catalog.games[0];
+  const mainOffer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
+  page(`<section class="hero">
+    <div class="hero-copy"><span class="status-pill store-${esc(store.status||'available')}">${esc(state.title)}</span>
+      <h1>شحن ألعابك.<br><span>أسهل من أول خطوة.</span></h1>
+      <p>اختار لعبتك وباقتك، وراجع السعر والتفاصيل قبل الإرسال. نراجع الدفع ونكمل الشحن معاك يدويًا، بكل وضوح.</p>
+      <div class="hero-actions"><a class="primary" href="#games">اختار لعبتك <span aria-hidden="true">←</span></a><button class="ghost-btn" type="button" data-go="/track">متابعة طلب</button></div>
+      <p class="hero-note">${esc(store.message||state.message)}${store.workHours?' · مواعيد العمل: '+esc(store.workHours):''}</p>
+    </div>
+    <div class="hero-visual"><img src="${esc(highlight?.cover||'/assets/game-covers/pubg-new.webp')}" alt="${esc(highlight?.name||'MOBA SHOP')}" width="600" height="420" fetchpriority="high"><span class="badge">MOBA SHOP · شحن يدوي</span><div class="hero-visual-copy"><strong>لعبتك. باقتك. اختيارك.</strong><span>التفاصيل واضحة، والطلب تحت مراجعة المسؤول.</span></div></div>
+  </section>
+  <div class="purchase-path" aria-label="خطوات الطلب"><div><b>01</b><span><strong>اختار اللعبة والباقة</strong><small>الأسعار والكميات قدامك</small></span></div><div><b>02</b><span><strong>راجع تفاصيل طلبك</strong><small>بدون إنشاء حساب</small></span></div><div><b>03</b><span><strong>كمل الشحن وتابع طلبك</strong><small>مراجعة يدوية للدفع والتنفيذ</small></span></div></div>
+  <section class="section games-section" id="games" aria-labelledby="gamesTitle"><div class="games-heading"><div><span class="eyebrow">ابدأ من هنا</span><h2 id="gamesTitle">اختار لعبتك</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب · كل باقة موضح لها طريقة إتمام الطلب</p></div><label class="game-search"><span aria-hidden="true">⌕</span><input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="ابحث عن لعبتك…" autocomplete="off"></label></div>
+  <div class="games-grid" id="gamesGrid">${catalog.games.map(gameCard).join('')}</div><p class="notice" id="noGames" role="status" hidden>ملقيناش لعبة بالاسم ده. جرّب اسمًا تاني أو تواصل مع الدعم.</p>
+  ${mainOffer?offerHtml(mainOffer):''}</section>`);
+  $('#gameSearch')?.addEventListener('input',event=>{
+    let count=0;document.querySelectorAll('#gamesGrid [data-game]').forEach(card=>{const game=catalog.games.find(g=>g.slug===card.dataset.game);const visible=!!game&&matchesGame(game,event.target.value);card.hidden=!visible;if(visible)count++;});
+    $('#gameCount').textContent=String(count);$('#noGames').hidden=count>0;
+  });
 }
 function offerHtml(o){
   const img = o.image || gameBySlug(o.game)?.cover || '/assets/game-covers/pubg-new.webp';
@@ -161,10 +142,10 @@ function offerHtml(o){
   const end = o.endsAt ? new Date(o.endsAt).getTime() : 0;
   const left = end && end>Date.now() ? Math.ceil((end-Date.now())/86400000) : 0;
   const productIds = Array.isArray(o.productIds) ? o.productIds.join(',') : String(o.productIds || '');
-  return `<button class="offer-card" data-offer-game="${o.game || 'pubg'}" data-offer-section="${o.section || ''}" data-offer-products="${productIds}" type="button">
+  return `<button class="offer-card" data-offer-game="${esc(o.game || 'pubg')}" data-offer-section="${esc(o.section || '')}" data-offer-products="${esc(productIds)}" type="button">
     <img src="${esc(img)}" alt="" loading="lazy" decoding="async">
     <span class="game-status">متاح الآن</span>
-    ${badge ? `<span class="discount-badge">${badge}</span>` : ''}
+    ${badge ? `<span class="discount-badge">${esc(badge)}</span>` : ''}
     <div class="offer-content">
       <span class="badge">عرض حصري</span>
       <h2>${esc(o.title || 'عروض حصرية')}</h2>
@@ -175,7 +156,7 @@ function offerHtml(o){
 }
 function gameCard(g){
   const soon = g.status !== 'available';
-  return `<button class="game-card ${soon?'soon':''}" data-game="${g.slug}" type="button">
+  return `<button class="game-card ${soon?'soon':''}" data-game="${esc(g.slug)}" type="button">
     <img src="${esc(g.cover)}" alt="" loading="lazy" decoding="async">
     <span class="game-status">${soon?'قريبًا':'متاح الآن'}</span>
     <div class="game-info"><h3>${esc(g.name)}</h3><p>${esc(g.subtitle || '')}</p></div>
@@ -183,8 +164,8 @@ function gameCard(g){
 }
 
 function renderGame(slug=currentGameSlug()){
-  const game = gameBySlug(slug);
-  if(!game) return renderHome();
+  const game = catalog.games.find(g=>g.slug===slug);
+  if(!game)return renderNotFoundV218();
   const sections = catalog.sections.filter(s=>s.game===game.slug);
   const firstSectionWithProducts = sections.find(s=>catalog.products.some(p=>p.game===game.slug && p.section===s.slug))?.slug;
   const active = selectedSection[game.slug] || firstSectionWithProducts || game.defaultSection || sections[0]?.slug;
@@ -197,11 +178,12 @@ function renderGame(slug=currentGameSlug()){
         <div>
           <span class="badge">${esc(game.name)}</span>
           <h1>${esc(game.name)}</h1>
-          <p>${products.every(p=>p.checkoutMethod==='manual')?'اختار الباقة والكمية، وكمل التفاصيل يدويًا في الشات.':'اكتب البيانات المطلوبة مرة واحدة، وبعدها اختار الباقة المناسبة.'}</p>
+          <p>اختار الباقة والكمية أولًا. هنطلب بيانات الحساب عند الحاجة فقط.</p>
         </div>
         <button class="ghost-btn" data-go="/">رجوع للرئيسية</button>
       </div>
     </section>
+    <nav class="flow-steps" aria-label="مراحل الشراء"><span class="current" aria-current="step">01 اختيار الباقة</span><span>02 مراجعة السلة</span><span>03 إتمام الطلب</span></nav>
     ${gameOffer ? `<section class="section">${offerHtml(gameOffer)}</section>` : ''}
     <section class="section products-layout">
       <aside class="side-list">
@@ -221,49 +203,26 @@ function renderGame(slug=currentGameSlug()){
   `);
 }
 function productCard(p){
-  const finalPrice = Number(p.salePrice || 0) > 0 ? Number(p.salePrice) : Number(p.price || 0);
-  const flags = [p.hot?'Hot':'',p.featured?'مميز':'',p.bestSeller?'الأكثر طلبا':''].filter(Boolean);
-  return `<article class="product-card" data-product="${p.id}">
-    ${p.image ? `<img class="product-thumb" src="${esc(p.image)}" alt="" loading="lazy" decoding="async">` : ''}
-    <div><h3>${esc(p.name)}</h3><span>${esc(p.unit || '')}</span>${flags.length?`<div class="product-flags">${flags.map(f=>`<b>${f}</b>`).join('')}</div>`:''}</div>
-    ${p.description ? `<p class="product-desc">${esc(p.description)}</p>` : ''}
-    <div class="price">${Number(p.salePrice||0)>0?`<small>${money(p.price)}</small> ${money(finalPrice)}`:money(p.price)}</div>
-    <div class="product-actions">
-      ${p.noQty ? '<span></span>' : `<div class="qty"><button type="button" data-qty-minus>-</button><b data-qty>1</b><button type="button" data-qty-plus>+</button></div>`}
-      <button class="primary" type="button" data-add-product="${p.id}">إضافة للسلة</button>
-    </div>
-  </article>`;
+  const price=Number(p.salePrice)>0?Number(p.salePrice):Number(p.price||0);
+  const section=catalog.sections.find(s=>s.game===p.game&&s.slug===p.section);
+  const available=productIsAvailable({...p,startsAt:p.startsAt||section?.startsAt,endsAt:p.endsAt||section?.endsAt})&&(gameBySlug(p.game)?.status||'available')==='available'&&(!section||(section.status||'available')==='available');
+  return `<article class="product-card ${available?'':'is-unavailable'}" data-product="${esc(p.id)}">
+  ${p.image?`<img class="product-thumb" src="${esc(p.image)}" alt="" loading="lazy" decoding="async">`:''}
+  <div><h3>${esc(p.name)}</h3><span class="small-note">${p.checkoutMethod==='manual'?'استكمال الشحن في الشات':'شحن ببيانات الحساب'}</span></div>
+  ${p.description?`<p class="product-desc">${esc(p.description)}</p>`:''}
+  <div class="price">${Number(p.salePrice)>0?`<small>${money(p.price)}</small> `:''}${money(price)}</div>
+  <div class="product-actions">${p.noQty?'<span class="small-note">كمية واحدة</span>':`<div class="qty"><button type="button" data-qty-minus aria-label="تقليل كمية ${esc(p.name)}">−</button><b data-qty aria-live="polite">1</b><button type="button" data-qty-plus aria-label="زيادة كمية ${esc(p.name)}">+</button></div>`}
+  <button class="primary" type="button" data-add-product="${esc(p.id)}" ${available?'':'disabled'}>${available?(p.checkoutMethod==='manual'?'أضف للطلب':'اختيار الباقة'):'غير متاح الآن'}</button></div></article>`;
 }
-
 function renderCart(){
   const cart=readCart();
-  page(`
-    <section class="section">
-      <div class="page-title"><div><h1>السلة</h1><p>راجع المنتجات والكميات قبل الانتقال للدفع.</p></div><button class="ghost-btn" data-go="/">رجوع للمنتجات</button></div>
-    </section>
-    <section class="section">
-      <div class="cart-list">
-        ${cart.map((item,i)=>cartItem(item,i)).join('') || '<div class="notice">السلة فاضية. اختار منتج الأول.</div>'}
-      </div>
-      <div class="summary-grid" style="margin-top:14px">
-        <div class="summary-box"><b>${cart.length}</b><span>منتجات</span></div>
-        <div class="summary-box"><b>${cartUnits(cart)}</b><span>كمية</span></div>
-        <div class="summary-box"><b>${money(cartTotal(cart))}</b><span>الإجمالي</span></div>
-      </div>
-      <div class="coupon-box" style="margin-top:14px">
-        <button class="ghost-btn" type="button" id="toggleCoupon">عندك كوبون خصم؟</button>
-        <div id="couponForm" hidden style="margin-top:10px">
-          <div class="fields-grid">
-            <div class="field"><label>كود الخصم</label><input id="couponCode" placeholder="اكتب الكود"></div>
-            <button class="primary" type="button" id="applyCoupon">تفعيل الكوبون</button>
-          </div>
-          <div id="couponMessage"></div>
-        </div>
-        <div id="couponActiveBox"></div>
-      </div>
-      <button class="primary" style="width:100%;margin-top:14px" ${cart.length?'':'disabled'} type="button" data-go="/checkout">كمل الدفع</button>
-    </section>
-  `);
+  const manual=cart.length&&cart.every(i=>(catalog.products.find(p=>p.id===i.productId)?.checkoutMethod||i.checkoutMethod)==='manual');
+  page(`<section class="section"><div class="page-title"><div><span class="eyebrow">خطوة أقرب لطلبك</span><h1>راجع سلتك</h1><p>عدّل الكمية أو بيانات الحساب قبل إتمام الطلب.</p></div><button class="ghost-btn" data-go="/">أضف منتجات أخرى</button></div><nav class="flow-steps" aria-label="مراحل الشراء"><span class="done">01 اختيار الباقة</span><span class="current" aria-current="step">02 مراجعة السلة</span><span>03 إتمام الطلب</span></nav></section>
+  ${cart.length?`<div class="cart-layout"><section class="section"><div class="cart-list">${cart.map(cartItem).join('')}</div></section>
+  <aside class="section cart-summary"><h2>ملخص الطلب</h2><div class="summary-line"><span>عدد المنتجات</span><strong>${cart.length}</strong></div><div class="summary-line"><span>إجمالي الكمية</span><strong>${cartUnits(cart)}</strong></div><div class="summary-line total"><span>الإجمالي</span><strong>${money(cartTotal(cart))}</strong></div>
+  <div class="coupon-box"><button class="ghost-btn" type="button" id="toggleCoupon">عندك كوبون خصم؟</button><div id="couponForm" hidden><div class="field"><label for="couponCode">كود الخصم</label><input id="couponCode" placeholder="اكتب الكود" autocomplete="off"></div><button class="primary" type="button" id="applyCoupon">تطبيق الكوبون</button><div id="couponMessage"></div></div><div id="couponActiveBox"></div></div>
+  <button class="primary" type="button" data-go="/checkout">${manual?'إتمام الطلب في الشات':'المتابعة للدفع'} <span aria-hidden="true">←</span></button><p class="small-note">السعر النهائي يُراجع على الخادم قبل إتمام الطلب. صورة التحويل وحدها لا تؤكد الدفع.</p></aside></div>`:
+  `<section class="section empty-cart"><span class="eyebrow">لسه مفيش منتجات</span><h2>اختار أول باقة ليك</h2><p class="muted">ارجع للألعاب، واختار اللعبة والباقة المناسبة.</p><button class="primary" data-go="/">تصفح الألعاب</button></section>`}`);
   renderCouponState();
 }
 function cartItem(item,i){
@@ -273,12 +232,13 @@ function cartItem(item,i){
       <p>ID: ${esc(item.pubgId)} | Name: ${esc(item.pubgName)}</p>
       ${item.extraFields ? `<p>${Object.entries(item.extraFields).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(' | ')}</p>` : ''}
       <b>${money(item.price)} × ${item.qty}</b>
+      ${(item.checkoutMethod||catalog.products.find(p=>p.id===item.productId)?.checkoutMethod)!=='manual'?`<button class="ghost-btn" type="button" data-cart-edit="${i}">تعديل بيانات الحساب</button>`:'<p class="small-note">تفاصيل الشحن تُستكمل في الشات</p>'}
     </div>
     <div class="qty">
-      <button type="button" data-cart-minus="${i}">-</button>
+      <button type="button" data-cart-minus="${i}" aria-label="تقليل الكمية">-</button>
       <b>${item.qty}</b>
-      <button type="button" data-cart-plus="${i}">+</button>
-      <button type="button" data-cart-remove="${i}" class="danger icon-btn">×</button>
+      <button type="button" data-cart-plus="${i}" aria-label="زيادة الكمية">+</button>
+      <button type="button" data-cart-remove="${i}" aria-label="حذف المنتج من السلة" class="danger icon-btn">×</button>
     </div>
   </article>`;
 }
@@ -335,14 +295,14 @@ async function renderCheckout(){
     const quote=await r.json();if(!r.ok||!quote.ok)throw new Error(quote.error||'تعذر مراجعة السعر');
     if(route!=='/checkout')return;
     cart=quote.items;saveCart(cart);coupon=quote.coupon;
-  }catch(e){return page(`<section class="section"><h1>راجع السلة قبل الدفع</h1><p>${esc(e.message)}</p><button class="primary" data-go="/cart">الرجوع للسلة</button></section>`);}
+  }catch(e){if(route!=='/checkout')return;return page(`<section class="section"><h1>راجع السلة قبل الدفع</h1><p>${esc(e.message)}</p><button class="primary" data-go="/cart">الرجوع للسلة</button></section>`);}
   const total=cartTotal(cart); const discount=Number(coupon?.discount_amount||0);
   const pay = catalog.payment || {};
   const instapay = {user:'mofr3oon1',phone:'01061707294',name:'مؤمن',link:'https://ipn.eg/S/mofr3oon1/instapay/3ALZfx',...(pay.instapay||{})};
   const wallet = {phone:'01061707294',name:'مؤمن',message:'Vodafone / Orange / Etisalat / WE',...(pay.wallet||{})};
   const locked = catalog.store?.status === 'maintenance';
   page(`
-    <section class="section"><div class="page-title"><div><h1>الدفع وتنفيذ الطلب</h1><p>اختار طريقة الدفع، ارفع السكرين، وبعدها راجع الطلب قبل الإرسال.</p></div><button class="ghost-btn" data-go="/cart">رجوع للسلة</button></div></section>
+    <section class="section"><div class="page-title"><div><h1>إتمام الطلب</h1><p>اختار طريقة الدفع، ارفع السكرين، وبعدها راجع الطلب قبل الإرسال.</p></div><button class="ghost-btn" data-go="/cart">رجوع للسلة</button></div></section>
     <section class="section checkout-section">
       <div class="summary-grid">
         <div class="summary-box"><b>${money(total)}</b><span>قبل الخصم</span></div>
@@ -351,12 +311,11 @@ async function renderCheckout(){
       </div>
       ${coupon ? `<div class="message ok coupon-state" style="margin-top:12px"><b>كوبون ${coupon.code}</b><span>خصم ${money(discount)} من إجمالي ${money(total)}</span><small>${coupon.product_scope_text || 'كل المنتجات'}</small></div>` : ''}
       <div class="checkout-steps">
-        <span>1. رقم المتابعة</span>
-        <span>2. طريقة الدفع</span>
-        <span>3. سكرين التحويل</span>
-        <span>4. تنفيذ الطلب</span>
+        <span>01 بيانات المتابعة</span>
+        <span>02 الدفع وإثبات التحويل</span>
+        <span>03 إرسال للمراجعة</span>
       </div>
-      <div class="notice warn" style="margin-top:14px">راجع ID واسم الحساب والسكرين قبل تنفيذ الطلب. أي ID غلط بعد التأكيد مسؤولية العميل.</div>
+      <div class="notice warn" style="margin-top:14px">راجع ID واسم الحساب والسكرين قبل تنفيذ الطلب. المراجعة اليدوية للدفع تسبق تنفيذ الشحن.</div>
       <form id="checkoutForm" class="checkout-grid" style="margin-top:14px">
         <div class="field"><label>رقم الموبايل للمتابعة</label><input name="customerPhone" inputmode="tel" placeholder="010xxxxxxxx" required></div>
         <div class="field"><label>طريقة الدفع</label><select name="paymentMethod"><option value="InstaPay" ${instapay.enabled===false||instapay.status==='disabled'?'disabled':''}>InstaPay</option><option value="Wallet" ${wallet.enabled===false||wallet.status==='disabled'?'disabled':''}>محفظة كاش</option></select></div>
@@ -374,11 +333,12 @@ async function renderCheckout(){
         ${checkoutPoliciesHtml(cart)}
         <div id="checkoutMessage" style="grid-column:1/-1"></div>
         ${locked?'<div class="message err" style="grid-column:1/-1">الموقع في وضع الصيانة حاليا، تنفيذ الطلبات متوقف مؤقتا.</div>':''}
-        <button class="primary success" style="grid-column:1/-1" type="submit" ${(cart.length&&!locked)?'':'disabled'}>تنفيذ الشراء</button>
+        <button class="primary success" style="grid-column:1/-1" type="submit" ${(cart.length&&!locked)?'':'disabled'}>إرسال الطلب للمراجعة</button>
       </form>
     </section>
   `);
   applyAssistantPrefill();
+  $('#checkoutForm')?.elements.paymentMethod?.dispatchEvent(new Event('change',{bubbles:true}));
 }
 function applyAssistantPrefill(){
   const raw = sessionStorage.getItem('assistant_prefill');
@@ -400,6 +360,7 @@ async function submitCheckout(form){
   const cart=readCart();
   if(!cart.length) return checkoutMessage('السلة فاضية.', 'err');
   const fd = new FormData(form);
+  for(const key of ['customerPhone','transferLast3'])if(fd.has(key))fd.set(key,normalizeDigits(fd.get(key)).trim());
   if(fd.get('termsAccepted')!=='true') return checkoutMessage('لازم توافق على شروط الشحن وسياسة الاسترجاع قبل تنفيذ الطلب.', 'err');
   const warning=$('.product-warning');
   if(warning && warning.dataset.accepted!=='true') return checkoutMessage('اقرأ تنبيه المنتج واضغط موافق ومتأكد قبل تنفيذ الطلب.', 'err');
@@ -419,8 +380,9 @@ async function submitCheckout(form){
     if(!data.ok) throw new Error(data.error || 'تعذر تنفيذ الطلب');
     rememberOrder(data); clearCart(); coupon=null; checkoutFile=null;
     sessionStorage.setItem('last_invoice', JSON.stringify(data));
+    checkoutSubmittingV218=false;
     navigate('/success');
-  }catch(e){ checkoutMessage(e.message || 'تعذر تنفيذ الطلب', 'err'); btn.disabled=false; btn.textContent='تنفيذ الشراء'; }
+  }catch(e){ checkoutMessage(e.message || 'تعذر تنفيذ الطلب', 'err'); btn.disabled=false; btn.textContent='إرسال الطلب للمراجعة'; }
 }
 function checkoutMessage(text,type){ const box=$('#checkoutMessage'); if(box) box.innerHTML=`<div class="message ${type==='ok'?'ok':'err'}">${esc(text)}</div>`; }
 
@@ -574,6 +536,15 @@ document.addEventListener('click', e=>{
   const add=e.target.closest('[data-add-product]'); if(add) return addProduct(add.dataset.addProduct, add.closest('.product-card'));
   const cp=e.target.closest('[data-cart-plus]'); if(cp){ const i=Number(cp.dataset.cartPlus); const cart=readCart(); if(cart[i]?.noQty){toast('هذا المنتج كمية واحدة فقط'); renderCart(); return;} updateCartItem(i,{qty:Math.min(20,Number(cart[i].qty||1)+1)}); renderCart(); return; }
   const cm=e.target.closest('[data-cart-minus]'); if(cm){ const i=Number(cm.dataset.cartMinus); const cart=readCart(); updateCartItem(i,{qty:Math.max(1,Number(cart[i].qty||1)-1)}); renderCart(); return; }
+  const edit=e.target.closest('[data-cart-edit]');
+  if(edit){
+    const index=Number(edit.dataset.cartEdit),item=readCart()[index],product=catalog.products.find(p=>p.id===item?.productId);
+    if(!item||!product)return toast('المنتج اتغير. حدّث السلة.','err');
+    const game=gameBySlug(product.game),section=catalog.sections.find(s=>s.game===product.game&&s.slug===product.section);
+    const fields=(product.customFields||section?.customFields||game.fields||[]).filter(f=>!/pass(word)?|كلمة.*مرور/i.test(String(f.key)+' '+String(f.label)));
+    collectAccountDetails({product,game,quantity:item.qty,fields,initial:{id:item.pubgId,name:item.pubgName,extraFields:item.extraFields},money}).then(details=>{if(!details)return;updateCartItem(index,{pubgId:details.id,pubgName:details.name,extraFields:details.extraFields});renderCart();});
+    return;
+  }
   const cr=e.target.closest('[data-cart-remove]'); if(cr){ removeCartItem(Number(cr.dataset.cartRemove)); renderCart(); return; }
   if(e.target.id==='toggleCoupon'){ const f=$('#couponForm'); f.hidden=!f.hidden; return; }
   if(e.target.id==='applyCoupon') return applyCoupon();
@@ -581,17 +552,23 @@ document.addEventListener('click', e=>{
   if(e.target.id==='acceptProductWarning'){ e.target.closest('.product-warning')?.classList.add('accepted'); e.target.closest('.product-warning')?.setAttribute('data-accepted','true'); e.target.textContent='تم التأكيد'; e.target.disabled=true; return; }
   const ac=e.target.closest('[data-assist]'); if(ac) return assistantAction(ac.dataset.assist);
 });
-function addProduct(id, card){
+async function addProduct(id,card){
   const product=catalog.products.find(p=>p.id===id);
-  if(!product) return toast('المنتج غير متاح حاليا، جرب تحديث الصفحة.', 'err');
+  if(!product||!productIsAvailable(product))return toast('الباقة غير متاحة حاليا. اختار باقة تانية.','err');
+  if(document.querySelector('.product-dialog'))return;
   const game=gameBySlug(product.game);
-  const accId=$('#accountId')?.value.trim(); const accName=$('#accountName')?.value.trim();
-  const extras={}; let missing=false;
-  document.querySelectorAll('[data-extra-field]').forEach(inp=>{ extras[inp.dataset.extraField]=inp.value.trim(); if(inp.dataset.required && !inp.value.trim()) missing=true; });
-  if(product.checkoutMethod!=='manual'&&(!accId || !accName || missing)) return toast('اكتب كل بيانات الحساب المطلوبة الأول.', 'err');
-  const qty=Number(card?.querySelector('[data-qty]')?.textContent || 1);
-  addCartItem({ productId:product.id, product:product.name, game:game.name, price:Number(product.salePrice||0)>0?Number(product.salePrice):product.price, qty, noQty:product.noQty, pubgId:accId, pubgName:accName, extraFields:extras });
-  toast('تمت إضافة المنتج للسلة');
+  const qty=product.noQty?1:Math.min(20,Math.max(1,Number(card?.querySelector('[data-qty]')?.textContent||1)));
+  let account={id:'',name:'',extraFields:{}};
+  if(product.checkoutMethod!=='manual'){
+    const section=catalog.sections.find(s=>s.game===product.game&&s.slug===product.section);
+    const fields=(product.customFields||section?.customFields||game.fields||[]).filter(f=>! /pass(word)?|كلمة.*مرور/i.test(String(f.key)+' '+String(f.label)));
+    const previous=accountDrafts.get(game.slug)||{id:$('#accountId')?.value||'',name:$('#accountName')?.value||'',extraFields:{}};
+    account=await collectAccountDetails({product,game,quantity:qty,fields,initial:previous,money});
+    if(!account)return;
+    accountDrafts.set(game.slug,account);
+  }
+  addCartItem({productId:product.id,product:product.name,game:game.slug,price:Number(product.salePrice)>0?Number(product.salePrice):product.price,qty,noQty:product.noQty,checkoutMethod:product.checkoutMethod||'direct',pubgId:account.id,pubgName:account.name,extraFields:account.extraFields});
+  toast('اتضافت للسلة. تقدر تكمل طلبك من زر السلة.');
 }
 function assistantAction(cmd){
   if(cmd==='charge') return navigate('/');
@@ -639,7 +616,7 @@ function finishAssistantOrderDraft(){
   products.forEach(p=>addCartItem({productId:p.id,product:p.name,game:'PUBG Mobile',price:p.price,qty:1,pubgId:assistantState.pubgId,pubgName:assistantState.pubgName,extraFields:{}}));
   sessionStorage.setItem('assistant_prefill', JSON.stringify({phone:assistantState.phone,paymentMethod:assistantState.paymentMethod,transferMode:assistantState.transferMode,transferLast3:assistantState.transferLast3}));
   const total = products.reduce((s,p)=>s+Number(p.price||0),0);
-  assistantReply(`تم تجهيز الطلب: ${products.map(p=>p.name).join(' + ')}<br>الإجمالي: ${money(total)}<br>افتح الدفع وارفع سكرين التحويل ثم اضغط تنفيذ الشراء.`,[{label:'فتح الدفع ورفع السكرين',cmd:'assistantCheckout'},{label:'إلغاء',cmd:'assistantCancel'}]);
+  assistantReply(`تم تجهيز الطلب: ${products.map(p=>p.name).join(' + ')}<br>الإجمالي: ${money(total)}<br>افتح الدفع وارفع سكرين التحويل ثم اضغط إرسال الطلب للمراجعة.`,[{label:'فتح الدفع ورفع السكرين',cmd:'assistantCheckout'},{label:'إلغاء',cmd:'assistantCancel'}]);
   assistantState = null;
 }
 
@@ -694,6 +671,7 @@ document.addEventListener('focusout', e=>{
 });
 $('#cartBubble').addEventListener('click',()=>navigate('/cart'));
 function initDraggablePharaoh(){
+  if(document.body.classList.contains('shop-page')){const button=$('#openAssistant');button.addEventListener('click',()=>{$('#assistantPanel').classList.add('open');if(!$('#assistantMessages').children.length)assistantReply('أهلًا بيك. اختار اللعبة من الصفحة، أو تابع طلبك بمفتاح المتابعة.',[{label:'اختيار لعبة',cmd:'charge'},{label:'متابعة طلب',cmd:'track'},{label:'الدعم',cmd:'support'}]);});return;}
   const btn=$('#openAssistant'); if(!btn) return;
   const saved=localStorage.getItem('pharaoh_pos');
   if(saved){try{const p=JSON.parse(saved); Object.assign(btn.style,{left:p.left+'px',top:p.top+'px',right:'auto',bottom:'auto'});}catch{}}
@@ -787,7 +765,7 @@ function renderPubgOffers(){
 }
 function renderProductDirect(productId){
   const p=catalog.products.find(x=>String(x.id)===String(productId));
-  if(!p){ toast('المنتج غير موجود أو تم إخفاؤه','err'); return renderHome(); }
+  if(!p)return renderNotFoundV218();
   selectedSection[p.game]=p.section || p.cat || selectedSection[p.game];
   selectedOfferProducts[p.game]=null;
   window.__mobaFocusProduct=p.id;
@@ -962,7 +940,7 @@ submitCheckout = async function(form){
     checkoutSubmittingV218 = false;
     checkoutMessage(customerErrorMessage(e), 'err');
     const btn=form.querySelector('button[type="submit"]');
-    if(btn){ btn.disabled=false; btn.textContent='تنفيذ الشراء'; }
+    if(btn){ btn.disabled=false; btn.textContent='إرسال الطلب للمراجعة'; }
   }
 };
 renderSuccess = function(){

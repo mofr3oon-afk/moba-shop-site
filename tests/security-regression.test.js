@@ -19,9 +19,9 @@ const {cartAmount}=await import('../lib/server-catalog.js');
 const {customerWhatsAppUrl}=await import('../js/contact-links.js');
 const originalFetch=globalThis.fetch;
 after(()=>{globalThis.fetch=originalFetch;});
-let calls,settings,orders,code,failStorage,failTelegram,fixture;
+let calls,settings,orders,code,failStorage,failTelegram,fixture,orderConflict;
 beforeEach(()=>{
-  calls=[];settings=new Map();orders=[];code='';failStorage=false;failTelegram=false;
+  calls=[];settings=new Map();orders=[];code='';failStorage=false;failTelegram=false;orderConflict=false;
   fixture={id:'MOBA-test-1001',phone:'01087654321',status:'needs_fix',fix_type:'bad_id',fix_count:0,items:[],raw_data:{},total:50};
   globalThis.__MOBA_RATE_LIMIT__?.clear();globalThis.__MOBA_ADMIN_FAILED__?.clear();globalThis.__MOBA_ADMIN_OTP__?.clear();
   globalThis.fetch=async(input,opts={})=>{
@@ -57,7 +57,7 @@ beforeEach(()=>{
         if(orders.some(o=>o.id===body.id))return new Response('duplicate 23505',{status:409});
         orders.push(body);return reply([body]);
       }
-      if(method==='PATCH'){const o=orders.find(o=>o.id===id)||fixture;Object.assign(o,body);return reply([o]);}
+      if(method==='PATCH'){if(orderConflict)return reply([]);const o=orders.find(o=>o.id===id)||fixture;Object.assign(o,body);return reply([o]);}
       if(id)return reply(id===fixture.id?[fixture]:orders.filter(o=>o.id===id));
       if(url.searchParams.has('created_at'))return reply(orders);
       if(url.searchParams.has('phone')&&!url.searchParams.has('status'))return reply(url.searchParams.get('phone').slice(3)===fixture.phone?[fixture]:[]);
@@ -223,4 +223,22 @@ test('customer status can be checked without putting a phone or token in the URL
   const access=newOrderAccess();fixture.raw_data.trackingTokenHash=access.hash;
   const res=await invoke(publicApi,{orderId:fixture.id,phone:fixture.phone,history:'1'},{headers:{'x-order-token':access.token},query:{action:'status'}});
   assert.equal(res.statusCode,200);assert.equal(res.data.orders[0].id,fixture.id);
+});
+test('Arabic customer phone and account digits create a canonical direct order',async()=>{
+  const res=await invoke(orderApi,checkout(1,{customerPhone:'٠١٠٩٨٧٦٥٤٣٢',cart:JSON.stringify([{productId:'pubg_60',qty:1,pubgId:'٥٢٨٥٥٢٧٤٨١',pubgName:'Test'}])}),formOptions);
+  assert.equal(res.statusCode,200);assert.equal(orders[0].phone,'01098765432');assert.equal(orders[0].items[0].pubgId,'5285527481');
+});
+test('manual fulfillment does not force account fields intended for direct charging',async()=>{
+  settings.set('dynamic_products',[{id:'ml_56',game:'mobile-legends',name:'Manual test',price:60,checkoutMethod:'manual'}]);
+  const res=await invoke(manualApi,{cart:[{productId:'ml_56',qty:1}],channel:'telegram',termsAccepted:true});assert.equal(res.statusCode,200);assert.equal(orders[0].raw_data.paymentVerified,false);
+});
+test('admin sees a conflict instead of overwriting a concurrently updated order',async()=>{
+  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'owner',username:'moamen'}));
+  orderConflict=true;
+  const res=await invoke(adminOrders,{id:fixture.id,status:'processing'},{headers:{cookie:cookieRes.headers['Set-Cookie'].split(';')[0]}});
+  assert.equal(res.statusCode,409);assert.equal(fixture.status,'needs_fix');
+  assert.ok(calls.find(c=>c.method==='PATCH'&&c.url.includes('/orders'))?.url.includes('status=eq.needs_fix'));
+});
+test('an unrelated malformed cookie does not break the login status endpoint',async()=>{
+  const res=await invoke(login,undefined,{method:'GET',headers:{cookie:'other=%E0%A4%A'}});assert.equal(res.statusCode,200);assert.equal(res.data.authenticated,false);
 });

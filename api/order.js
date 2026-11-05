@@ -8,6 +8,7 @@ import { getServerProducts as loadServerProducts, pricedCart, cartAmount } from 
 import { readRawBody as boundedBody, validateImageBytes, parseForm } from '../lib/request-body.js';
 import { orderIdentity, fingerprint, readExistingOrder, replayResponse } from '../lib/idempotency.js';
 import { saveReceipt } from '../lib/receipts.js';
+import { normalizeDigits } from '../js/interface-utils.js';
 
 async function supa(path, opts={}){ return await supabaseRequest(path, opts); }
 
@@ -257,12 +258,12 @@ export default async function handler(req,res){
     const deviceId=String(fields.deviceId||'').trim().slice(0,80);
     let cart=JSON.parse(fields.cart||'[]');
     const testOrder = false; // Public clients cannot label real orders as disposable test data.
-    const customerPhone=String(fields.customerPhone||'').trim();
+    const customerPhone=normalizeDigits(fields.customerPhone||'').trim();
     const paymentMethod=String(fields.paymentMethod||'').trim();
     const customerName='غير محدد';
     const note=String(fields.note||'').trim();
     const transferMode=String(fields.transferMode||'').trim(); // same | other
-    const transferLast3=String(fields.transferLast3||'').trim();
+    const transferLast3=normalizeDigits(fields.transferLast3||'').trim();
     let total=0;
     if(!/^01\d{9}$/.test(customerPhone) || looksFakeDigits(customerPhone,'phone')) return json(res,400,{ok:false,error:'رقم الموبايل غير صحيح أو شكله عشوائي'});
     if(!['Wallet','InstaPay'].includes(paymentMethod)) return json(res,400,{ok:false,error:'اختار طريقة دفع صحيحة'});

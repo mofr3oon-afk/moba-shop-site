@@ -8,7 +8,12 @@ export function rememberOrder(data){
 }
 export function readOrderAccess(){try{return JSON.parse(localStorage.getItem('moba_order_access')||'{}');}catch{return {};}}
 export function money(n){ return `${Number(n||0).toLocaleString('en-US')} جنيه`; }
-export function readCart(){ try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]')}catch{return []} }
+export function readCart(){
+  try{
+    const value=JSON.parse(localStorage.getItem(CART_KEY)||'[]');if(!Array.isArray(value))return [];
+    return value.filter(item=>item&&typeof item==='object'&&typeof item.productId==='string'&&item.productId&&Number.isFinite(Number(item.price))&&Number(item.price)>=0&&Number.isSafeInteger(Number(item.qty??1))&&Number(item.qty??1)>=1&&Number(item.qty??1)<=20).slice(0,30).map(item=>({...item,qty:item.noQty?1:Number(item.qty??1),price:Number(item.price)}));
+  }catch{return [];}
+}
 export function saveCart(cart){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); window.dispatchEvent(new Event('cart:changed')); }
 export function clearCart(){ saveCart([]); }
 export function cartTotal(cart=readCart()){ return cart.reduce((s,x)=>s + Number(x.price||0)*Math.max(1,Number(x.qty||1)),0); }

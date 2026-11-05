@@ -1,3 +1,4 @@
+import { ORDER_STATUS_TEXT } from './interface-utils.js';
 ﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog } from './catalog.js';
 import { money, toast } from './store.js';
 import { customerWhatsAppUrl } from './contact-links.js';
@@ -707,31 +708,44 @@ function adminSummaryHtml(rows){
   const byGame={}; rows.forEach(o=>{const g=orderGame(o)||'غير محدد'; byGame[g]=(byGame[g]||0)+1;});
   const top=Object.entries(byGame).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
   return `<div class="summary-grid admin-summary">
-    <div class="summary-box"><b>${todayRows.length}</b><span>طلبات اليوم</span></div>
+    <div class="summary-box"><b>${todayRows.length}</b><span>اليوم ضمن القائمة</span></div>
     <div class="summary-box"><b>${rows.filter(o=>o.status==='processing').length}</b><span>قيد التنفيذ</span></div>
     <div class="summary-box"><b>${rows.filter(o=>o.status==='delivered').length}</b><span>مكتملة</span></div>
     <div class="summary-box"><b>${rows.filter(o=>['rejected','cancelled'].includes(o.status)).length}</b><span>مرفوضة/ملغية</span></div>
-    <div class="summary-box"><b>${money(todayRows.filter(o=>o.status==='delivered').reduce((s,o)=>s+Number(o.total||0),0))}</b><span>إيراد المكتمل اليوم</span></div>
+    <div class="summary-box"><b>${money(todayRows.filter(o=>o.status==='delivered').reduce((s,o)=>s+Number(o.total||0),0))}</b><span>إيراد المكتمل في القائمة اليوم</span></div>
     <div class="summary-box"><b>${escAdmin(top)}</b><span>أكثر لعبة</span></div>
   </div>`;
 }
-const renderOrdersV217 = async function(){
-  view.innerHTML='<div class="message">جاري تحميل الطلبات...</div>';
+let orderFetchSequence=0;
+const renderOrdersV217=async function(){
+  const sequence=++orderFetchSequence;
+  const query=adminOrderFilters.q||'';
+  const status=adminOrderFilters.status||'all';
+  if(!view.querySelector('#adminOrderSearch'))view.innerHTML='<div class="message" role="status">جاري تحميل الطلبات...</div>';
+  view.setAttribute('aria-busy','true');
   try{
-    const d=await api('/api/admin-orders?limit=150&q='+encodeURIComponent(adminOrderFilters.q||''));
-    adminOrdersCache=d.orders||[];
-    renderAdminOrdersList();
-  }catch(e){ view.innerHTML=`<div class="message err">${escAdmin(safeAdminErrorMessage(e.message))}</div>`; }
-}
+    const d=await api('/api/admin-orders?'+new URLSearchParams({limit:'150',q:query,status}));
+    if(sequence!==orderFetchSequence||query!==adminOrderFilters.q||tab!=='orders')return;
+    const focused=document.activeElement?.id==='adminOrderSearch';
+    const selection=focused?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
+    adminOrdersCache=d.orders||[];renderAdminOrdersList();
+    if(focused){const input=$('#adminOrderSearch');input?.focus({preventScroll:true});if(input&&selection)input.setSelectionRange(...selection);}
+  }catch(e){
+    if(sequence!==orderFetchSequence||tab!=='orders')return;
+    if(view.querySelector('#adminOrderSearch'))toast(safeAdminErrorMessage(e.message),'err');
+    else view.innerHTML=`<div class="message err">${escAdmin(safeAdminErrorMessage(e.message))}</div><button class="primary" id="refreshOrders">حاول تاني</button>`;
+  }finally{if(sequence===orderFetchSequence)view.removeAttribute('aria-busy');}
+};
+
 function renderAdminOrdersList(){
   const rows=filteredAdminOrders();
   const games=[...new Set(adminOrdersCache.map(orderGame).filter(Boolean))];
   const pays=[...new Set(adminOrdersCache.map(o=>String(o.payment_method||'').trim()).filter(Boolean))];
-  view.innerHTML=`<div class="page-title"><div><h1>الطلبات</h1><p>${adminOrdersCache.length} طلب | المستخدم: ${escAdmin(currentAdmin?.username||loginUser||'-')} | الصلاحية: ${escAdmin(currentAdmin?.role||loginRole||'-')}</p></div><div class="admin-actions"><button class="primary" id="refreshOrders">تحديث</button><button class="ghost-btn" id="exportOrdersCsv">Export CSV</button></div></div>
+  view.innerHTML=`<div class="page-title"><div><h1>الطلبات</h1><p>أحدث ${adminOrdersCache.length} طلب في النتائج | المستخدم: ${escAdmin(currentAdmin?.username||loginUser||'-')} | الصلاحية: ${escAdmin(currentAdmin?.role||loginRole||'-')}</p></div><div class="admin-actions"><button class="primary" id="refreshOrders">تحديث</button><button class="ghost-btn" id="exportOrdersCsv">Export CSV</button></div></div>
     ${adminSummaryHtml(adminOrdersCache)}
     <div class="admin-filters">
       <input id="adminOrderSearch" placeholder="بحث برقم الطلب / رقم العميل" value="${escAdmin(adminOrderFilters.q)}">
-      <select id="adminStatusFilter"><option value="all">كل الحالات</option>${['pending','claimed','processing','needs_fix','on_hold','delivered','rejected','cancelled','archived'].map(s=>`<option value="${s}" ${adminOrderFilters.status===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select id="adminStatusFilter"><option value="all">كل الحالات</option>${['pending','claimed','processing','needs_fix','on_hold','delivered','rejected','cancelled','archived'].map(s=>`<option value="${s}" ${adminOrderFilters.status===s?'selected':''}>${ORDER_STATUS_TEXT[s]||s}</option>`).join('')}</select>
       <select id="adminGameFilter"><option value="all">كل الألعاب</option>${games.map(g=>`<option value="${escAdmin(g)}" ${adminOrderFilters.game===g?'selected':''}>${escAdmin(g)}</option>`).join('')}</select>
       <select id="adminPaymentFilter"><option value="all">كل طرق الدفع</option>${pays.map(p=>`<option value="${escAdmin(p)}" ${adminOrderFilters.payment===p?'selected':''}>${escAdmin(p)}</option>`).join('')}</select>
       <select id="adminLateFilter"><option value="all">كل الأوقات</option><option value="10">أكثر من 10 دقائق</option><option value="30">أكثر من 30 دقيقة</option><option value="60">أكثر من ساعة</option></select>
@@ -754,14 +768,14 @@ const orderHtmlCompactV217 = function(o){
     ${o.telegram_photo_file_id?`<div class="admin-card screenshot-card"><img src="/api/admin-orders?screenshot=${encodeURIComponent(o.telegram_photo_file_id)}" alt="screenshot"><a class="ghost-btn" href="/api/admin-orders?screenshot=${encodeURIComponent(o.telegram_photo_file_id)}" target="_blank">فتح كامل</a></div>`:''}
     <div class="admin-card"><b>سجل العميل</b><p>عدد طلبات هذا الرقم داخل القائمة الحالية: ${adminOrdersCache.filter(x=>String(x.phone)===String(o.phone)).length}</p><p>إجمالي مشتريات ظاهرة: ${money(adminOrdersCache.filter(x=>String(x.phone)===String(o.phone)).reduce((s,x)=>s+Number(x.total||0),0))}</p></div>
     <textarea class="order-note" placeholder="ملاحظة أو سبب المشكلة للعميل" rows="2" style="width:100%;margin-top:10px"></textarea>
-    <div class="order-actions">
-      <button class="mini" data-copy="${escAdmin(firstId)}">نسخ ID</button>
-      <button class="mini" data-copy="${escAdmin(o.phone||'')}">نسخ رقم العميل</button>
-      ${customerWhatsAppUrl(o.phone)?`<a class="mini" href="${customerWhatsAppUrl(o.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}
-      <button class="st-claimed" data-status="claimed">استلام</button>
-      <button class="st-pending" data-status="pending" data-note="سحب الاستلام من المسؤول الحالي">سحب الاستلام</button>
+    <div class="order-actions">      <button class="st-claimed" data-status="claimed">استلام</button>
       <button class="st-processing" data-status="processing">جاري التنفيذ</button>
       <button class="st-delivered" data-status="delivered">تم الشحن</button>
+    </div>
+    <details class="additional-actions"><summary>إجراءات إضافية · تعديل ودعم</summary><div class="order-actions">      <button class="mini" data-copy="${escAdmin(firstId)}">نسخ ID</button>
+      <button class="mini" data-copy="${escAdmin(o.phone||'')}">نسخ رقم العميل</button>
+      ${customerWhatsAppUrl(o.phone)?`<a class="mini" href="${customerWhatsAppUrl(o.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}
+      <button class="st-pending" data-status="pending" data-note="سحب الاستلام من المسؤول الحالي">سحب الاستلام</button>
       <button class="st-needs_fix" data-status="needs_fix" data-note="السكرين غير واضح. ارفع صورة جديدة يظهر فيها رقم أو اسم التحويل، المبلغ، ووقت التحويل.">سكرين غير واضح</button>
       <button class="st-needs_fix" data-status="needs_fix" data-note="ID أو اسم الحساب غير صحيح. اكتب ID واسم الحساب الصحيحين من صفحة متابعة الطلب.">ID غلط</button>
       <button class="st-needs_fix" data-status="needs_fix" data-note="المبلغ المحول ناقص. حول المبلغ المتبقي وارفع سكرين التحويل الجديد من صفحة متابعة الطلب.">المبلغ ناقص</button>
@@ -770,8 +784,7 @@ const orderHtmlCompactV217 = function(o){
       <button class="st-archived" data-status="archived" data-note="تمت أرشفة الطلب من لوحة الأدمن.">أرشفة</button>
       <button class="danger" data-ban-ip="${escAdmin(ip)}">حظر IP</button>
       <button class="danger" data-ban-device="${escAdmin(dev)}">حظر Device</button>
-      <button class="danger" data-ban-id="${escAdmin(firstId)}">حظر ID</button>
-    </div>
+      <button class="danger" data-ban-id="${escAdmin(firstId)}">حظر ID</button></div></details>
   </details>`;
 }
 function exportOrdersCsv(){
@@ -867,7 +880,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   if(e.target.id==='adminOrderSearch' || e.target.id==='adminStatusFilter' || e.target.id==='adminGameFilter' || e.target.id==='adminPaymentFilter' || e.target.id==='adminLateFilter'){
     adminOrderFilters={q:document.querySelector('#adminOrderSearch')?.value||'',status:document.querySelector('#adminStatusFilter')?.value||'all',game:document.querySelector('#adminGameFilter')?.value||'all',payment:document.querySelector('#adminPaymentFilter')?.value||'all',late:document.querySelector('#adminLateFilter')?.value||'all'};
-    renderAdminOrdersList();
+    if(e.target.id==='adminStatusFilter')renderOrders();else renderAdminOrdersList();
     return;
   }
   if(e.target.matches('[data-upload-game]')) uploadGameImage(e.target);
@@ -919,14 +932,14 @@ orderHtmlCompact = function(o){
       <button class="primary" data-edit-order-v218="${escAdmin(o.id)}">حفظ تعديل البيانات</button>
     </details>
   </div>`;
-  return html.replace('</details>', `${controls}</details>`);
+  return html.replace(/<\/details>\s*$/, `${controls}</details>`);
 };
 const _v218RenderAdminOrdersList = renderAdminOrdersList;
 renderAdminOrdersList = function(){
   _v218RenderAdminOrdersList();
-  const actions = document.querySelector('.page-title .admin-actions');
+  const actions = view.querySelector('.page-title .admin-actions');
   if(actions && !document.getElementById('deleteTestOrders')){
-    actions.insertAdjacentHTML('beforeend', `<button class="danger" id="deleteTestOrders">حذف طلبات TEST</button>`);
+    actions.insertAdjacentHTML('beforeend', `<details class="admin-advanced"><summary>أدوات متقدمة</summary><button class="danger" id="deleteTestOrders">حذف طلبات TEST</button></details>`);
   }
 };
 renderHealth = async function(){

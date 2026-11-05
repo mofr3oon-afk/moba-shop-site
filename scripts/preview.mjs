@@ -7,7 +7,8 @@ const root=path.resolve(import.meta.dirname,'..');
 const settings=new Map([
   ['dynamic_sections',JSON.stringify([{key:'qr',title:'PUBG QR — معاينة تجريبية',game:'pubg',status:'available'}])],
   ['dynamic_products',JSON.stringify([{id:'qa-qr',game:'pubg',section:'qr',cat:'qr',name:'باقة QR تجريبية — غير معروضة للبيع',price:120,checkoutMethod:'manual',status:'available',cost:90}])],
-  ['support_phone','201061707294'],['brand_settings','{}']
+  ['support_phone','201061707294'],['brand_settings','{}'],
+  ['payment_settings',JSON.stringify({instapay:{enabled:false,status:'disabled',user:'demo-only',name:'اختبار فقط'},wallet:{enabled:true,status:'available',phone:'01000000000',name:'محفظة تجريبية — لا تحول أموالًا',message:'بيانات وهمية للمعاينة فقط'}})]
 ]);
 let orders=[];
 const receipts=new Map();

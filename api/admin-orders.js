@@ -5,6 +5,8 @@ import { readJsonBody } from '../lib/request-body.js';
 import { loadReceipt } from '../lib/receipts.js';
 import { newOrderAccess } from '../lib/customer-access.js';
 import { adminReport } from '../lib/admin-report.js';
+import { orderMutationPath, nextOrderTimestamp } from '../lib/order-concurrency.js';
+import { normalizeDigits } from '../js/interface-utils.js';
 export const config = { api:{bodyParser:false} };
 
 function orderByRecent(a,b){ return new Date(b.created_at||0)-new Date(a.created_at||0); }
@@ -162,7 +164,8 @@ export default async function handler(req,res){
         const rows=await supabaseRequest(`orders?id=eq.${encodeURIComponent(id)}&select=*`);
         const order=rows?.[0];
         if(!order) return json(res,404,{ok:false,error:'الطلب غير موجود'});
-        const phone=String(body.phone||order.phone||'').trim();
+        const phone=normalizeDigits(body.phone||order.phone||'').trim();
+        if(phone&&!/^01\d{9}$/.test(phone))return json(res,400,{ok:false,error:'رقم العميل غير صالح'});
         const pubgId=String(body.pubgId||'').trim();
         const pubgName=String(body.pubgName||'').trim();
         const internal_note=String(body.internal_note||'').trim();
@@ -212,7 +215,9 @@ export default async function handler(req,res){
       }
       if(status === 'needs_fix') patch.fix_type=issueTypeFromNote(note);
       if(note) patch.note = String(order.note||'').trim() ? String(order.note||'').trim() + `\n${note}` : note;
-      const updated=await supabasePatchWithSchemaFallback(`orders?id=eq.${encodeURIComponent(id)}`, patch);
+      patch.updated_at=nextOrderTimestamp(order);
+      const updated=await supabasePatchWithSchemaFallback(orderMutationPath(order), patch);
+      if(!updated?.length)return json(res,409,{ok:false,error:'الطلب اتعدل من مسؤول آخر. حدّث القائمة قبل المحاولة تاني.'});
       await logAdminEvent('order_status_update', req, {orderId:id,status,note,adminName,role:admin?.role||'owner'}).catch(()=>null);
       return json(res,200,{ok:true,order:updated&&updated[0]});
     }

@@ -3,6 +3,7 @@ import { rateLimit, persistentRateLimit, safeError } from '../lib/_security.js';
 import { readJsonBody } from '../lib/request-body.js';
 import { getServerProducts, pricedCart, invalid, cartAmount } from '../lib/server-catalog.js';
 import { orderIdentity, fingerprint, readExistingOrder, replayResponse } from '../lib/idempotency.js';
+import { normalizeDigits } from '../js/interface-utils.js';
 
 export const config={api:{bodyParser:false}};
 export function handoffDetails(order,contact){
@@ -32,7 +33,7 @@ export default async function handler(req,res){
     if(!['whatsapp','telegram'].includes(body.channel))throw invalid('اختار واتساب أو تليجرام');
     if(body.termsAccepted!==true)throw invalid('وافق على شروط الشحن قبل إرسال الطلب');
     if(body.coupon_code)throw invalid('الكوبونات للطلب المباشر حاليا. اتفق مع الدعم على أي خصم للشحن اليدوي.');
-    const phone=String(body.phone||'').trim();
+    const phone=normalizeDigits(body.phone||'').trim();
     if(phone&&!/^01\d{9}$/.test(phone))throw invalid('رقم الموبايل غير صحيح');
     const identity=orderIdentity(req.headers['idempotency-key'],'CHAT');
     const requestHash=fingerprint({cart:body.cart,channel:body.channel,phone});
