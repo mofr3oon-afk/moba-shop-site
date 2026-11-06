@@ -1,4 +1,4 @@
-import { ORDER_STATUS_TEXT } from './interface-utils.js';
+import { ORDER_STATUS_TEXT, normalizeDigits } from './interface-utils.js';
 import { mountVisualCatalog } from './visual-catalog-editor.js';
 ﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog } from './catalog.js';
 import { money, toast } from './store.js';
@@ -10,6 +10,7 @@ let settings={};
 let settingsLoaded=false;
 let local=readLocalCatalog();
 let loginChallenge=null;
+let adminAuthPending=false;
 let loginRole='owner';
 let loginUser='';
 let currentAdmin=null;
@@ -41,6 +42,8 @@ async function checkLogin(){
   try{ const d=await api('/api/admin-login'); if(d.authenticated){currentAdmin=d.session||null; loginUser=currentAdmin?.username||loginUser; loginRole=currentAdmin?.role||loginRole; content.hidden=false; loginBox.hidden=true; loginBox.style.display='none'; await loadSettings(); render();} }catch{}
 }
 async function login(){
+  if(adminAuthPending)return;
+  adminAuthPending=true;document.querySelector('#loginBtn').disabled=true;
   loginUser = document.querySelector('#adminUsername').value.trim();
   const password = document.querySelector('#adminPassword').value;
   try{
@@ -50,20 +53,30 @@ async function login(){
       loginChallenge=d.challenge; loginRole=d.role || 'owner';
       document.querySelector('#credentialsStep').hidden=true;
       document.querySelector('#otpStep').hidden=false;
+      document.querySelector('#adminOtp').focus();
       return;
     }
     currentAdmin=d.session||{username:loginUser,role:d.role||loginRole};
     content.hidden=false; loginBox.hidden=true; loginBox.style.display='none'; await loadSettings(); render();
   }
   catch(e){ document.querySelector('#adminPassword').value = ''; toast(e.code?.startsWith('OTP_DELIVERY_')?e.message:e.status===429 ? TOO_MANY_LOGIN_ERROR : GENERIC_LOGIN_ERROR,'err'); }
+  finally{adminAuthPending=false;document.querySelector('#loginBtn').disabled=false;}
 }
 async function verifyOtp(){
+  if(adminAuthPending)return;
+  adminAuthPending=true;document.querySelector('#otpBtn').disabled=true;
   try{
-    const d=await api('/api/admin-login',{method:'POST',body:JSON.stringify({username:loginUser,challenge:loginChallenge,otp:document.querySelector('#adminOtp').value.trim(),role:loginRole,trustDevice:document.querySelector('#trustAdminDevice')?.checked!==false,deviceId:localStorage.getItem('moba_device_id')||'admin'})});
+    const d=await api('/api/admin-login',{method:'POST',body:JSON.stringify({username:loginUser,challenge:loginChallenge,otp:normalizeDigits(document.querySelector('#adminOtp').value).trim(),role:loginRole,trustDevice:document.querySelector('#trustAdminDevice')?.checked!==false,deviceId:localStorage.getItem('moba_device_id')||'admin'})});
     currentAdmin=d.session||{username:loginUser,role:loginRole};
     content.hidden=false; loginBox.hidden=true; loginBox.style.display='none'; await loadSettings(); render();
   }catch(e){ toast(e.status===429 ? TOO_MANY_LOGIN_ERROR : GENERIC_LOGIN_ERROR,'err'); }
+  finally{adminAuthPending=false;document.querySelector('#otpBtn').disabled=false;}
 }
+loginBox.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'||event.repeat||event.isComposing)return;
+  if(event.target.matches('#adminUsername,#adminPassword')){event.preventDefault();login();}
+  if(event.target.matches('#adminOtp')){event.preventDefault();verifyOtp();}
+});
 async function loadSettings(){
   try{ const d=await api('/api/settings?admin=1'); settings=d.settings||{}; settingsLoaded=true; }catch{ settingsLoaded=false; settings={}; }
   if(Array.isArray(settings.dynamic_products))local.products=settings.dynamic_products;

@@ -36,14 +36,14 @@
         <h1>MOBA SHOP Admin</h1>
         <p>سجل الدخول لفتح لوحة التحكم</p>
         <div id="credentialsStep">
-          <div class="field"><label>Username</label><input id="adminUsername" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="اسم المستخدم"></div>
-          <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="كلمة المرور"></div>
-          <p>التحقق الإضافي مطلوب لكل دخول من مصدر غير موثوق.</p>
+          <div class="field"><label for="adminUsername">اسم المستخدم</label><input id="adminUsername" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="اسم المستخدم"></div>
+          <div class="field"><label for="adminPassword">كلمة المرور</label><input id="adminPassword" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" placeholder="كلمة المرور"></div>
+          <p>قد يُطلب كود تحقق على تليجرام لإتمام الدخول.</p>
           <button class="primary" id="loginBtn" style="width:100%;margin-top:12px">دخول</button>
         </div>
         <div id="otpStep" hidden>
           <div class="message ok">تم إرسال كود التحقق على تليجرام.</div>
-          <div class="field"><label>كود التحقق</label><input id="adminOtp" inputmode="numeric" placeholder="اكتب الكود"></div>
+          <div class="field"><label for="adminOtp">كود التحقق</label><input id="adminOtp" inputmode="numeric" autocomplete="one-time-code" placeholder="اكتب الكود"></div>
           <button class="primary success" id="otpBtn" style="width:100%;margin-top:12px">تأكيد الكود</button>
         </div>
       </div>
@@ -52,7 +52,7 @@
       <section class="section">
         <div class="page-title">
           <div><h1>لوحة التحكم</h1><p>إدارة الطلبات والأقسام والعروض والبراند.</p></div>
-          <div class="admin-actions"><button class="ghost-btn" id="logoutBtn" type="button">Logout</button><a class="ghost-btn" href="/">فتح الموقع</a></div>
+          <div class="admin-actions"><button class="ghost-btn" id="logoutBtn" type="button">تسجيل الخروج</button><a class="ghost-btn" href="/">فتح الموقع</a></div>
         </div>
       </section>
       <nav class="admin-tabs" aria-label="أقسام لوحة الإدارة">
