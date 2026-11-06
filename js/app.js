@@ -1,4 +1,5 @@
 import { studioHome } from './storefront-studio.js';
+import { mountCatalogControls, savingsPercent } from './catalog-controls.js';
 import { matchesGame, productIsAvailable, normalizeDigits } from './interface-utils.js';
 import { collectAccountDetails } from './product-dialog.js';
 import { gameTile, imageSource } from './catalog-presentation.js';
@@ -155,13 +156,13 @@ function renderGame(slug=currentGameSlug()){
   const products = catalog.products.filter(p=>p.game===game.slug && p.section===active && (!offerIds || offerIds.includes(p.id)));
   const gameOffer = catalog.offers.find(o=>o.game===game.slug && (o.placement==='game' || o.placement==='both'));
   page(`
-    <section class="section">
+    <section class="section game-introduction">
+      <nav class="catalog-breadcrumb" aria-label="مسار التصفح"><a href="/" data-link>الألعاب</a><span aria-hidden="true">/</span><span aria-current="page">${esc(game.name)}</span></nav>
       <div class="page-title">
-        <div>
-          <span class="badge">${esc(game.name)}</span>
+        <div class="game-title-identity"><img src="${esc(imageSource(game.cover))}" alt="" width="64" height="64"><div>
           <h1>${esc(game.name)}</h1>
           <p>اختار الباقة والكمية أولًا. هنطلب بيانات الحساب عند الحاجة فقط.</p>
-        </div>
+        </div></div>
         <button class="ghost-btn" data-go="/">رجوع للرئيسية</button>
       </div>
     </section>
@@ -177,12 +178,14 @@ function renderGame(slug=currentGameSlug()){
           <div class="field"><label>${esc(game.nameLabel)}</label><input id="accountName" placeholder="${esc(game.namePlaceholder)}"></div>
           ${(game.fields||[]).map(f=>`<div class="field"><label>${esc(f.label)}</label><input data-extra-field="${esc(f.key)}" ${f.type==='number'?'inputmode="numeric"':''} placeholder="${esc(f.placeholder||f.label)}" ${f.required?'data-required="1"':''}></div>`).join('')}
         </div>
+        <div id="packageTools"></div>
         <div class="products-grid">
           ${products.map(productCard).join('') || '<div class="notice">لا توجد منتجات في القسم ده حاليا. اختار قسم تاني أو راجع العروض.</div>'}
         </div>
       </div>
     </section>
   `);
+  mountCatalogControls({host:$('#packageTools'),grid:app.querySelector('.products-grid'),items:products,selector:'[data-product]',key:`shop:${game.slug}:${active}`,available:p=>productIsAvailable(p)&&game.status==='available'&&productIsAvailable(sections.find(s=>s.slug===p.section)||{})});
 }
 function productCard(p){
   const price=Number(p.salePrice)>0?Number(p.salePrice):Number(p.price||0);
@@ -726,7 +729,7 @@ productCard = function(p){
   if(p.status==='soon') badges.push('قريبا');
   else if(p.status==='disabled') badges.push('موقوف مؤقتا');
   else badges.push('متاح');
-  if(Number(p.salePrice||p.sale_price||0)>0) badges.push('عرض');
+  const saving=savingsPercent(p);if(saving>0)badges.push(`خصم ${saving}%`);
   if(p.hot) badges.push('الأكثر طلبا');
   if(p.new) badges.push('جديد');
   if(p.featured) badges.push('مميز');
