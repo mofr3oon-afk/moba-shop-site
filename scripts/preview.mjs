@@ -17,6 +17,13 @@ globalThis.fetch=async(input,opts={})=>{
   const body=typeof opts.body==='string'?JSON.parse(opts.body):null;
   const reply=data=>new Response(JSON.stringify(data),{status:200});
   if(url.hostname==='api.telegram.org')return reply({ok:true,result:{message_id:1,photo:[{file_id:'preview'}]}});
+  if(url.hostname==='gopay.co.id'){
+    const id=body?.data?.userId;
+    if(id==='00000')return new Response(JSON.stringify({message:'Invalid user account'}),{status:404});
+    if(id==='99999')return new Response('{}',{status:503});
+    if(id==='11111')await new Promise(resolve=>setTimeout(resolve,1200));
+    return reply({message:'Success',data:{username:id==='22222'?'لاعب المعاينة الثاني':'MO FR3OON — معاينة فقط'}});
+  }
   if(url.hostname!=='preview.invalid')throw new Error('Preview blocks external requests');
   if(url.pathname.includes('/storage/')){
     if(url.pathname.includes('/bucket/'))return reply({public:false});

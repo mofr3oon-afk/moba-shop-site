@@ -8,6 +8,17 @@ const accountDrafts=new Map();
 import { addCartItem, cartTotal, cartUnits, clearCart, deviceId, money, readCart, removeCartItem, saveCart, toast, updateCartItem } from './store.js';
 import { SITE_CONTENT } from './site-content.js';
 import { rememberOrder, readOrderAccess } from './store.js';
+import {parseTrackingLink} from './tracking-links.js';
+import {renderTrackingPage,mountTrackingActions} from './tracking-ui.js';
+function consumeTrackingLink(){
+  const incoming=location.pathname==='/track'?parseTrackingLink(location.hash):null;
+  if(location.pathname==='/track'&&location.hash){
+    history.replaceState({},'',incoming?`/track?order=${encodeURIComponent(incoming.id)}`:'/track');
+    if(incoming)rememberOrder({orderId:incoming.id,trackingToken:incoming.token,phone:incoming.phone});
+  }
+  return incoming;
+}
+let incomingTracking=consumeTrackingLink();
 import { renderManualCheckout, checkoutAttempt } from './manual-checkout.js';
 
 let catalog = { games: [], sections: [], products: [], offers: [] };
@@ -386,18 +397,7 @@ function renderSuccess(){
   </div></section>`);
 }
 function renderTrack(){
-  const saved=Object.entries(readOrderAccess());
-  page(`<section class="section"><div class="page-title"><div><h1>متابعة الطلب</h1><p>بدون حساب: استخدم رقم الطلب ومفتاح المتابعة الخاص بك. الطلبات القديمة أو المفتاح المفقود عبر الدعم.</p></div></div></section>
-    <section class="section"><form id="trackForm" class="fields-grid">
-    <div class="field"><label>طلب محفوظ على الجهاز</label><select id="savedOrder"><option value="">اختار طلبًا أو اكتب بياناته</option>${saved.map(([id,o])=>`<option value="${esc(id)}">${esc(o.orderCode)}</option>`).join('')}</select></div>
-    <div class="field"><label>رقم الطلب الكامل</label><input name="orderId" required autocomplete="off"></div>
-    <div class="field"><label>رقم الموبايل</label><input name="phone" inputmode="tel" placeholder="اختياري لطلبات الشات"></div>
-    <div class="field"><label>مفتاح المتابعة الخاص</label><input name="trackingToken" required type="password" autocomplete="off"></div>
-    <button class="primary">بحث</button></form><div id="trackResult"></div></section>`);
-  $('#savedOrder').addEventListener('change',e=>{
-    const access=readOrderAccess()[e.target.value];if(!access)return;
-    const form=$('#trackForm');form.elements.orderId.value=e.target.value;form.elements.phone.value=access.phone;form.elements.trackingToken.value=access.token;
-  });
+  renderTrackingPage(page,trackOrder,incomingTracking);
 }
 function renderPolicies(){
   page(`<section class="section policies-page">
@@ -405,15 +405,20 @@ function renderPolicies(){
     ${policiesCards()}
   </section>`);
 }
+let trackingRequest=0;
 async function trackOrder(phone){
+  const request=++trackingRequest;
+  phone=normalizeDigits(phone||'').trim();
   const box=$('#trackResult'); box.innerHTML='<div class="message">جاري البحث...</div>';
-  const form=$('#trackForm');const orderId=form?.elements.orderId.value;const token=form?.elements.trackingToken.value;
+  const form=$('#trackForm');const orderId=form?.elements.orderId.value.trim();const token=form?.elements.trackingToken.value.trim();
   try{ const r=await fetch('/api/public?action=status',{method:'POST',headers:{'Content-Type':'application/json','x-order-token':token},body:JSON.stringify({history:'1',phone,orderId})}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'لا يوجد طلب');
     rememberOrder({orderId,trackingToken:token,phone,orderCode:d.orders?.[0]?.order_code});
+    if(request!==trackingRequest||!box.isConnected)return;
+    mountTrackingActions(document.querySelector('[data-tracking-actions]'),orderId,{token,phone:phone||''});
     const orders=d.orders||[];
     const groups={all:orders,fix:orders.filter(o=>['needs_fix','on_hold','pending'].includes(o.status)),done:orders.filter(o=>o.status==='delivered'),cancel:orders.filter(o=>['cancelled','rejected'].includes(o.status))};
     box.innerHTML = `<div class="track-tabs"><button class="active" data-track-filter="all">الكل <small>${groups.all.length}</small></button><button data-track-filter="fix">محتاج تعديل/معلق <small>${groups.fix.length}</small></button><button data-track-filter="done">مكتمل <small>${groups.done.length}</small></button><button data-track-filter="cancel">ملغي <small>${groups.cancel.length}</small></button></div><div id="trackOrders">${orders.map(o=>trackCard(o,phone)).join('')}</div>`;
-  }catch(e){ box.innerHTML=`<div class="message err">${esc(customerErrorMessage(e))}</div>`; }
+  }catch(e){ if(request!==trackingRequest||!box.isConnected)return; box.innerHTML=`<div class="message err">${esc(customerErrorMessage(e))}</div>`; }
 }
 function trackCard(o,phone){
   const fix=o.status==='needs_fix';
@@ -671,6 +676,7 @@ function initDraggablePharaoh(){
 initDraggablePharaoh();
 $('#closeAssistant').addEventListener('click',()=>$('#assistantPanel').classList.remove('open'));
 window.addEventListener('popstate',()=>{route=location.pathname; render();});
+window.addEventListener('hashchange',()=>{if(location.pathname==='/track'){incomingTracking=consumeTrackingLink();route=location.pathname;render();}});
 window.addEventListener('cart:changed', updateCartBubble);
 
 // V217: customer safety, manual store status, FAQ, direct product links, and cleaner tracking.
@@ -917,7 +923,6 @@ submitCheckout = async function(form){
     const res = await fetch('/api/order',{method:'POST',headers:{'idempotency-key':checkoutAttempt(cart)},body:fd});
     const data = await res.json().catch(()=>({ok:false,error:'حصلت مشكلة مؤقتة، جرب مرة تانية أو تواصل معنا.'}));
     if(!data.ok) throw new Error(data.error || 'تعذر تنفيذ الطلب');
-    rememberOrder(data);
     rememberOrder(data); clearCart(); coupon=null; checkoutFile=null;
     sessionStorage.setItem('last_invoice', JSON.stringify(data));
     navigate('/success');
@@ -940,15 +945,14 @@ renderSuccess = function(){
         <div class="summary-box"><b>${esc(data.status || 'تحت المراجعة')}</b><span>حالة الطلب</span></div>
         <div class="summary-box"><b>${money(data.total || 0)}</b><span>الإجمالي</span></div>
       </div>
-      <div class="message ok">احتفظ برقم الطلب أو رقم الموبايل لمتابعة طلبك.</div>
-      <div class="field"><label>رقم الطلب الكامل</label><input readonly value="${esc(data.orderId||'')}"></div>
-      <div class="field"><label>مفتاح المتابعة الخاص — احتفظ به ولا تشاركه علنًا</label><input readonly value="${esc(data.trackingToken||'')}"></div>
+      <div class="message ok">طلبك محفوظ على المتصفح ده. انسخ رابط المتابعة الخاص عشان تفتحه من أي جهاز.</div>
+      <div data-tracking-actions></div>
       <div class="success-actions">
-        <button class="primary" data-go="/track">متابعة الطلب</button>
         ${supportLinks()}
       </div>
     </div>
   </section>`);
+  mountTrackingActions(document.querySelector('[data-tracking-actions]'),data.orderId,{token:data.trackingToken,phone:data.phone||''});
 };
 function renderNotFoundV218(){
   page(`<section class="section not-found-page">

@@ -1,4 +1,5 @@
 import {escapeText as esc,normalizeDigits} from './interface-utils.js';
+import {mountPlayerLookup} from './player-lookup.js';
 
 export function collectAccountDetails({product,game,quantity,fields,initial={},money}){
   const dialog=document.createElement('dialog');dialog.className='product-dialog';
@@ -16,10 +17,11 @@ export function collectAccountDetails({product,game,quantity,fields,initial={},m
     <p class="small-note">راجع ID الحساب قبل تأكيد الطلب النهائي.</p>
   </form>`;
   document.body.append(dialog);
+  const stopLookup=mountPlayerLookup(dialog,game);
   const previous=document.activeElement;
   return new Promise(resolve=>{
     let settled=false;
-    const finish=value=>{if(settled)return;settled=true;dialog.close();dialog.remove();if(previous?.isConnected)previous.focus();resolve(value);};
+    const finish=value=>{if(settled)return;settled=true;stopLookup();dialog.close();dialog.remove();if(previous?.isConnected)previous.focus();resolve(value);};
     dialog.querySelectorAll('.close-dialog').forEach(button=>button.addEventListener('click',()=>finish(null)));
     dialog.addEventListener('cancel',event=>{event.preventDefault();finish(null);});
     dialog.addEventListener('close',()=>finish(null));

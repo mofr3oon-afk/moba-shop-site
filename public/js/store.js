@@ -1,12 +1,26 @@
+import {validOrderAccess} from './tracking-links.js';
 const CART_KEY = 'moba_clean_cart';
+let memoryOrderAccess={};
+const forgottenOrders=new Set();
 const DEVICE_KEY = 'moba_device_id';
 export function rememberOrder(data){
-  if(!data.orderId||!data.trackingToken)return;
+  if(!validOrderAccess(data.orderId,{token:data.trackingToken,phone:data.phone||''}))return;
+  forgottenOrders.delete(data.orderId);
   const saved=readOrderAccess();
   saved[data.orderId]={token:data.trackingToken,phone:data.phone||'',orderCode:data.orderCode||data.orderId};
-  localStorage.setItem('moba_order_access',JSON.stringify(saved));
+  memoryOrderAccess=saved;
+  try{localStorage.setItem('moba_order_access',JSON.stringify(saved));}catch{}
 }
-export function readOrderAccess(){try{return JSON.parse(localStorage.getItem('moba_order_access')||'{}');}catch{return {};}}
+export function readOrderAccess(){
+  let saved;try{saved=JSON.parse(localStorage.getItem('moba_order_access')||'{}');}catch{}
+  if(!saved||typeof saved!=='object'||Array.isArray(saved))saved={};
+  return Object.fromEntries(Object.entries({...saved,...memoryOrderAccess}).filter(([id,value])=>!forgottenOrders.has(id)&&validOrderAccess(id,value)));
+}
+export function forgetOrderAccess(id){
+  const saved=readOrderAccess();delete saved[id];memoryOrderAccess=saved;
+  forgottenOrders.add(id);
+  try{localStorage.setItem('moba_order_access',JSON.stringify(saved));return true;}catch{return false;}
+}
 export function money(n){ return `${Number(n||0).toLocaleString('en-US')} جنيه`; }
 export function readCart(){
   try{

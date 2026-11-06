@@ -6,6 +6,7 @@ import fixOrderHandler from '../lib/handlers/fix-order.js';
 import { json } from '../lib/_utils.js';
 import { readJsonBody } from '../lib/request-body.js';
 import quoteHandler from '../lib/handlers/quote.js';
+import playerLookupHandler from '../lib/handlers/player-lookup.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -17,6 +18,7 @@ async function attachJsonBody(req){
 export default async function handler(req,res){
   try{
   const action = String(req.query?.action || '').trim();
+  if(action==='player-lookup'){await attachJsonBody(req);return playerLookupHandler(req,res);}
   if(action==='quote'){await attachJsonBody(req);return quoteHandler(req,res);}
   if(action === 'status'){if(req.method==='POST')await attachJsonBody(req);return statusHandler(req,res);}
   if(action === 'reviews'){ await attachJsonBody(req); return reviewsHandler(req,res); }

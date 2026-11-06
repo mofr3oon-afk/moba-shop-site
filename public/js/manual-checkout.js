@@ -1,3 +1,4 @@
+import {mountTrackingActions} from './tracking-ui.js';
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function checkoutAttempt(cart,channel='direct'){
   const signature=JSON.stringify({cart,channel});
@@ -28,7 +29,8 @@ export function renderManualCheckout({page,cart,rememberOrder,clearCart,money}){
       <div class="field"><label>تفاصيل الطلب — انسخها وأرسلها في الشات</label><textarea id="handoffText" readonly rows="7">${esc(data.message)}</textarea></div><button class="ghost-btn" id="copyHandoff" type="button">نسخ الرسالة</button>
       <a class="primary" href="${esc(target)}" target="_blank" rel="noopener">فتح ${channel==='whatsapp'?'واتساب':'تليجرام'}</a>
       <p>${channel==='telegram'?'تليجرام: انسخ التفاصيل ثم أرسلها في المحادثة المفتوحة.':''}</p>
-      <div class="field"><label>مفتاح متابعة خاص — احتفظ به</label><input readonly value="${esc(data.trackingToken)}"></div><a class="ghost-btn" href="/track" data-link>متابعة الطلب</a>`;
+      <div data-tracking-actions></div>`;
+      mountTrackingActions(result.querySelector('[data-tracking-actions]'),data.orderId,{token:data.trackingToken,phone:data.phone||''});
       document.querySelector('#copyHandoff').onclick=async()=>{
         try{await navigator.clipboard.writeText(data.message);document.querySelector('#copyHandoff').textContent='تم النسخ';}
         catch{document.querySelector('#handoffText').select();}
