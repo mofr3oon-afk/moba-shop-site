@@ -71,6 +71,7 @@ function response(){return {headers:{},setHeader(k,v){this.headers[k]=v;},getHea
 async function invoke(handler,body,{method='POST',query={},type='application/json',headers={}}={}){
   const req=Readable.from(body===undefined?[]:[Buffer.isBuffer(body)?body:Buffer.from(JSON.stringify(body))]);
   Object.assign(req,{method,query,headers:{'content-type':type,'x-forwarded-for':'127.0.0.1','user-agent':'test','idempotency-key':crypto.randomUUID(),...headers}});
+  if(handler===settingsApi)req.body=body; // Vercel parses JSON for this endpoint.
   const res=response();await handler(req,res);return res;
 }
 function multipart(fields,{validImage=true}={}){
@@ -241,4 +242,16 @@ test('admin sees a conflict instead of overwriting a concurrently updated order'
 });
 test('an unrelated malformed cookie does not break the login status endpoint',async()=>{
   const res=await invoke(login,undefined,{method:'GET',headers:{cookie:'other=%E0%A4%A'}});assert.equal(res.statusCode,200);assert.equal(res.data.authenticated,false);
+});
+
+test('catalog save preserves game ownership when only unrelated sections are stored',async()=>{
+  const cookieRes=response();setSessionCookie(cookieRes,makeSession({headers:{}},{role:'owner',username:'moamen'}));
+  const headers={cookie:cookieRes.headers['Set-Cookie'].split(';')[0]};
+  const res=await invoke(settingsApi,{settings:{dynamic_sections:[{game:'pubg',slug:'qr_stable',name:'اسم عربي متغير'}],dynamic_products:[{id:'ff_50',game:'freefire',section:'diamonds',name:'50 diamonds',price:55}]}},{headers});
+  assert.equal(res.statusCode,200);const product=res.data.settings.dynamic_products.find(p=>p.id==='ff_50');assert.equal(product.game,'freefire');assert.equal(product.section,'diamonds');
+  assert.equal(res.data.settings.dynamic_sections[0].key,'qr_stable');assert.equal(res.data.settings.dynamic_sections[0].slug,'qr_stable');
+});
+test('catalog API preserves sparse hidden product tombstones',async()=>{
+  settings.set('dynamic_products',JSON.stringify([{id:'pubg_60',hidden:true}]));
+  const res=await invoke(settingsApi,undefined,{method:'GET'});assert.equal(res.data.settings.dynamic_products[0].status,'hidden');
 });

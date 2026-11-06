@@ -1,3 +1,4 @@
+import { studioHome } from './storefront-studio.js';
 import { matchesGame, productIsAvailable, normalizeDigits } from './interface-utils.js';
 import { collectAccountDetails } from './product-dialog.js';
 import { gameTile, imageSource } from './catalog-presentation.js';
@@ -115,21 +116,7 @@ function applyBrand(){
 }
 
 function renderHome(){
-  const store=catalog.store||{};
-  const state=storeStatusInfo();
-  const mainOffer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
-  page(`<section class="hero">
-    <div class="hero-copy"><span class="status-pill store-${esc(store.status||'available')}">${esc(state.title)}</span>
-      <h1>اختار لعبتك. <span>وابدأ الشحن.</span></h1>
-      <p>باقات واضحة، سعر بالجنيه، ومتابعة لطلبك خطوة بخطوة.</p>
-      <div class="hero-actions"><a class="primary" href="#games">اختار لعبتك <span aria-hidden="true">←</span></a><button class="ghost-btn" type="button" data-go="/track">متابعة طلب</button></div>
-      <p class="hero-note">${esc(store.message||state.message)}${store.workHours?' · مواعيد العمل: '+esc(store.workHours):''}</p>
-    </div>
-  </section>
-  <div class="purchase-path" aria-label="خطوات الطلب"><div><b>01</b><span><strong>اختار اللعبة والباقة</strong><small>الأسعار والكميات قدامك</small></span></div><div><b>02</b><span><strong>راجع تفاصيل طلبك</strong><small>بدون إنشاء حساب</small></span></div><div><b>03</b><span><strong>كمل الشحن وتابع طلبك</strong><small>مراجعة يدوية للدفع والتنفيذ</small></span></div></div>
-  <section class="section games-section" id="games" aria-labelledby="gamesTitle"><div class="games-heading"><div><span class="eyebrow">ابدأ من هنا</span><h2 id="gamesTitle">اختار لعبتك</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب · كل باقة موضح لها طريقة إتمام الطلب</p></div><label class="game-search"><span aria-hidden="true">⌕</span><input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="ابحث عن لعبتك…" autocomplete="off"></label></div>
-  <div class="games-grid" id="gamesGrid">${catalog.games.map(gameCard).join('')}</div><p class="notice" id="noGames" role="status" hidden>ملقيناش لعبة بالاسم ده. جرّب اسمًا تاني أو تواصل مع الدعم.</p>
-  ${mainOffer?offerHtml(mainOffer):''}</section>`);
+  page(studioHome(catalog,storeStatusInfo(),offerHtml));
   $('#gameSearch')?.addEventListener('input',event=>{
     let count=0;document.querySelectorAll('#gamesGrid [data-game]').forEach(card=>{const game=catalog.games.find(g=>g.slug===card.dataset.game);const visible=!!game&&matchesGame(game,event.target.value);card.hidden=!visible;if(visible)count++;});
     $('#gameCount').textContent=String(count);$('#noGames').hidden=count>0;
@@ -162,7 +149,8 @@ function renderGame(slug=currentGameSlug()){
   if(!game)return renderNotFoundV218();
   const sections = catalog.sections.filter(s=>s.game===game.slug);
   const firstSectionWithProducts = sections.find(s=>catalog.products.some(p=>p.game===game.slug && p.section===s.slug))?.slug;
-  const active = selectedSection[game.slug] || firstSectionWithProducts || game.defaultSection || sections[0]?.slug;
+  const preferred=sections.some(s=>s.slug===game.defaultSection)&&catalog.products.some(p=>p.game===game.slug&&p.section===game.defaultSection)?game.defaultSection:null;
+  const active = selectedSection[game.slug] || preferred || firstSectionWithProducts || sections[0]?.slug;
   const offerIds = selectedOfferProducts[game.slug] || null;
   const products = catalog.products.filter(p=>p.game===game.slug && p.section===active && (!offerIds || offerIds.includes(p.id)));
   const gameOffer = catalog.offers.find(o=>o.game===game.slug && (o.placement==='game' || o.placement==='both'));
@@ -206,7 +194,7 @@ function productCard(p){
   ${p.description?`<p class="product-desc">${esc(p.description)}</p>`:''}
   <div class="price">${Number(p.salePrice)>0?`<small>${money(p.price)}</small> `:''}${money(price)}</div>
   <div class="product-actions">${p.noQty?'<span class="small-note">كمية واحدة</span>':`<div class="qty"><button type="button" data-qty-minus aria-label="تقليل كمية ${esc(p.name)}">−</button><b data-qty aria-live="polite">1</b><button type="button" data-qty-plus aria-label="زيادة كمية ${esc(p.name)}">+</button></div>`}
-  <button class="primary" type="button" data-add-product="${esc(p.id)}" ${available?'':'disabled'}>${available?(p.checkoutMethod==='manual'?'أضف للطلب':'اختيار الباقة'):'غير متاح الآن'}</button></div></article>`;
+  <button class="primary" type="button" data-add-product="${esc(p.id)}" ${readCart().length?'':'data-buy-now'} ${available?'':'disabled'}>${available?(readCart().length?'أضف للسلة':p.checkoutMethod==='manual'?'اطلب في الشات':'اشحن الآن'):'غير متاح الآن'}</button></div></article>`;
 }
 function renderCart(){
   const cart=readCart();
@@ -527,7 +515,7 @@ document.addEventListener('click', e=>{
   const section=e.target.closest('[data-section]'); if(section){ selectedOfferProducts[currentGameSlug()]=null; selectedSection[currentGameSlug()]=section.dataset.section; renderGame(); return; }
   const plus=e.target.closest('[data-qty-plus]'); if(plus){ const q=plus.closest('.product-card').querySelector('[data-qty]'); q.textContent=Math.min(20,Number(q.textContent)+1); return; }
   const minus=e.target.closest('[data-qty-minus]'); if(minus){ const q=minus.closest('.product-card').querySelector('[data-qty]'); q.textContent=Math.max(1,Number(q.textContent)-1); return; }
-  const add=e.target.closest('[data-add-product]'); if(add) return addProduct(add.dataset.addProduct, add.closest('.product-card'));
+  const add=e.target.closest('[data-add-product]'); if(add) return addProduct(add.dataset.addProduct, add.closest('.product-card'),{checkout:add.hasAttribute('data-buy-now')});
   const cp=e.target.closest('[data-cart-plus]'); if(cp){ const i=Number(cp.dataset.cartPlus); const cart=readCart(); if(cart[i]?.noQty){toast('هذا المنتج كمية واحدة فقط'); renderCart(); return;} updateCartItem(i,{qty:Math.min(20,Number(cart[i].qty||1)+1)}); renderCart(); return; }
   const cm=e.target.closest('[data-cart-minus]'); if(cm){ const i=Number(cm.dataset.cartMinus); const cart=readCart(); updateCartItem(i,{qty:Math.max(1,Number(cart[i].qty||1)-1)}); renderCart(); return; }
   const edit=e.target.closest('[data-cart-edit]');
@@ -546,11 +534,13 @@ document.addEventListener('click', e=>{
   if(e.target.id==='acceptProductWarning'){ e.target.closest('.product-warning')?.classList.add('accepted'); e.target.closest('.product-warning')?.setAttribute('data-accepted','true'); e.target.textContent='تم التأكيد'; e.target.disabled=true; return; }
   const ac=e.target.closest('[data-assist]'); if(ac) return assistantAction(ac.dataset.assist);
 });
-async function addProduct(id,card){
+async function addProduct(id,card,{checkout=false}={}){
   const product=catalog.products.find(p=>p.id===id);
   if(!product||!productIsAvailable(product))return toast('الباقة غير متاحة حاليا. اختار باقة تانية.','err');
   if(document.querySelector('.product-dialog'))return;
   const game=gameBySlug(product.game);
+  const method=product.checkoutMethod||'direct';
+  if(readCart().some(item=>(catalog.products.find(p=>p.id===item.productId)?.checkoutMethod||item.checkoutMethod||'direct')!==method))return toast('أكمل السلة الحالية أو أفرغها قبل اختيار طريقة شحن مختلفة.','err');
   const qty=product.noQty?1:Math.min(20,Math.max(1,Number(card?.querySelector('[data-qty]')?.textContent||1)));
   let account={id:'',name:'',extraFields:{}};
   if(product.checkoutMethod!=='manual'){
@@ -562,7 +552,7 @@ async function addProduct(id,card){
     accountDrafts.set(game.slug,account);
   }
   addCartItem({productId:product.id,product:product.name,game:game.slug,price:Number(product.salePrice)>0?Number(product.salePrice):product.price,qty,noQty:product.noQty,checkoutMethod:product.checkoutMethod||'direct',pubgId:account.id,pubgName:account.name,extraFields:account.extraFields});
-  toast('اتضافت للسلة. تقدر تكمل طلبك من زر السلة.');
+  if(checkout)navigate('/checkout');else toast('اتضافت للسلة. تقدر تكمل طلبك من زر السلة.');
 }
 function assistantAction(cmd){
   if(cmd==='charge') return navigate('/');
@@ -791,13 +781,10 @@ submitCheckout = async function(form){
   return _v217SubmitCheckout(form);
 };
 const _v217AddProduct = addProduct;
-addProduct = function(id,card){
-  const before=readCart().length;
-  const result=_v217AddProduct(id,card);
-  if(readCart().length>before){
-    localStorage.setItem('moba_last_id', $('#accountId')?.value.trim() || '');
-    localStorage.setItem('moba_last_name', $('#accountName')?.value.trim() || '');
-  }
+addProduct = async function(id,card,options){
+  const result=await _v217AddProduct(id,card,options);
+  const product=catalog.products.find(p=>p.id===id),account=accountDrafts.get(product?.game);
+  if(account){localStorage.setItem('moba_last_id',account.id);localStorage.setItem('moba_last_name',account.name);}
   return result;
 };
 const _v217Render = render;
@@ -885,6 +872,7 @@ submitCheckout = async function(form){
   if(!cart.length) return checkoutMessage('السلة فاضية.', 'err');
   const fd = new FormData(form);
   clearFieldErrors(form);
+  for(const key of ['customerPhone','transferLast3'])if(fd.has(key))fd.set(key,normalizeDigits(fd.get(key)).trim());
   try{
     validateSelectedPayment(form);
     if(!/^01\d{9}$/.test(String(fd.get('customerPhone')||''))){
@@ -1009,5 +997,5 @@ render();
 loadCatalog().then(c=>{
   catalog = c;
   render();
-}).catch(()=>null);
+}).catch(()=>page('<section class="section catalog-failure"><h1>الأسعار غير متاحة حاليًا</h1><p>تعذر الاتصال بالمتجر. أعد تحميل الصفحة للحصول على الأسعار الصحيحة.</p><a class="primary" href="/">إعادة المحاولة</a></section>'));
 

@@ -61,6 +61,7 @@ function normalizeSection(raw){
     name:raw.name || raw.title,
     order:Number(raw.order ?? raw.sort_order ?? 99),
     status:raw.status || 'available',
+    hidden:!!raw.hidden,
     image:raw.image || '',
     hot:!!raw.hot,
     featured:!!raw.featured,
@@ -84,6 +85,7 @@ function normalizeProduct(raw){
     description:raw.description || raw.desc || '',
     order:Number(raw.order ?? raw.sort_order ?? 99),
     noQty:!!raw.noQty || !!raw.no_qty,
+    hidden:!!raw.hidden,
     status:raw.status || 'available',
     image:raw.image || '',
     hot:!!raw.hot,
@@ -114,20 +116,18 @@ export function saveLocalCatalog(overrides){
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(overrides));
 }
 export async function loadCatalog(){
-  let remote = {};
-  try{
-    const r = await fetch('/api/settings');
-    const data = await r.json();
-    if(data.ok) remote = data.settings || {};
-  }catch{}
+  const r = await fetch('/api/settings');
+  const data = await r.json();
+  if(!r.ok||!data.ok)throw new Error('تعذر تحميل الأسعار الحالية. أعد المحاولة قبل اختيار باقة.');
+  const remote = data.settings || {};
   const local = {}; // Customer prices never use admin drafts left in localStorage.
   const dynamicGames = Object.values(remote.game_settings || {}).map(normalizeGame).filter(g=>g.slug);
   const games = mergeById(DEFAULT_CATALOG.games, [...dynamicGames, ...(local.games || []).map(normalizeGame)], 'slug')
     .filter(g=>g.status !== 'hidden').sort((a,b)=>a.order-b.order);
   const sections = mergeSections(DEFAULT_CATALOG.sections, [...(remote.dynamic_sections || []).map(normalizeSection), ...(local.sections || []).map(normalizeSection)].filter(s=>s.game && s.slug))
-    .filter(s=>s.status !== 'hidden' && games.some(g=>g.slug===s.game)).sort((a,b)=>a.order-b.order);
-  const products = mergeById(DEFAULT_CATALOG.products, [...(remote.dynamic_products || []).map(normalizeProduct), ...(local.products || []).map(normalizeProduct)].filter(p=>p.game && p.section && p.name && p.price), 'id')
-    .filter(p=>p.status !== 'hidden' && games.some(g=>g.slug===p.game)).sort((a,b)=>a.order-b.order);
+    .filter(s=>!s.hidden&&s.status !== 'hidden' && games.some(g=>g.slug===s.game)).sort((a,b)=>a.order-b.order);
+  const products = mergeById(DEFAULT_CATALOG.products, [...(remote.dynamic_products || []), ...(local.products || [])].filter(p=>p?.id), 'id').map(normalizeProduct)
+    .filter(p=>!p.hidden&&p.status !== 'hidden'&&Number.isFinite(p.price)&&p.price>0&&games.some(g=>g.slug===p.game)&&sections.some(s=>s.game===p.game&&s.slug===p.section)).sort((a,b)=>a.order-b.order);
   const hasRemoteOffers = remote.exclusive_offer && Array.isArray(remote.exclusive_offer.items);
   const baseOffers = hasRemoteOffers ? [] : DEFAULT_CATALOG.offers;
   const offers = [...baseOffers, ...(hasRemoteOffers?remote.exclusive_offer.items:[]), ...(local.offers || [])]

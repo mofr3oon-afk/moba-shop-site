@@ -73,10 +73,11 @@ function cleanCatalogInput(input){
       const title=String(raw.title||raw.name||raw.key||'').trim();
       if(!title) continue;
       const game=String(raw.game||'pubg').trim() || 'pubg';
-      const key=keyify(raw.key||title,'section');
+      const key=keyify(raw.slug||raw.key||title,'section');
       const sec={
         ...raw,
         key,
+        slug:key,
         title,
         game,
         location: raw.location || 'game',
@@ -117,19 +118,18 @@ function cleanCatalogInput(input){
     for(const raw of input.dynamic_products){
       if(!raw || typeof raw!=='object') continue;
       const name=String(raw.name||'').trim();
-      if(!name) continue;
+      if(!name){if(raw.id&&(raw.hidden||raw.status==='hidden'))byProduct.set('id:'+raw.id,{...raw,status:'hidden',hidden:true});continue;}
       let game=String(raw.game||'pubg').trim() || 'pubg';
       let cat=keyify(raw.section||raw.cat||firstByGame[game]||'uc','cat');
-      if(validSections.size && !validSections.has(game+'|'+cat)){
-        const fallback=sections.find(s=>String(s.game||'pubg')===game) || sections[0];
-        if(fallback){ game=String(fallback.game||game); cat=String(fallback.key||cat); }
-      }
+      // Settings can contain only overrides. Never move a product to another game
+      // because that game's default sections are absent from this partial payload.
       const prod={
         ...raw,
         id: raw.id || ('prod_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6)),
         name,
         game,
         cat,
+        section:cat,
         price: Number(raw.price||0),
         sale_price: Number(raw.salePrice??raw.sale_price??raw.discount_price??0),
         cost: raw.cost==null||raw.cost===''?null:Number(raw.cost),

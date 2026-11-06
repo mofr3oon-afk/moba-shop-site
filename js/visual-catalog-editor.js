@@ -65,7 +65,7 @@ export function mountVisualCatalog(root,{local,onSave,onDraft,onAdvanced}){
         const encoded=canvas.toDataURL('image/webp',.82);if(encoded.length>280000)throw new Error('الصورة كبيرة بعد التحسين؛ جرّب صورة أبسط.');uploadedImage=encoded;form.elements[imageKey].value='';form.elements[imageKey].placeholder='صورة مرفوعة جاهزة';error.hidden=true;refresh();
       }catch(e){error.textContent=e.message;error.hidden=false;}finally{uploadPending=false;}
     });
-    form.onsubmit=e=>{e.preventDefault();try{if(uploadPending)throw new Error('انتظر تجهيز الصورة.');const row=validateCatalogDraft(kind,read());if(row[imageKey]&&imageSource(row[imageKey])!==String(row[imageKey]).trim())throw new Error('رابط الصورة لازم يكون HTTPS أو صورة مرفوعة.');if(isGame&&!sections().some(s=>s.game===row.slug))local.sections=[...(local.sections||[]),{game:row.slug,slug:'main',name:'الباقات',status:'available',order:1}];put(kind,row);dialog.close();}catch(e){error.textContent=e.message;error.hidden=false;}};
+    form.onsubmit=e=>{e.preventDefault();try{if(uploadPending)throw new Error('انتظر تجهيز الصورة.');const row=validateCatalogDraft(kind,read());if(row[imageKey]&&imageSource(row[imageKey])==='/assets/moba-shop-logo-256.png'&&String(row[imageKey]).trim()!=='/assets/moba-shop-logo-256.png')throw new Error('رابط الصورة لازم يكون HTTPS أو صورة مرفوعة.');if(isGame&&!sections().some(s=>s.game===row.slug))local.sections=[...(local.sections||[]),{game:row.slug,slug:'main',name:'الباقات',status:'available',order:1}];put(kind,row);dialog.close();}catch(e){error.textContent=e.message;error.hidden=false;}};
     refresh();dialog.showModal();form.elements.name.focus();
   }
   render();
