@@ -1,5 +1,6 @@
 export const DEFAULT_CATALOG = {
   games: [
+    { slug:'roblox', name:'Roblox', subtitle:'روبوكس · الشحن في الشات', cover:'/assets/game-covers/roblox.webp', status:'available', order:6, defaultSection:'robux' },
     { slug:'pubg', name:'PUBG Mobile', subtitle:'UC | شدات', cover:'/assets/game-covers/pubg-new.webp', status:'available', order:1, defaultSection:'uc', idLabel:'PUBG ID', idPlaceholder:'اكتب ID ببجي', nameLabel:'اسم الحساب داخل اللعبة', namePlaceholder:'اكتب اسم الحساب' },
     { slug:'freefire', name:'Free Fire', subtitle:'Diamonds | عضويات', cover:'/assets/game-covers/freefire-new.webp', status:'available', order:2, defaultSection:'diamonds', idLabel:'Free Fire ID', idPlaceholder:'اكتب ID فري فاير', nameLabel:'اسم الحساب', namePlaceholder:'اكتب اسم الحساب' },
     { slug:'blood-strike', name:'Blood Strike MENA', subtitle:'MENA Top Up', cover:'/assets/game-covers/blood_mena.jpg', status:'available', order:3, defaultSection:'diamonds', idLabel:'Blood Strike ID', idPlaceholder:'اكتب ID بلد سترايك', nameLabel:'اسم الحساب', namePlaceholder:'اكتب اسم الحساب' },
@@ -7,6 +8,9 @@ export const DEFAULT_CATALOG = {
     { slug:'yalla-ludo', name:'Yalla Ludo', subtitle:'Diamonds / Coins', cover:'/assets/game-covers/yalla_ludo.webp', status:'available', order:5, defaultSection:'diamonds', idLabel:'Yalla Ludo ID', idPlaceholder:'اكتب ID يلا لودو', nameLabel:'اسم الحساب', namePlaceholder:'اكتب اسم الحساب' }
   ],
   sections: [
+    { game:'pubg', slug:'qr', name:'شدات QR · عبر الشات', order:2 },
+    { game:'pubg', slug:'growth', name:'الازدهار والكريستالة', order:3 },
+    { game:'roblox', slug:'robux', name:'عروض روبوكس', order:1 },
     { game:'pubg', slug:'uc', name:'شدات UC', order:1 },
     { game:'freefire', slug:'diamonds', name:'الماس', order:1 },
     { game:'freefire', slug:'memberships', name:'عضويات وتصاريح', order:2 },
@@ -16,6 +20,24 @@ export const DEFAULT_CATALOG = {
     { game:'yalla-ludo', slug:'diamonds', name:'جواهر', order:1 }
   ],
   products: [
+    ...[
+      ['growth_1','الازدهار الأول',55],
+      ['growth_2','الازدهار الثاني',155],
+      ['growth_3','الازدهار الثالث',255],
+      ['mythic_crystal','الكريستالة الميثك',155]
+    ].map(([key,name,price],index)=>({
+      id:`pubg_${key}`,game:'pubg',section:'growth',name,unit:'Pack',amount:1,price,order:index+1,noQty:true
+    })),
+    ...[[325,235],[1800,1190]].map(([amount,price],index)=>({
+      id:`pubg_qr_${amount}`,game:'pubg',section:'qr',name:`${amount} شدة QR`,unit:'UC',amount,price,
+      order:index+1,checkoutMethod:'manual',noQty:true,
+      description:'تأكد من توفر العرض مع الدعم قبل التحويل.'
+    })),
+    ...[[100,100,80],[200,200,160],[400,310,250],[800,620,480]].map(([amount,price,salePrice],index)=>({
+      id:`roblox_${amount}`,game:'roblox',section:'robux',name:`${amount} روبوكس`,unit:'Robux',amount,price,salePrice,
+      order:index+1,checkoutMethod:'manual',noQty:true,
+      description:'عرض بكمية محدودة. تأكد من توفر الباقة مع الدعم قبل التحويل.'
+    })),
     ...[[60,50],[325,235],[660,435],[1800,1120],[3850,2170],[8100,4350]].map(([uc,price],i)=>({id:`pubg_${uc}`,game:'pubg',section:'uc',name:`UC ${uc}`,unit:'UC',amount:uc,price,order:i+1})),
     ...[[50,40],[100,70],[210,130],[310,180],[583,300],[1188,590],[2420,1140],[6160,2800]].map(([amount,price],i)=>({id:`ff_${amount}`,game:'freefire',section:'diamonds',name:`${amount} 💎`,unit:'Diamonds',amount,price,order:i+1})),
     {id:'ff_weekly',game:'freefire',section:'memberships',name:'عضوية أسبوعية',unit:'Membership',amount:1,price:130,order:20,noQty:true},
@@ -26,7 +48,7 @@ export const DEFAULT_CATALOG = {
     {id:'bs_elite_plus',game:'blood-strike',section:'passes',name:'Strike Elite+',unit:'Pass',amount:1,price:475,order:21,noQty:true},
     {id:'bs_level_offer',game:'blood-strike',section:'passes',name:'عرض المستوى',unit:'Offer',amount:1,price:135,order:22,noQty:true},
     ...[[56,60],[172,160],[257,250],[344,300],[706,550],[1346,1000],[1825,1400],[2195,1750],[3688,2750],[5532,3900],[9288,6500]].map(([amount,price],i)=>({id:`ml_${amount}`,game:'mobile-legends',section:'diamonds',name:`${amount} 💎`,unit:'Diamonds',amount,price,order:i+1})),
-    ...[[840,120],[2320,300],[5150,600],[13580,1500],[27640,2900],[55800,5600],[168860,16800],[283460,27500]].map(([amount,price],i)=>({id:`yl_${amount}`,game:'yalla-ludo',section:'diamonds',name:`${amount} جوهرة`,unit:'Diamonds',amount,price,order:i+1}))
+    ...[[840,115],[2320,270],[5150,530],[13580,1245],[27640,2350],[55800,4650],[168860,13800],[283460,22900]].map(([amount,price],i)=>({id:`yl_${amount}`,game:'yalla-ludo',section:'diamonds',name:`${amount} جوهرة`,unit:'Diamonds',amount,price,order:i+1}))
   ],
   offers: [
     {id:'june_pubg',title:'عروض شهر 6',subtitle:'باقات PUBG Mobile محدودة',game:'pubg',section:'uc',image:'/assets/game-covers/pubg-new.webp',active:true,order:1}

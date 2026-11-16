@@ -122,7 +122,23 @@ async function saveSettings(){
   }catch(e){ saveLocalCatalog(local); toast('تم الحفظ محليًا فقط: '+e.message,'err'); }
 }
 function render(){
-  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const tabs=[...document.querySelectorAll('.admin-tabs [data-tab]')];
+  const picker=document.querySelector('#adminSectionPicker');
+  for(const button of tabs){
+    const active=button.dataset.tab===tab;
+    button.classList.toggle('active',active);
+    if(active)button.setAttribute('aria-current','page');
+    else button.removeAttribute('aria-current');
+  }
+  if(picker){
+    picker.replaceChildren(...tabs.filter(button=>!button.hidden).map(button=>new Option(button.textContent.trim(),button.dataset.tab)));
+    picker.value=tab;
+    picker.parentElement.hidden=false;
+    picker.onchange=()=>{
+      const target=tabs.find(button=>button.dataset.tab===picker.value&&!button.hidden);
+      if(target)target.click();
+    };
+  }
   if(tab==='catalog') return renderCatalog();
   if(tab==='offers') return renderOffers();
   if(tab==='brand') return renderBrand();

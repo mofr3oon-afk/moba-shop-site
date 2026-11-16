@@ -27,6 +27,7 @@ let selectedSection = {};
 let selectedOfferProducts = {};
 let coupon = null;
 let checkoutFile = null;
+let receiptPreviewUrl = null;
 let assistantState = null;
 
 const $ = (s,root=document)=>root.querySelector(s);
@@ -54,6 +55,9 @@ function setActiveNav(){
   });
 }
 function page(html){
+  if(receiptPreviewUrl) URL.revokeObjectURL(receiptPreviewUrl);
+  receiptPreviewUrl=null;
+  checkoutFile=null;
   document.querySelector('.product-dialog')?.close();
   app.innerHTML = html; app.focus({preventScroll:true}); setActiveNav(); updateCartBubble();
   const product=route.startsWith('/product/')?catalog.products.find(p=>String(p.id)===decodeURIComponent(route.slice(9))):null;
@@ -285,13 +289,14 @@ async function renderCheckout(){
   const methods=new Set(cart.map(i=>catalog.products.find(p=>p.id===i.productId)?.checkoutMethod||'direct'));
   if(methods.size>1)return page('<section class="section"><h1>افصل طلب الشات عن الطلب المباشر</h1><p>السلة تحتوي طرق شحن مختلفة. أكمل نوعًا واحدًا في كل طلب.</p><button class="primary" data-go="/cart">راجع السلة</button></section>');
   if(methods.has('manual'))return renderManualCheckout({page,cart,rememberOrder,clearCart,money});
-  page('<section class="section" aria-live="polite">جاري مراجعة الأسعار على الخادم...</section>');
+  page('<section id="checkoutQuote" class="section" aria-live="polite">جاري مراجعة الأسعار...</section>');
+  const quoteView=$('#checkoutQuote');
   try{
     const r=await fetch('/api/public?action=quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cart,coupon_code:coupon?.code||'',phone:localStorage.getItem('moba_last_phone')||''})});
     const quote=await r.json();if(!r.ok||!quote.ok)throw new Error(quote.error||'تعذر مراجعة السعر');
-    if(route!=='/checkout')return;
+    if(!quoteView.isConnected)return;
     cart=quote.items;saveCart(cart);coupon=quote.coupon;
-  }catch(e){if(route!=='/checkout')return;return page(`<section class="section"><h1>راجع السلة قبل الدفع</h1><p>${esc(e.message)}</p><button class="primary" data-go="/cart">الرجوع للسلة</button></section>`);}
+  }catch(e){if(!quoteView.isConnected)return;return page(`<section class="section"><h1>راجع السلة قبل الدفع</h1><p>${esc(e.message)}</p><button class="primary" data-go="/cart">الرجوع للسلة</button></section>`);}
   const total=cartTotal(cart); const discount=Number(coupon?.discount_amount||0);
   const pay = catalog.payment || {};
   const instapay = {user:'mofr3oon1',phone:'01061707294',name:'مؤمن',link:'https://ipn.eg/S/mofr3oon1/instapay/3ALZfx',...(pay.instapay||{})};
@@ -325,7 +330,12 @@ async function renderCheckout(){
           <input name="transferLast3" inputmode="numeric" maxlength="3" placeholder="آخر 3 أرقام لو التحويل من رقم تاني">
         </div>
         <div class="field"><label>ملاحظة اختيارية</label><textarea name="note" rows="4" placeholder="أي ملاحظة للطلب"></textarea></div>
-        <div class="field upload-card"><label>سكرين التحويل</label><input id="screenshotInput" name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" required><div id="filePreview" class="message">لم يتم اختيار صورة بعد</div></div>
+        <div class="field upload-card">
+          <label for="screenshotInput">صورة إثبات التحويل</label>
+          <small id="receiptHint">JPG أو PNG أو WebP، حتى 3 ميجابايت.</small>
+          <input id="screenshotInput" name="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="receiptHint filePreview" required>
+          <div id="filePreview" class="message" role="status">لم يتم اختيار صورة بعد</div>
+        </div>
         ${checkoutPoliciesHtml(cart)}
         <div id="checkoutMessage" style="grid-column:1/-1"></div>
         ${locked?'<div class="message err" style="grid-column:1/-1">الموقع في وضع الصيانة حاليا، تنفيذ الطلبات متوقف مؤقتا.</div>':''}
@@ -650,10 +660,6 @@ document.addEventListener('change', e=>{
       box.innerHTML=paymentDetailsHtml(e.target.value, instapay, wallet);
     }
   }
-  if(e.target.id==='screenshotInput'){
-    checkoutFile = e.target.files?.[0] || null;
-    $('#filePreview').textContent = checkoutFile ? `تم اختيار: ${checkoutFile.name}` : 'لم يتم اختيار صورة بعد';
-  }
 });
 document.addEventListener('focusin', e=>{
   if(e.target.matches('input,textarea,select')) document.body.classList.add('typing');
@@ -769,11 +775,11 @@ trackCard = function(o,phone){
   const msg = SITE_CONTENT.orderStatusMessages?.[o.status] || o.customer_status_text || o.status_text || o.status;
   const items = Array.isArray(o.items) ? o.items : [];
   const steps=['pending','claimed','processing','delivered'];
-  const currentIndex=o.status==='rejected'||o.status==='cancelled'?3:Math.max(0,steps.indexOf(o.status));
+  const currentIndex=steps.indexOf(o.status);
   return `<details class="track-card upgraded-track" data-track-status="${esc(o.status)}">
     <summary><b>${esc(o.order_code || o.id)}</b><span>${esc(o.status_label || o.status_text || o.status)}</span><span>${money(o.total)}</span></summary>
     <div class="track-status-message ${o.status==='rejected'||o.status==='needs_fix'?'warn':'ok'}">${esc(msg)}</div>
-    <div class="track-timeline">${steps.map((s,i)=>`<span class="${i<=currentIndex?'done':''}">${esc(SITE_CONTENT.orderStatusMessages?.[s] || s)}</span>`).join('')}</div>
+    ${currentIndex>=0?`<div class="track-timeline">${steps.map((s,i)=>`<span class="${i<=currentIndex?'done':''}" ${i===currentIndex?'aria-current="step"':''}>${esc(SITE_CONTENT.orderStatusMessages?.[s] || s)}</span>`).join('')}</div>`:''}
     <div class="track-blocks">
       <section><h3>بيانات الطلب</h3><p>رقم الطلب: ${esc(o.order_code || o.id)}</p><p>وقت الطلب: ${esc(o.created_at || '-')}</p><p>آخر تحديث: ${esc(o.updated_at || '-')}</p></section>
       <section><h3>المنتجات</h3>${items.map(i=>`<article><b>${esc(i.product)}</b><span>ID: ${esc(i.pubgId||'-')}</span><span>Name: ${esc(i.pubgName||'-')}</span><span>Qty: ${esc(i.qty||1)}</span></article>`).join('') || '<p>لا توجد منتجات.</p>'}</section>
@@ -882,6 +888,8 @@ submitCheckout = async function(form){
   const fd = new FormData(form);
   clearFieldErrors(form);
   for(const key of ['customerPhone','transferLast3'])if(fd.has(key))fd.set(key,normalizeDigits(fd.get(key)).trim());
+  const receipt=checkoutFile;
+  checkoutSubmittingV218=true;
   try{
     validateSelectedPayment(form);
     if(!/^01\d{9}$/.test(String(fd.get('customerPhone')||''))){
@@ -908,8 +916,7 @@ submitCheckout = async function(form){
     }
     const total = Math.max(0, cartTotal(cart)-Number(coupon?.discount_amount||0));
     const ok = await orderConfirmModalV218(form, cart, total);
-    if(!ok) return;
-    checkoutSubmittingV218 = true;
+    if(!ok || !form.isConnected || checkoutFile!==receipt) return;
     fd.set('cart', JSON.stringify(cart));
     fd.set('deviceId', deviceId());
     fd.set('termsAccepted','true');
@@ -927,10 +934,12 @@ submitCheckout = async function(form){
     sessionStorage.setItem('last_invoice', JSON.stringify(data));
     navigate('/success');
   }catch(e){
-    checkoutSubmittingV218 = false;
+    if(!form.isConnected)return;
     checkoutMessage(customerErrorMessage(e), 'err');
     const btn=form.querySelector('button[type="submit"]');
     if(btn){ btn.disabled=false; btn.textContent='إرسال الطلب للمراجعة'; }
+  }finally{
+    checkoutSubmittingV218=false;
   }
 };
 renderSuccess = function(){
@@ -968,17 +977,35 @@ const _v218Render = render;
 render = async function(){
   const known = route==='/' || ['/cart','/checkout','/success','/track','/policies','/reviews','/faq','/offers/pubg'].includes(route) || route.startsWith('/game/') || route.startsWith('/product/');
   if(!known) return renderNotFoundV218();
+  if(route==='/track'){
+    if(catalog.games.length)applyBrand();
+    return renderTrack();
+  }
   return _v218Render();
 };
 document.addEventListener('change', e=>{
   if(e.target.id==='screenshotInput'){
+    if(receiptPreviewUrl)URL.revokeObjectURL(receiptPreviewUrl);
+    receiptPreviewUrl=null;
     checkoutFile = e.target.files?.[0] || null;
     const box = $('#filePreview');
     if(!box) return;
+    e.target.setCustomValidity('');
+    box.classList.remove('err');
     if(!checkoutFile){ box.innerHTML='لم يتم اختيار صورة بعد'; return; }
+    if(!checkoutFile.size || checkoutFile.size>3*1024*1024 || !/^image\/(png|jpeg|webp)$/i.test(checkoutFile.type)){
+      const message='اختار صورة JPG أو PNG أو WebP بحجم لا يتجاوز 3 ميجابايت.';
+      checkoutFile=null;
+      e.target.value='';
+      e.target.setCustomValidity(message);
+      box.classList.add('err');
+      box.textContent=message;
+      return;
+    }
     const size = checkoutFile.size >= 1024*1024 ? `${(checkoutFile.size/1024/1024).toFixed(2)} MB` : `${Math.ceil(checkoutFile.size/1024)} KB`;
-    const url = URL.createObjectURL(checkoutFile);
-    box.innerHTML = `<div class="upload-preview"><img src="${url}" alt="معاينة سكرين التحويل"><div><b>${esc(checkoutFile.name)}</b><small>الحجم: ${size}</small><button type="button" class="mini" onclick="document.getElementById('screenshotInput')?.click()">تغيير الصورة</button></div></div>`;
+    receiptPreviewUrl = URL.createObjectURL(checkoutFile);
+    box.innerHTML = `<div class="upload-preview"><img src="${receiptPreviewUrl}" alt="معاينة إثبات التحويل"><div><b>${esc(checkoutFile.name)}</b><small>الحجم: ${size}</small><button type="button" class="mini">تغيير الصورة</button></div></div>`;
+    box.querySelector('button').addEventListener('click',()=>e.target.click());
   }
 });
 if('serviceWorker' in navigator){
@@ -1003,6 +1030,8 @@ window.addEventListener('unhandledrejection', e=>sendClientErrorLogV218('unhandl
 render();
 loadCatalog().then(c=>{
   catalog = c;
-  render();
-}).catch(()=>page('<section class="section catalog-failure"><h1>الأسعار غير متاحة حاليًا</h1><p>تعذر الاتصال بالمتجر. أعد تحميل الصفحة للحصول على الأسعار الصحيحة.</p><a class="primary" href="/">إعادة المحاولة</a></section>'));
+  if(route==='/track')applyBrand();else render();
+}).catch(()=>{
+  if(route!=='/track')page('<section class="section catalog-failure"><h1>الأسعار غير متاحة حاليًا</h1><p>تعذر الاتصال بالمتجر. أعد تحميل الصفحة للحصول على الأسعار الصحيحة.</p><a class="primary" href="/">إعادة المحاولة</a></section>');
+});
 
