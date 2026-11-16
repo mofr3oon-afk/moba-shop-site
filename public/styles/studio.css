@@ -203,3 +203,95 @@ body.shop-page .market-actions .primary {background:#ffbc6c!important;border-col
   .order-view-header {flex-wrap:wrap;gap:6px}
   .order-contact .primary {flex:1 1 180px}
 }
+/* Indigo and mint storefront identity. */
+.shop-icon {width:1.15em;height:1.15em;flex:none;vertical-align:middle}
+.skip-shop {position:fixed;inset-inline-start:16px;top:12px;z-index:1000;transform:translateY(-160%);background:#fff;color:#20284b;padding:12px;border-radius:8px}
+.skip-shop:focus {transform:translateY(0)}
+body.shop-page {background:#141b32!important}
+body.shop-page:has(.market-hero) {background:#edf1fb!important}
+body.shop-page .topbar {background:#20284b!important;border:1px solid #495582;border-radius:17px;padding:10px 16px!important;margin-block:12px 8px}
+body.shop-page .topbar .brand img {box-shadow:0 0 0 1px #7b8bbc73;border-radius:12px}
+body.shop-page .topbar .brand b {color:#fff!important}
+body.shop-page .topbar .brand em {color:#a2f5d2!important}
+body.shop-page .topbar .brand small {color:#cdd6f3!important}
+body.shop-page .main-nav a {display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;color:#e1e8fc!important}
+body.shop-page .main-nav a.active {background:#3d4a79!important;border-color:#9aecc8!important;color:#fff!important}
+body.shop-page .main-nav a:hover {background:#3d4a79!important}
+.shop-page a:focus-visible,.shop-page button:focus-visible,.admin-page button:focus-visible {outline:2px solid #71e6bc;outline-offset:3px}
+.shop-page .market-hero {border-radius:26px;border-color:#415070;min-height:460px;background:#192548}
+.market-hero-image {object-position:center 25%}
+.market-hero::after {background:linear-gradient(to left,#192548 5%,#192548dd 37%,#19254824 72%)}
+.market-kicker {color:#a2f5d2;font-size:12px;letter-spacing:.18em;font-weight:800;margin-bottom:14px}
+.market-hero h1 {font-size:clamp(42px,6vw,80px);line-height:1.14}
+.market-hero h1 em {color:#a2f5d2}
+.market-hero p {color:#e5eafd}
+.market-actions a,.market-actions button {display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px}
+body.shop-page .market-actions .primary {background:#a2f5d2!important;color:#13273a!important;border-color:#a2f5d2!important}
+.shop-page .market-actions .ghost-btn {background:#1f2e53;border-color:#6576a6}
+.shop-page .market-feature {background:#26365b;border-color:#536590}
+.market-feature small,.market-feature i {color:#a2f5d2}
+.shop-page .market-feature:hover {background:#354973;border-color:#a2f5d2}
+.shop-page:has(.market-hero) .studio-store-status {background:#fff;color:#182345;padding:12px 16px;border-radius:12px;border:1px solid #d8e0f1;margin-top:12px}
+.shop-page:has(.market-hero) .studio-store-status p,.shop-page:has(.market-hero) .studio-store-status p span {color:#34436b}
+.market-shortcuts button {background:#fff;border-color:#d8e0f1;color:#20284b;border-radius:13px;min-height:64px}
+.market-shortcuts button span {color:#345685}
+.market-shortcuts button:hover {background:#f2fbff;border-color:#657eb5}
+.shop-page .games-heading h2 {color:#20284b;font-size:clamp(24px,4vw,39px)}
+.shop-page .games-heading p {color:#445477}
+.shop-page .games-heading {border-bottom-color:#cbd5eb}
+.shop-page .game-search {background:#fff!important;border-color:#cad6ef!important;color:#435781}
+.shop-page .game-search input {color:#20284b!important}
+.shop-page .games-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))!important}
+.shop-page .games-grid .catalog-game-tile {border-color:#d9e2f3!important;background:#fff!important;color:#17233f!important;border-radius:19px!important}
+.shop-page .games-grid .tile-art {height:126px;background:radial-gradient(ellipse at bottom,color-mix(in srgb,var(--tile-accent) 39%,transparent),transparent 75%),#263359!important;border-bottom:0}
+.shop-page .games-grid .tile-copy {padding:14px 16px 18px}
+.shop-page .games-grid .tile-copy>span,.shop-page .games-grid .tile-copy small {color:#4e5e7d}
+.shop-page .games-grid .tile-copy small b {color:#293f79}
+.shop-page .games-grid .tile-arrow {background:#e9effc;color:#32487c}
+.shop-page .games-grid .catalog-game-tile:hover {border-color:#758bc1!important;box-shadow:0 10px 22px #354d7b24!important}
+.shop-page .market-guide {background:#20284b;border-color:#34446a;color:#f5f7ff}
+.market-guide h2 {display:flex;align-items:center;gap:9px}
+.market-guide h2 .shop-icon {color:#a2f5d2}
+.shop-page .game-introduction {background:linear-gradient(130deg,#293761,#1c2747)!important;border-color:#495c8f!important}
+.shop-page .game-title-identity p,.shop-page .catalog-breadcrumb {color:#c5d2f2!important}
+.shop-page .side-list button.active {background:#3b4e83!important;border-color:#96d9cf!important}
+.shop-page .product-card {background:#202b49!important;border-color:#46577f!important;border-radius:15px!important}
+.shop-page .product-card .package-art {background:linear-gradient(145deg,#31446e,#24365a);border-color:#4f6191}
+.shop-page .product-card .package-symbol {color:#a2f5d2;font-size:29px;line-height:1}
+.shop-page .package-method {display:inline-flex;align-items:center;gap:5px;margin-top:5px;color:#d1e3ff;font-size:11px}
+.shop-page .product-card .price {color:#aff4d7!important}
+.shop-page .product-card .price small {color:#ccd4eb!important}
+body.shop-page .product-actions .primary {background:#a2f5d2!important;border-color:#a2f5d2!important;color:#162742!important}
+.shop-page .product-actions .qty {border-color:#566991}
+.shop-page .order-view {background:#222d4b;border-color:#566994}
+.shop-page .order-view-header button {display:inline-flex;align-items:center;gap:6px}
+.shop-page .order-contact .primary {display:inline-flex;align-items:center;gap:7px}
+.shop-page .track-timeline [aria-current=step] {outline-color:#a2f5d2}
+.admin-page .admin-tabs {background:#253154!important}
+.admin-page .admin-tabs [aria-current=page] {border-inline-start-color:#a2f5d2!important;background:#3b4e83!important}
+.admin-page .visual-editor-head {border-bottom-color:#6477a3}
+.admin-page .catalog-package-face .package-symbol {color:#a2f5d2;font-size:26px}
+@keyframes store-cover-in {from{opacity:.45;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+@keyframes store-title-in {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.market-hero-image {animation:store-cover-in .65s ease-out both}
+.market-hero-copy {animation:store-title-in .4s ease-out both}
+.market-shortcuts button,.shop-page .catalog-game-tile {transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease}
+@media(hover:hover){
+  .market-shortcuts button:hover,.shop-page .games-grid .catalog-game-tile:hover {transform:translateY(-3px)}
+}
+.shop-page button:active:not(:disabled) {translate:0 1px}
+@media(max-width:700px){
+  body.shop-page .topbar {padding:9px 10px!important}
+  body.shop-page .main-nav a {gap:4px;flex-direction:column}
+  .shop-page .market-hero {min-height:420px;border-radius:17px}
+  .market-hero::after {background:linear-gradient(0deg,#182344 7%,#182344e0 35%,transparent 90%)}
+  .shop-page .games-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .shop-page .games-grid .tile-art {height:103px}
+  .shop-page .games-grid .tile-art img {width:61px;height:61px}
+  .shop-page .games-grid .tile-copy {padding:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .market-hero-image,.market-hero-copy {animation:none!important}
+  .market-shortcuts button,.shop-page .catalog-game-tile {transition:none!important;transform:none!important}
+  .shop-page button:active:not(:disabled) {translate:none}
+}

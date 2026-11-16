@@ -1,3 +1,4 @@
+import {mountStoreIcons,storeIcon} from './store-icons.js';
 import { studioHome } from './storefront-studio.js';
 import { mountCatalogControls, savingsPercent } from './catalog-controls.js';
 import { matchesGame, productIsAvailable, normalizeDigits } from './interface-utils.js';
@@ -32,6 +33,7 @@ let assistantState = null;
 
 const $ = (s,root=document)=>root.querySelector(s);
 const app = $('#app');
+mountStoreIcons(document);
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function policiesCards(){
   return `<div class="policy-grid">${SITE_CONTENT.sections.map(s=>`<details class="policy-card"><summary>${esc(s.title)}</summary><p>${esc(s.body)}</p></details>`).join('')}</div>`;
@@ -61,7 +63,8 @@ function page(html){
   document.querySelector('.product-dialog')?.close();
   app.innerHTML = html; app.focus({preventScroll:true}); setActiveNav(); updateCartBubble();
   const product=route.startsWith('/product/')?catalog.products.find(p=>String(p.id)===decodeURIComponent(route.slice(9))):null;
-  document.title=`${product?.name||app.querySelector('h1')?.textContent||'شحن الألعاب'} | MOBA SHOP`;
+  const siteName=catalog.brand?.name||'MOBA SHOP';
+  document.title=route==='/'?siteName+' — متجر الشحن الرقمي':`${product?.name||app.querySelector('h1')?.textContent||'متجر الشحن الرقمي'} | ${siteName}`;
   let robots=document.querySelector('meta[name="robots"]');
   if(!robots){robots=document.createElement('meta');robots.name='robots';document.head.append(robots);}
   robots.content=['/checkout','/cart','/track','/success'].includes(route)?'noindex,nofollow':'index,follow';
@@ -109,13 +112,13 @@ function updateCartBubble(){
   const cart=readCart();
   $('#cartBubbleText').textContent = `${cartUnits(cart)} منتجات · ${money(cartTotal(cart))}`;
   $('#cartBubble').hidden=!cart.length||['/cart','/checkout','/success'].includes(route);
-  const cartLink=document.querySelector('.main-nav a[href="/cart"]');if(cartLink)cartLink.textContent=cart.length?`السلة (${cartUnits(cart)})`:'السلة';
+  const cartLink=document.querySelector('[data-cart-label]');if(cartLink)cartLink.textContent=cart.length?`السلة (${cartUnits(cart)})`:'السلة';
 }
 function applyBrand(){
   const brand = catalog.brand || {};
   const logo = brand.logo || '/assets/moba-shop-logo-512.webp';
   const icon = brand.icon || '/assets/moba-shop-logo-256.png';
-  if(brand.name) document.title = `${brand.name} | شحن ألعاب وتطبيقات بسرعة وأمان`;
+
   const img = document.querySelector('.brand img');
   if(img) img.src = logo;
   const name = document.querySelector('.brand b');
@@ -124,7 +127,7 @@ function applyBrand(){
     name.innerHTML = `${esc(parts[0] || 'MOBA')} <em>${esc(parts.slice(1).join(' ') || 'SHOP')}</em>`;
   }
   const tagline = document.querySelector('.brand small');
-  if(tagline) tagline.textContent = brand.tagline || 'متجر شحن الألعاب';
+  if(tagline) tagline.textContent = brand.tagline || 'متجر الشحن الرقمي';
   const favicon = document.querySelector('link[rel="icon"]');
   if(favicon) favicon.href = icon;
   const supportPhone = String(catalog.store?.supportPhone || '201061707294').replace(/\D/g,'');
@@ -206,9 +209,10 @@ function productCard(p){
   const price=Number(p.salePrice)>0?Number(p.salePrice):Number(p.price||0);
   const section=catalog.sections.find(s=>s.game===p.game&&s.slug===p.section);
   const available=productIsAvailable({...p,startsAt:p.startsAt||section?.startsAt,endsAt:p.endsAt||section?.endsAt})&&(gameBySlug(p.game)?.status||'available')==='available'&&(!section||(section.status||'available')==='available');
+  const method=p.checkoutMethod==='manual'?'chat':'bolt';
   return `<article class="product-card ${available?'':'is-unavailable'}" data-product="${esc(p.id)}">
-  <div class="package-art">${p.image?`<img class="product-thumb" src="${esc(imageSource(p.image))}" alt="" loading="lazy" decoding="async">`:'<span class="package-symbol" aria-hidden="true">◇</span>'}<small>${esc(gameBySlug(p.game)?.name||p.unit||'باقة شحن')}</small></div>
-  <div><h3>${esc(p.name)}</h3><span class="small-note">${p.checkoutMethod==='manual'?'استكمال الشحن في الشات':'شحن ببيانات الحساب'}</span></div>
+  <div class="package-art">${p.image?`<img class="product-thumb" src="${esc(imageSource(p.image))}" alt="" loading="lazy" decoding="async">`:`<span class="package-symbol" aria-hidden="true">${storeIcon(/UC|Diamond/i.test(p.unit||'')?'gem':'box')}</span>`}<small>${esc(gameBySlug(p.game)?.name||p.unit||'باقة شحن')}</small></div>
+  <div><h3>${esc(p.name)}</h3><span class="package-method">${storeIcon(method)} ${p.checkoutMethod==='manual'?'عبر الشات':'شحن مباشر'}</span></div>
   ${p.description?`<p class="product-desc">${esc(p.description)}</p>`:''}
   <div class="price">${Number(p.salePrice)>0?`<small>${money(p.price)}</small> `:''}${money(price)}</div>
   <div class="product-actions">${p.noQty?'<span class="small-note">كمية واحدة</span>':`<div class="qty"><button type="button" data-qty-minus aria-label="تقليل كمية ${esc(p.name)}">−</button><b data-qty aria-live="polite">1</b><button type="button" data-qty-plus aria-label="زيادة كمية ${esc(p.name)}">+</button></div>`}
@@ -781,8 +785,8 @@ trackCard = function(o,phone){
   const supportPhone=String(catalog.store?.supportPhone||'201061707294').replace(/\D/g,'');
   const draft=encodeURIComponent('محتاج مساعدة بخصوص طلب MOBA SHOP رقم '+reference);
   return `<article class="order-view" data-status="${esc(o.status)}">
-    <header class="order-view-header"><div><span class="order-current">${esc(o.status_label || o.status_text || o.status)}</span><h2>${esc(msg)}</h2><p>رقم الطلب <bdi>${esc(reference)}</bdi></p></div><button class="ghost-btn" type="button" data-track-refresh>تحديث الحالة</button></header>
-    <div class="order-contact"><a class="primary" href="https://wa.me/${supportPhone}?text=${draft}" target="_blank" rel="noopener noreferrer">واتساب بخصوص الطلب</a><a class="ghost-btn" href="https://t.me/MOFR3OON" target="_blank" rel="noopener noreferrer">تليجرام</a></div>
+    <header class="order-view-header"><div><span class="order-current">${esc(o.status_label || o.status_text || o.status)}</span><h2>${esc(msg)}</h2><p>رقم الطلب <bdi>${esc(reference)}</bdi></p></div><button class="ghost-btn" type="button" data-track-refresh>${storeIcon('refresh')} تحديث الحالة</button></header>
+    <div class="order-contact"><a class="primary" href="https://wa.me/${supportPhone}?text=${draft}" target="_blank" rel="noopener noreferrer">${storeIcon('chat')} واتساب بخصوص الطلب</a><a class="ghost-btn" href="https://t.me/MOFR3OON" target="_blank" rel="noopener noreferrer">تليجرام</a></div>
     ${currentIndex>=0?`<div class="track-timeline" aria-label="مراحل الطلب">${stepLabels.map((label,i)=>`<span class="${i<=currentIndex?'done':''}" ${i===currentIndex?'aria-current="step"':''}>${esc(label)}</span>`).join('')}</div>`:''}
     <details class="order-details"><summary>تفاصيل الطلب · ${money(o.total)}</summary><div class="track-blocks">
       <section><h3>بيانات الطلب</h3><p>رقم الطلب: ${esc(o.order_code || o.id)}</p><p>وقت الطلب: ${esc(o.created_at || '-')}</p><p>آخر تحديث: ${esc(o.updated_at || '-')}</p></section>
