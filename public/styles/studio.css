@@ -102,3 +102,52 @@ body.shop-page,body.admin-page{font-family:Tahoma,'Segoe UI',Arial,sans-serif;te
 @media(min-width:901px){
   .shop-page .cart-summary {position:sticky;top:18px;align-self:start}
 }
+/* Storefront redesign */
+body.shop-page {background:#0c101b!important}
+.shop-page .topbar {border-bottom-color:#37364c}
+.shop-page .market-hero {
+  display:grid;grid-template-columns:1.15fr 1fr;gap:28px;
+  align-items:stretch;padding:32px;margin:16px 0 0;border-radius:26px;
+  background:radial-gradient(ellipse at 20% 0%,#37306a 0%,transparent 55%),linear-gradient(115deg,#15172a,#241831);
+  border:1px solid #524769;overflow:hidden;
+}
+.market-hero-copy {display:flex;justify-content:center;flex-direction:column;align-items:start;padding:clamp(0px,3vw,34px)}
+.market-hero h1 {font-size:clamp(39px,6vw,82px);margin:0;line-height:1.17;color:#fff;font-weight:900;letter-spacing:-.04em}
+.market-hero h1 em {font-style:normal;color:#d7ff69}
+.market-hero p {font-size:clamp(14px,1.5vw,18px);line-height:1.9;color:#e0dbed;margin:18px 0}
+.market-actions {display:flex;gap:10px;flex-wrap:wrap}
+body.shop-page .market-actions .primary {background:#d7ff69!important;border-color:#d7ff69!important;color:#15192a!important}
+.market-feature {
+  position:relative;isolation:isolate;display:flex;align-items:end;min-height:350px;overflow:hidden;
+  padding:16px;border-radius:22px;border:1px solid #8179ab;background:#242547;color:#fff;
+  text-align:start;cursor:pointer;
+}
+.market-feature img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 25%;z-index:-2}
+.market-feature::before {content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,#141226 0%,#14122608 68%)}
+.market-feature-caption {width:100%;display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:center;padding:12px 14px;border-radius:14px;background:#141226e8}
+.market-feature-caption strong {font-size:clamp(16px,2.5vw,26px);letter-spacing:.035em}
+.market-feature-caption span {grid-column:1;color:#d7ff69}
+.market-feature-caption i {grid-column:2;grid-row:1/3;font-style:normal;font-size:22px}
+.market-shortcuts {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 28px}
+.market-shortcuts button {min-height:60px;display:flex;align-items:center;gap:10px;text-align:start;border:1px solid #37364c;border-radius:12px;background:#191a2b;color:#f7f4ff;padding:8px;cursor:pointer}
+.market-shortcuts img {object-fit:cover;border-radius:9px}
+.market-shortcuts button span {margin-inline-start:auto;color:#d7ff69}
+.market-shortcuts button:hover,.market-feature:hover {border-color:#d7ff69}
+.shop-page .games-grid .tile-art {background:#1e1f36!important}
+.shop-page .games-grid .tile-art img {width:80px;height:80px;object-fit:cover;border-radius:18px}
+.shop-page .games-grid .catalog-game-tile {border-color:#484661!important}
+.shop-page .games-grid .catalog-game-tile:hover {border-color:#d7ff69!important}
+.shop-page .product-card .price {font-variant-numeric:tabular-nums}
+.shop-page .product-card .product-desc {line-height:1.65;color:#c7c6dc}
+.market-guide {padding:22px;margin-top:24px;border-radius:16px;background:#191a2b;border:1px solid #37364c}
+.market-guide h2 {margin-top:0}
+.admin-page .admin-tabs [aria-current=page] {border-inline-start-color:#d7ff69!important}
+.admin-page .visual-editor-head {border-bottom-color:#605785}
+@media(max-width:700px){
+  .shop-page .market-hero {grid-template-columns:1fr;gap:14px;padding:16px;border-radius:18px}
+  .market-hero h1 {font-size:clamp(36px,10vw,62px)}
+  .market-hero p {margin:10px 0 14px}
+  .market-feature {min-height:180px;aspect-ratio:1.85;padding:9px}
+  .market-feature img {object-position:center 32%}
+  .market-shortcuts {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-block:12px 22px}
+}

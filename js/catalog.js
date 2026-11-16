@@ -1,5 +1,29 @@
+const idPrices = [[60,55],[325,265],[355,295],[385,320],[445,375],[660,500],[720,555],[840,665],[985,765],[1800,1270],[3850,2470],[8100,4950]];
+const previousIdPrices = new Map([
+  ['pubg_60',[60,55]], ['pubg_325',[270,250]], ['pubg_660',[500,480]],
+  ['pubg_1800',[1300,1225]], ['pubg_3850',[2500,0]], ['pubg_8100',[5000,4750]]
+]);
+const latestIdPrices = new Map(idPrices.map(([amount,price])=>['pubg_'+amount,price]));
+
+// Replace the matching legacy price pairs while retaining the rest of each stored row.
+export function refreshLegacyIdPrice(row){
+  const previous=previousIdPrices.get(row?.id);
+  if(!previous || row.catalogPriceRevision===2)return row;
+  if(Number(row.price)!==previous[0] || Number(row.salePrice??row.sale_price??0)!==previous[1])return row;
+  return {...row,price:latestIdPrices.get(row.id),salePrice:0,sale_price:0,catalogPriceRevision:2};
+}
+
+function packages(game,section,unit,label,rows,{manual=false}={}){
+  return rows.map(([amount,price],index)=>({
+    id:game+'_'+section+'_'+amount,game,section,unit,amount,name:amount.toLocaleString('en-US')+' '+label,
+    price,order:index+1,...(manual?{checkoutMethod:'manual',noQty:true}:{})
+  }));
+}
+
 export const DEFAULT_CATALOG = {
   games: [
+    {slug:'tiktok',name:'TikTok Coins',subtitle:'كوينات · عبر الشات',cover:'/assets/game-covers/tiktok.webp',status:'available',order:7,defaultSection:'coins'},
+    {slug:'efootball',name:'eFootball Android',subtitle:'كوينز وباكدجات · عبر الشات',cover:'/assets/game-covers/efootball.webp',status:'available',order:8,defaultSection:'coins'},
     { slug:'roblox', name:'Roblox', subtitle:'روبوكس · الشحن في الشات', cover:'/assets/game-covers/roblox.webp', status:'available', order:6, defaultSection:'robux' },
     { slug:'pubg', name:'PUBG Mobile', subtitle:'UC | شدات', cover:'/assets/game-covers/pubg-new.webp', status:'available', order:1, defaultSection:'uc', idLabel:'PUBG ID', idPlaceholder:'اكتب ID ببجي', nameLabel:'اسم الحساب داخل اللعبة', namePlaceholder:'اكتب اسم الحساب' },
     { slug:'freefire', name:'Free Fire', subtitle:'Diamonds | عضويات', cover:'/assets/game-covers/freefire-new.webp', status:'available', order:2, defaultSection:'diamonds', idLabel:'Free Fire ID', idPlaceholder:'اكتب ID فري فاير', nameLabel:'اسم الحساب', namePlaceholder:'اكتب اسم الحساب' },
@@ -8,10 +32,17 @@ export const DEFAULT_CATALOG = {
     { slug:'yalla-ludo', name:'Yalla Ludo', subtitle:'Diamonds / Coins', cover:'/assets/game-covers/yalla_ludo.webp', status:'available', order:5, defaultSection:'diamonds', idLabel:'Yalla Ludo ID', idPlaceholder:'اكتب ID يلا لودو', nameLabel:'اسم الحساب', namePlaceholder:'اكتب اسم الحساب' }
   ],
   sections: [
+    {game:'pubg',slug:'qr-bonus',name:'QR الزيادة · عبر الشات',order:3},
+    {game:'pubg',slug:'korea',name:'PUBG الكورية · بالحساب',order:4},
+    {game:'pubg',slug:'prime',name:'Prime وPrime Plus',order:6},
+    {game:'roblox',slug:'robux-standard',name:'الأسعار العادية',order:2},
+    {game:'tiktok',slug:'coins',name:'كوينات TikTok',order:1},
+    {game:'efootball',slug:'coins',name:'كوينز Android',order:1},
+    {game:'efootball',slug:'legends',name:'باكدجات الأساطير',order:2},
     { game:'pubg', slug:'qr', name:'شدات QR · عبر الشات', order:2 },
-    { game:'pubg', slug:'growth', name:'الازدهار والكريستالة', order:3 },
+    { game:'pubg', slug:'growth', name:'الازدهار والكريستالة', order:5 },
     { game:'roblox', slug:'robux', name:'عروض روبوكس', order:1 },
-    { game:'pubg', slug:'uc', name:'شدات UC', order:1 },
+    { game:'pubg', slug:'uc', name:'شدات عبر ID', order:1 },
     { game:'freefire', slug:'diamonds', name:'الماس', order:1 },
     { game:'freefire', slug:'memberships', name:'عضويات وتصاريح', order:2 },
     { game:'blood-strike', slug:'diamonds', name:'جواهر', order:1 },
@@ -20,15 +51,34 @@ export const DEFAULT_CATALOG = {
     { game:'yalla-ludo', slug:'diamonds', name:'جواهر', order:1 }
   ],
   products: [
-    ...[
-      ['growth_1','الازدهار الأول',55],
-      ['growth_2','الازدهار الثاني',155],
-      ['growth_3','الازدهار الثالث',255],
-      ['mythic_crystal','الكريستالة الميثك',155]
-    ].map(([key,name,price],index)=>({
-      id:`pubg_${key}`,game:'pubg',section:'growth',name,unit:'Pack',amount:1,price,order:index+1,noQty:true
+    ...packages('tiktok','coins','Coins','كوين',[[100,85],[350,235],[500,320],[1000,620],[1500,930],[1600,990],[2000,1240],[2500,1550],[3000,1860],[3500,2170],[4000,2480],[5000,3100],[6000,3720],[7000,4300],[8000,4920],[10000,6100],[15000,9150],[20000,12200]],{manual:true}),
+    ...packages('efootball','coins','Coins','كوينز',[[100,60],[300,165],[500,275],[1000,475],[2000,935],[3000,1320],[5000,2040],[10000,3750],[15000,5500]],{manual:true}),
+    ...packages('roblox','robux-standard','Robux','روبوكس',[[40,45],[80,75],[400,320],[800,620],[1700,1200],[5250,3050],[11000,5500],[24000,11000]],{manual:true}),
+    ...packages('pubg','korea','UC','شدة',[[60,60],[195,165],[390,320],[680,480],[1850,1180],[3950,2250],[8300,4450]],{manual:true}),
+    ...[[370,700,325,300],[690,1200,550,600],[2000,2900,1300,1500],[4000,5500,2500,3000],[9000,12000,4950,6000]].map(([min,max,price,gift],index)=>({
+      id:'pubg_qr_bonus_'+min,game:'pubg',section:'qr-bonus',name:'من '+min+' إلى '+max+' شدة',unit:'UC',amount:min,
+      price,order:index+1,checkoutMethod:'manual',noQty:true,description:'يُحتسب في هدايا الشراء '+gift+' شدة.'
     })),
-    ...[[325,235],[1800,1190]].map(([amount,price],index)=>({
+    ...[
+      ['prime','Prime',60,'60 شدة عند التفعيل + 3 يوميًا. الإجمالي 150 شدة.'],
+      ['plus','Prime Plus',480,'660 شدة عند التفعيل + 8 يوميًا. الإجمالي 900 شدة.'],
+      ['bundle','Prime + Prime Plus',540,'الاشتراكان معًا لمدة 30 يومًا.']
+    ].map(([key,name,price,description],index)=>({
+      id:'pubg_prime_'+key,game:'pubg',section:'prime',name,price,description:description+' مدة الاشتراك 30 يومًا من التفعيل.',
+      unit:'اشتراك',amount:1,order:index+1,checkoutMethod:'manual',noQty:true
+    })),
+    ...[['suarez','باكدج لويس سواريز',60],['casillas','باكدج إيكر كاسياس',165]].map(([key,name,price],index)=>({
+      id:'efootball_'+key,game:'efootball',section:'legends',name,price,unit:'باكدج',amount:1,order:index+1,checkoutMethod:'manual',noQty:true
+    })),
+    ...[
+      ['growth_1','الازدهار الأول',55,'170 شدة + 900 رصيد'],
+      ['growth_2','الازدهار الثاني',155,'180 شدة + 9 قطع'],
+      ['growth_3','الازدهار الثالث',255,'300 شدة + 79 جزء ميثك'],
+      ['mythic_crystal','الكريستالة الميثك',140,'']
+    ].map(([key,name,price,description],index)=>({
+      id:`pubg_${key}`,game:'pubg',section:'growth',name,unit:'Pack',amount:1,price,description,order:index+1,noQty:true
+    })),
+    ...[[325,230],[660,460],[1800,1190],[3850,2250],[8100,4600]].map(([amount,price],index)=>({
       id:`pubg_qr_${amount}`,game:'pubg',section:'qr',name:`${amount} شدة QR`,unit:'UC',amount,price,
       order:index+1,checkoutMethod:'manual',noQty:true,
       description:'تأكد من توفر العرض مع الدعم قبل التحويل.'
@@ -38,8 +88,8 @@ export const DEFAULT_CATALOG = {
       order:index+1,checkoutMethod:'manual',noQty:true,
       description:'عرض بكمية محدودة. تأكد من توفر الباقة مع الدعم قبل التحويل.'
     })),
-    ...[[60,50],[325,235],[660,435],[1800,1120],[3850,2170],[8100,4350]].map(([uc,price],i)=>({id:`pubg_${uc}`,game:'pubg',section:'uc',name:`UC ${uc}`,unit:'UC',amount:uc,price,order:i+1})),
-    ...[[50,40],[100,70],[210,130],[310,180],[583,300],[1188,590],[2420,1140],[6160,2800]].map(([amount,price],i)=>({id:`ff_${amount}`,game:'freefire',section:'diamonds',name:`${amount} 💎`,unit:'Diamonds',amount,price,order:i+1})),
+    ...idPrices.map(([uc,price],i)=>({id:`pubg_${uc}`,game:'pubg',section:'uc',name:`UC ${uc}`,unit:'UC',amount:uc,price,order:i+1})),
+    ...[[50,35],[100,70],[210,120],[310,180],[583,270],[1188,500],[2420,1000],[6160,2800]].map(([amount,price],i)=>({id:`ff_${amount}`,game:'freefire',section:'diamonds',name:`${amount} 💎`,unit:'Diamonds',amount,price,order:i+1})),
     {id:'ff_weekly',game:'freefire',section:'memberships',name:'عضوية أسبوعية',unit:'Membership',amount:1,price:130,order:20,noQty:true},
     {id:'ff_monthly',game:'freefire',section:'memberships',name:'عضوية شهرية',unit:'Membership',amount:1,price:570,order:21,noQty:true},
     {id:'ff_booyah',game:'freefire',section:'memberships',name:'تصريح بوياه',unit:'Pass',amount:1,price:180,order:22,noQty:true},
@@ -148,7 +198,7 @@ export async function loadCatalog(){
     .filter(g=>g.status !== 'hidden').sort((a,b)=>a.order-b.order);
   const sections = mergeSections(DEFAULT_CATALOG.sections, [...(remote.dynamic_sections || []).map(normalizeSection), ...(local.sections || []).map(normalizeSection)].filter(s=>s.game && s.slug))
     .filter(s=>!s.hidden&&s.status !== 'hidden' && games.some(g=>g.slug===s.game)).sort((a,b)=>a.order-b.order);
-  const products = mergeById(DEFAULT_CATALOG.products, [...(remote.dynamic_products || []), ...(local.products || [])].filter(p=>p?.id), 'id').map(normalizeProduct)
+  const products = mergeById(DEFAULT_CATALOG.products, [...(remote.dynamic_products || []).map(refreshLegacyIdPrice), ...(local.products || [])].filter(p=>p?.id), 'id').map(normalizeProduct)
     .filter(p=>!p.hidden&&p.status !== 'hidden'&&Number.isFinite(p.price)&&p.price>0&&games.some(g=>g.slug===p.game)&&sections.some(s=>s.game===p.game&&s.slug===p.section)).sort((a,b)=>a.order-b.order);
   const hasRemoteOffers = remote.exclusive_offer && Array.isArray(remote.exclusive_offer.items);
   const baseOffers = hasRemoteOffers ? [] : DEFAULT_CATALOG.offers;

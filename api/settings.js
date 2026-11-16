@@ -131,6 +131,7 @@ function cleanCatalogInput(input){
         cat,
         section:cat,
         price: Number(raw.price||0),
+        catalogPriceRevision: 2,
         sale_price: Number(raw.salePrice??raw.sale_price??raw.discount_price??0),
         cost: raw.cost==null||raw.cost===''?null:Number(raw.cost),
         uc: Number(raw.uc||0),

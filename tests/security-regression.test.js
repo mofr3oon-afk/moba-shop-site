@@ -112,8 +112,8 @@ test('deleted legacy coupon cannot be resurrected at checkout',async()=>{
 });
 test('direct checkout uses server price and persists private proof before notification',async()=>{
   const res=await invoke(orderApi,checkout(2,{testOrder:'true'}),formOptions);
-  assert.equal(res.statusCode,200);assert.equal(res.data.total,100);assert.equal(orders.length,1);
-  assert.equal(orders[0].items[0].price,50);assert.equal(orders[0].order_type,'cart');assert.equal(orders[0].raw_data.paymentVerified,false);
+  assert.equal(res.statusCode,200);assert.equal(res.data.total,110);assert.equal(orders.length,1);
+  assert.equal(orders[0].items[0].price,55);assert.equal(orders[0].order_type,'cart');assert.equal(orders[0].raw_data.paymentVerified,false);
   assert.ok(orders[0].raw_data.receiptPath);assert.equal(res.data.trackingToken.length,64);assert.equal(res.data.raw_data,undefined);
 });
 test('retry with the same key returns one order without new notification',async()=>{
@@ -171,7 +171,7 @@ test('parallel manual retries create one order with one reference',async()=>{
 test('quote ignores client prices and applies scoped coupon by product ID',async()=>{
   settings.set('coupon_rules',JSON.stringify([{code:'SAVE',active:true,type:'percent',value:10,products:['pubg_60']}]));
   const res=await invoke(publicApi,{cart:[{productId:'pubg_60',price:1,product:'Fake',qty:2}],total:1,coupon_code:'SAVE'},{query:{action:'quote'}});
-  assert.equal(res.statusCode,200);assert.equal(res.data.subtotal,100);assert.equal(res.data.total,90);assert.equal(res.data.coupon.discount_amount,10);
+  assert.equal(res.statusCode,200);assert.equal(res.data.subtotal,110);assert.equal(res.data.total,99);assert.equal(res.data.coupon.discount_amount,11);
 });
 test('handoff links omit account IDs, customer phone, tracking secrets and proof',()=>{
   const detail=handoffDetails({order_code:'TEST',items:[{product:'QR fixture',qty:1,price:50,pubgId:'secret'}],total:50,phone:'secret',trackingToken:'secret'},{whatsapp:'201000000000',telegram:'MOFR3OON'});
@@ -254,4 +254,17 @@ test('catalog save preserves game ownership when only unrelated sections are sto
 test('catalog API preserves sparse hidden product tombstones',async()=>{
   settings.set('dynamic_products',JSON.stringify([{id:'pubg_60',hidden:true}]));
   const res=await invoke(settingsApi,undefined,{method:'GET'});assert.equal(res.data.settings.dynamic_products[0].status,'hidden');
+});
+
+test('legacy PUBG ID overrides use the new price while a fresh admin price takes precedence',async()=>{
+  const quote=()=>invoke(publicApi,{cart:[{productId:'pubg_325',qty:1}]},{query:{action:'quote'}});
+  const row={id:'pubg_325',game:'pubg',section:'uc',price:270,salePrice:250};
+  settings.set('dynamic_products',[row]);
+  let result=await quote();
+  assert.equal(result.statusCode,200);
+  assert.equal(result.data.total,265);
+  settings.set('dynamic_products',[{...row,catalogPriceRevision:2}]);
+  result=await quote();
+  assert.equal(result.statusCode,200);
+  assert.equal(result.data.total,250);
 });

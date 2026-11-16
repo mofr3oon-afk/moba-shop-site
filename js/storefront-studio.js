@@ -6,14 +6,39 @@ export function gameStartingPrice(catalog,game){
   const prices=catalog.products.filter(p=>p.game===game.slug&&productIsAvailable(p)&&catalog.sections.some(s=>s.game===p.game&&s.slug===p.section&&productIsAvailable(s))).map(catalogPrice).filter(n=>Number.isFinite(n)&&n>0);
   return prices.length?Math.min(...prices):null;
 }
+
 const priceText=n=>new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(n);
+
 export function studioHome(catalog,state,offerHtml){
-  const availableGames=catalog.games.filter(game=>game.status==='available');
-  const featured=['pubg','roblox','yalla-ludo'].map(slug=>availableGames.find(game=>game.slug===slug)).filter(Boolean);
-  for(const game of availableGames){
-    if(featured.length>=3)break;
-    if(!featured.includes(game))featured.push(game);
-  }
+  const featured=catalog.games.find(game=>game.slug==='pubg'&&game.status==='available');
+  const shortcuts=['freefire','roblox','tiktok','efootball'].map(slug=>catalog.games.find(game=>game.slug===slug&&game.status==='available')).filter(Boolean);
   const offer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
-  return `<section class="studio-hero"><div class="studio-hero-copy"><span class="studio-kicker"><i></i> MOBA SHOP / GAME ON</span><h1>اشحن لعبتك.<br><em>وركّز في اللعب.</em></h1><p>اختار اللعبة وشوف الباقات والأسعار بالجنيه.</p><div class="studio-hero-actions"><a class="primary" href="#games">تصفح الألعاب <span aria-hidden="true">↙</span></a><button class="ghost-btn" data-go="/track">تابع طلبك</button></div><div class="studio-assurance"><span>✓ من غير كلمة مرور</span><span>✓ مراجعة التحويل قبل الشحن</span></div></div><div class="studio-art" aria-label="باقات الألعاب"><span class="studio-art-word" aria-hidden="true">PLAY<br>YOUR<br>WAY.</span>${featured.map((g,i)=>`<button class="studio-game-pass pass-${i}" data-game="${esc(g.slug)}"><img src="${esc(imageSource(g.cover))}" alt="" width="92" height="92"><span><small>اختار باقتك</small><strong>${esc(g.name)}</strong>${gameStartingPrice(catalog,g)!==null?`<b>من ${priceText(gameStartingPrice(catalog,g))} <small>ج.م</small></b>`:'<b>استعرض الباقات ←</b>'}</span><i aria-hidden="true">↗</i></button>`).join('')}<span class="studio-art-caption">باقتك الجاية، على بُعد خطوة.</span></div></section><div class="studio-store-status"><span class="status-pill store-${esc(catalog.store.status||'available')}">${esc(state.title)}</span><p>${esc(catalog.store.message||state.message)}${catalog.store.workHours?` <span>· ${esc(catalog.store.workHours)}</span>`:''}</p></div><section class="section games-section" id="games" aria-labelledby="gamesTitle"><div class="games-heading"><div><span class="eyebrow">كل الألعاب في مكان واحد</span><h2 id="gamesTitle">الألعاب والباقات</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب · اختار اللعبة وشوف الباقات المتاحة</p></div><label class="game-search"><span aria-hidden="true">⌕</span><input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="ببجي، فري فاير…" autocomplete="off"></label></div><div class="games-grid" id="gamesGrid">${catalog.games.map(g=>gameTile(g,{count:catalog.products.filter(p=>p.game===g.slug).length,startingPrice:gameStartingPrice(catalog,g)})).join('')}</div><p class="notice" id="noGames" role="status" hidden>مش لاقي لعبتك؟ جرّب الاسم بالعربي أو الإنجليزي، أو تواصل مع الدعم.</p>${offer?offerHtml(offer):''}</section><section class="studio-how"><div><span class="eyebrow">واضحة من أول خطوة</span><h2>طلبك، من الاختيار<br>لحد الشحن.</h2><a href="/faq" data-link>عندك سؤال؟ شوف الإجابات ←</a></div><ol><li><b>01</b><span><strong>اختار اللعبة والباقة</strong><small>السعر والكمية قدامك قبل ما تكمل.</small></span></li><li><b>02</b><span><strong>راجع بيانات حسابك</strong><small>هنطلب بيانات الشحن فقط، من غير كلمة مرور.</small></span></li><li><b>03</b><span><strong>كمل طلبك وتابعه</strong><small>نراجع التحويل قبل تنفيذ الشحن. باقات الشات تُستكمل مع الدعم.</small></span></li></ol></section>`;
+  const featuredPrice=featured?gameStartingPrice(catalog,featured):null;
+  return `
+    <section class="market-hero">
+      <div class="market-hero-copy">
+        <h1>عالمك في اللعب<br><em>يبدأ هنا.</em></h1>
+        <p>شدات، جواهر وكوينات لألعابك المفضلة. اختار باقتك وشوف السعر بالجنيه.</p>
+        <div class="market-actions">
+          <a class="primary" href="#games">تصفح الباقات <span aria-hidden="true">↙</span></a>
+          <button class="ghost-btn" data-go="/track">تابع طلبك</button>
+        </div>
+      </div>
+      ${featured?`<button class="market-feature" data-game="${esc(featured.slug)}">
+        <img src="${esc(imageSource(featured.cover))}" alt="" width="400" height="400">
+        <span class="market-feature-caption"><strong>PUBG MOBILE</strong>
+          <span>${featuredPrice===null?'شوف الباقات':`من ${priceText(featuredPrice)} ج.م`}</span>
+          <i aria-hidden="true">←</i>
+        </span>
+      </button>`:''}
+    </section>
+    <div class="studio-store-status"><span class="status-pill store-${esc(catalog.store.status||'available')}">${esc(state.title)}</span><p>${esc(catalog.store.message||state.message)}${catalog.store.workHours?` <span>· ${esc(catalog.store.workHours)}</span>`:''}</p></div>
+    <div class="market-shortcuts" aria-label="اختصارات الشحن">${shortcuts.map(game=>`<button data-game="${esc(game.slug)}"><img src="${esc(imageSource(game.cover))}" alt="" width="38" height="38"><strong>${esc(game.name)}</strong><span aria-hidden="true">←</span></button>`).join('')}</div>
+    <section class="section games-section" id="games" aria-labelledby="gamesTitle">
+      <div class="games-heading"><div><h2 id="gamesTitle">الألعاب والباقات</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب وخدمات شحن</p></div><label class="game-search"><span aria-hidden="true">⌕</span><input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="اكتب اسم اللعبة…" autocomplete="off"></label></div>
+      <div class="games-grid" id="gamesGrid">${catalog.games.map(g=>gameTile(g,{count:catalog.products.filter(p=>p.game===g.slug).length,startingPrice:gameStartingPrice(catalog,g)})).join('')}</div>
+      <p class="notice" id="noGames" role="status" hidden>جرّب البحث باسم اللعبة بالعربي أو الإنجليزي.</p>
+      ${offer?offerHtml(offer):''}
+    </section>
+    <section class="market-guide"><h2>إزاي تطلب؟</h2><p>اختار الباقة، وكمّل ببيانات الشحن المطلوبة. باقات الشات بيأكدها الدعم قبل التحويل.</p><a class="ghost-btn" href="/faq" data-link>الأسئلة الشائعة ←</a></section>`;
 }

@@ -10,7 +10,7 @@ test('hidden flags and sparse tombstones never resurrect base products',async()=
 });
 test('partial overrides preserve base game, section and price; hidden sections remove their packages',async()=>{
   fixture({dynamic_products:[{id:'pubg_60',name:'Renamed'}]});
-  let catalog=await loadCatalog();const p=catalog.products.find(p=>p.id==='pubg_60');assert.equal(p.price,50);assert.equal(p.game,'pubg');
+  let catalog=await loadCatalog();const p=catalog.products.find(p=>p.id==='pubg_60');assert.equal(p.price,55);assert.equal(p.game,'pubg');
   fixture({dynamic_sections:[{game:'pubg',slug:'uc',name:'UC',status:'hidden'}]});
   catalog=await loadCatalog();
   assert.ok(!catalog.products.some(p=>p.game==='pubg'&&p.section==='uc'));
