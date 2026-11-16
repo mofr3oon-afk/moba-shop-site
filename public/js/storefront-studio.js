@@ -1,6 +1,6 @@
-import {storeIcon} from './store-icons.js';
 import { escapeText as esc, productIsAvailable } from './interface-utils.js';
 import { gameTile, imageSource, catalogPrice } from './catalog-presentation.js';
+import { storeIcon } from './store-icons.js';
 
 export function gameStartingPrice(catalog,game){
   if(game.status&&game.status!=='available')return null;
@@ -8,38 +8,31 @@ export function gameStartingPrice(catalog,game){
   return prices.length?Math.min(...prices):null;
 }
 
-const priceText=n=>new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).format(n);
-
 export function studioHome(catalog,state,offerHtml){
-  const featured=catalog.games.find(game=>game.slug==='pubg'&&game.status==='available');
-  const shortcuts=['pubg-kr','freefire','roblox','tiktok'].map(slug=>catalog.games.find(game=>game.slug===slug&&game.status==='available')).filter(Boolean);
   const offer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
-  const featuredPrice=featured?gameStartingPrice(catalog,featured):null;
-  return `
-    <section class="market-hero">
-      <img class="market-hero-image" src="/assets/catalog-studio/field-hero.webp" alt="" width="1440" height="960" fetchpriority="high">
-      <div class="market-hero-copy">
-        <span class="market-kicker">MOBA SHOP</span>
-        <h1>شحن الألعاب<br><em>والكوينات</em></h1>
-        <p>اختار اللعبة والباقة وشوف السعر بالجنيه.</p>
-        <div class="market-actions">
-          <a class="primary" href="#games">تصفح الباقات ${storeIcon('arrow')}</a>
-          <button class="ghost-btn" data-go="/track">${storeIcon('orders')} تابع طلبك</button>
-        </div>
+  const editions=['pubg','pubg-kr'].map(slug=>catalog.games.find(game=>game.slug===slug&&game.status==='available')).filter(Boolean);
+  return `<div class="store-directory">
+    <section class="directory-intro">
+      <div><h1>اختار لعبتك<br><em>واشحن باقتك</em></h1><p>شدات، جواهر وكوينات بالجنيه المصري.</p></div>
+      <div class="directory-status"><span class="status-pill store-${esc(catalog.store.status||'available')}">${esc(state.title)}</span>
+        <p>${esc(catalog.store.message||state.message)}</p>
+        ${catalog.store.workHours?`<small>${esc(catalog.store.workHours)}</small>`:''}
       </div>
-      ${featured?`<button class="market-feature" data-game="${esc(featured.slug)}">
-        <img src="${esc(imageSource(featured.cover))}" alt="" width="40" height="40">
-        <span><strong>ببجي العالمية</strong><small>${featuredPrice===null?'شوف الباقات':`من ${priceText(featuredPrice)} ج.م`}</small></span>
-        <i aria-hidden="true">${storeIcon('arrow')}</i>
-      </button>`:''}
     </section>
-    <div class="studio-store-status"><span class="status-pill store-${esc(catalog.store.status||'available')}">${esc(state.title)}</span><p>${esc(catalog.store.message||state.message)}${catalog.store.workHours?` <span>· ${esc(catalog.store.workHours)}</span>`:''}</p></div>
-    <div class="market-shortcuts" aria-label="اختصارات الشحن">${shortcuts.map(game=>`<button data-game="${esc(game.slug)}"><img src="${esc(imageSource(game.cover))}" alt="" width="38" height="38"><strong>${esc(game.name)}</strong><span aria-hidden="true">${storeIcon('arrow')}</span></button>`).join('')}</div>
-    <section class="section games-section" id="games" aria-labelledby="gamesTitle">
-      <div class="games-heading"><div><h2 id="gamesTitle">الألعاب والباقات</h2><p><span id="gameCount">${catalog.games.length}</span> ألعاب وخدمات شحن</p></div><label class="game-search">${storeIcon('search')}<input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="اكتب اسم اللعبة…" autocomplete="off"></label></div>
-      <div class="games-grid" id="gamesGrid">${catalog.games.map(g=>gameTile(g,{count:catalog.products.filter(p=>p.game===g.slug).length,startingPrice:gameStartingPrice(catalog,g)})).join('')}</div>
+    <section class="directory-catalog" id="games" aria-labelledby="gamesTitle">
+      <div class="directory-toolbar">
+        <div><h2 id="gamesTitle">الألعاب والخدمات</h2><span id="gameCount">${catalog.games.length}</span></div>
+        <label class="directory-search">${storeIcon('search')}<input id="gameSearch" type="search" aria-label="ابحث عن لعبة" aria-controls="gamesGrid" placeholder="ابحث عن لعبة…" autocomplete="off"></label>
+      </div>
+      <div class="games-grid" id="gamesGrid">${catalog.games.map(game=>gameTile(game,{startingPrice:gameStartingPrice(catalog,game)})).join('')}</div>
       <p class="notice" id="noGames" role="status" hidden>جرّب البحث باسم اللعبة بالعربي أو الإنجليزي.</p>
-      ${offer?offerHtml(offer):''}
     </section>
-    <section class="market-guide"><h2>${storeIcon('shield')} إزاي تطلب؟</h2><p>اختار الباقة، وكمّل ببيانات الشحن المطلوبة. باقات الشات بيأكدها الدعم قبل التحويل.</p><a class="ghost-btn" href="/faq" data-link>الأسئلة الشائعة ←</a></section>`;
+    ${editions.length?`<section class="edition-panel">
+      <img class="edition-cover" src="/assets/catalog-studio/field-hero.webp" alt="" width="1440" height="960" loading="lazy">
+      <div><h2>ببجي العالمية والكورية</h2><p>اختار نسخة لعبتك عشان تظهر الباقات المناسبة.</p>
+      <div class="edition-actions">${editions.map(game=>`<button class="ghost-btn" type="button" data-game="${esc(game.slug)}"><img src="${esc(imageSource(game.cover))}" alt="" width="32" height="32">${game.slug==='pubg'?'ببجي العالمية':'ببجي الكورية'} ${storeIcon('arrow')}</button>`).join('')}</div></div>
+    </section>`:''}
+    ${offer?offerHtml(offer):''}
+    <div class="directory-footer"><a href="/track" data-link>${storeIcon('orders')} متابعة الطلب</a><a href="/faq" data-link>${storeIcon('shield')} الأسئلة الشائعة</a></div>
+  </div>`;
 }

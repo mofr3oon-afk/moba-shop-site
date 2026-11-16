@@ -1,8 +1,8 @@
 const paths = {
-  home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-6h6v6"/>',
-  cart:'<path d="M2 4h3l3 11h10l3-8H6"/><circle cx="9" cy="19" r="1"/><circle cx="17" cy="19" r="1"/>',
-  orders:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8m-8 4h8m-8 4h5"/>',
-  chat:'<path d="M4 4h16v12H9l-5 4zM8 9h8m-8 3h5"/>',
+  home:'<path d="m3 10 8-7a1.5 1.5 0 0 1 2 0l8 7v8a2 2 0 0 1-2 2h-4v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5H5a2 2 0 0 1-2-2z"/>',
+  cart:'<rect x="4" y="8" width="16" height="13" rx="3"/><path fill="none" d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  orders:'<path d="M6 3h12a2 2 0 0 1 2 2v16l-4-2-4 2-4-2-4 2V5a2 2 0 0 1 2-2z"/><path fill="none" d="M8 8h8m-8 4h6"/>',
+  chat:'<path d="M7 4h10a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4h-6l-6 4v-5a4 4 0 0 1-2-3V8a4 4 0 0 1 4-4z"/><path fill="none" d="M8 11h.01m4 0h.01m4 0h.01"/>',
   search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>',
   arrow:'<path d="M20 12H4m6-6-6 6 6 6"/>',
   gem:'<path d="m4 8 4-4h8l4 4-8 12zM4 8h16m-11 0 3 12 3-12"/>',

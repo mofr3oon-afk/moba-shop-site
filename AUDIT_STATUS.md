@@ -156,3 +156,6 @@
 - تحقق 98 اختبارًا و64 ملفًا، وطلب كوري وهمي بـ60 جنيه في المعاينة ظهر في المتابعة مع اختفاء المفتاح من العنوان وعدم مشاركته في رابط الدعم.
 - نُشر c8aaff2 على main. تحقق وصول صورة الغلاف وفتح لوحة التحكم وطلباتي وصفحة الكورية على الإنتاج. مراجعة سعر pubg_korea_60 أعادت 60 جنيهًا ولعبة pubg-kr.
 - واجهة نيلية ونعناعية بعنوان «MOBA SHOP — متجر الشحن الرقمي»، دليل ألعاب فاتح، أيقونات SVG وحركة دخول الغلاف والبطاقات مع دعم تقليل الحركة. 60 بندًا موثقًا في outputs/STORE-60-CHANGES.md، ومعاينتا كمبيوتر وهاتف. تحقق 98 اختبارًا وفحص 65 ملفًا و12 بطاقة PUBG و4 أيقونات تنقل وعرض 390px دون تجاوز أفقي.
+- نُشر a519a8a على main. تحقق وصول HTML بالأيقونات وCSS بالحركة وعنوان لوحة الإدارة الجديد إلى رابط الإنتاج.
+
+- Dark storefront restructure: catalog-first RTL homepage, horizontal game cards, separate PUBG editions, charcoal/violet palette, new navigation icons and self-hosted IBM Plex Sans Arabic. Preview checked at desktop/mobile widths, Arabic search returned Roblox only, and 98 tests passed.

@@ -85,7 +85,8 @@ http.createServer(async(req,res)=>{
     let file=path.resolve(root,requested||'index.html');
     if(!file.startsWith(root+path.sep)&&file!==path.join(root,'index.html')){res.statusCode=403;return res.end();}
     if(!fs.existsSync(file)||!fs.statSync(file).isFile())file=path.join(root,'index.html');
-    if(!/\.(html|js|css|png|webp|jpg|svg|ico|webmanifest)$/.test(file)){res.statusCode=404;return res.end();}
-    res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res);
+    if(!/\.(html|js|css|png|webp|jpg|svg|ico|webmanifest|woff2)$/.test(file)){res.statusCode=404;return res.end();}
+    const extension=path.extname(file);
+    res.setHeader('Content-Type',extension==='.woff2'?'font/woff2':mime[extension]||'application/octet-stream');fs.createReadStream(file).pipe(res);
   }catch(e){res.statusCode=500;res.end(JSON.stringify({ok:false,error:e.message}));}
 }).listen(4318,'127.0.0.1',()=>console.log('Isolated QA preview: http://127.0.0.1:4318 — fake password: preview-password'));

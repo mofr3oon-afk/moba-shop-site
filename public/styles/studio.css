@@ -295,3 +295,85 @@ body.shop-page .product-actions .primary {background:#a2f5d2!important;border-co
   .market-shortcuts button,.shop-page .catalog-game-tile {transition:none!important;transform:none!important}
   .shop-page button:active:not(:disabled) {translate:none}
 }
+/* Catalog-first layout with charcoal surfaces and violet accents. */
+body.shop-page {background:#111217!important;color:#e9e7f3}
+body.shop-page .topbar {background:#191a24!important;border-color:#333545;border-radius:12px}
+body.shop-page .topbar .brand em {color:#c8b4ff!important}
+body.shop-page .main-nav a.active {background:#312743!important;border-color:#a68ae8!important}
+.shop-page .store-directory {--directory-accent:#c8b4ff;--directory-line:#393648;--directory-text:#ede9f5;--directory-muted:#bcb5cb;color:var(--directory-text)}
+.directory-intro {display:grid;grid-template-columns:1fr minmax(220px,310px);align-items:end;gap:24px;padding:32px 0 24px;border-bottom:1px solid var(--directory-line)}
+.directory-intro h1 {margin:0;line-height:1.12;font-size:clamp(40px,6.5vw,82px);letter-spacing:-.035em}
+.directory-intro em {color:var(--directory-accent);font-style:normal}
+.directory-intro p {margin:12px 0 0;color:var(--directory-muted);font-size:16px;line-height:1.65}
+.directory-status {padding:16px;border:1px solid var(--directory-line);background:#1c1d28;border-radius:14px}
+.directory-status p {font-size:13px;margin:8px 0 0}
+.directory-status small {display:block;margin-top:6px;color:var(--directory-muted)}
+.directory-catalog {padding-top:22px;scroll-margin-top:16px}
+.directory-toolbar {display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.directory-toolbar>div {display:flex;gap:9px;align-items:center}
+.directory-toolbar h2 {font-size:clamp(20px,3vw,32px);margin:0}
+.directory-toolbar #gameCount {color:var(--directory-muted);font-variant-numeric:tabular-nums}
+.directory-search {display:flex;align-items:center;gap:12px;padding:0 14px;border:1px solid var(--directory-line);border-radius:10px;background:#20212d;color:var(--directory-accent)}
+.directory-search input {width:min(29vw,255px);min-height:45px;background:transparent!important;border:0!important;outline:0;color:var(--directory-text)!important;font-size:16px}
+.directory-search:focus-within {outline:2px solid var(--directory-accent);outline-offset:2px}
+.shop-page .store-directory .games-grid {grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px}
+.shop-page .store-directory .catalog-game-tile {
+  display:grid!important;grid-template-columns:76px minmax(0,1fr);align-items:center;min-height:122px;
+  padding:12px!important;gap:12px;text-align:start;background:#1e1f2a!important;color:var(--directory-text)!important;
+  border:1px solid var(--directory-line)!important;border-radius:13px!important;position:relative;
+}
+.shop-page .store-directory .tile-art {
+  display:grid;place-items:center;width:76px;height:86px;border-radius:10px;overflow:hidden;
+  background:color-mix(in srgb,var(--tile-accent) 16%,#222230)!important;
+}
+.shop-page .store-directory .tile-art img {width:100%;height:100%;object-fit:cover;border-radius:inherit;outline:0}
+.shop-page .store-directory .tile-monogram,.shop-page .store-directory .tile-orbit {display:none}
+.shop-page .store-directory .tile-copy {padding:0 0 2px 20px;display:grid;gap:4px;min-width:0}
+.shop-page .store-directory .tile-copy strong {font-family:inherit;font-size:16px;line-height:1.25;overflow-wrap:anywhere}
+.shop-page .store-directory .tile-copy>span,.shop-page .store-directory .tile-copy small {color:var(--directory-muted);line-height:1.35}
+.shop-page .store-directory .tile-copy small b {color:var(--directory-accent)}
+.shop-page .store-directory .tile-state {position:absolute;inset:6px auto auto 8px;font-size:10px;line-height:1.2}
+.shop-page .store-directory .tile-state:not(.unavailable) {display:none}
+.shop-page .store-directory .tile-arrow {background:#352d49;color:#dacaff;inset-inline-end:9px;bottom:10px}
+.shop-page .store-directory .catalog-game-tile:hover {background:#282435!important;border-color:#79639e!important;box-shadow:none!important;transform:translateY(-2px)}
+.edition-panel {position:relative;isolation:isolate;overflow:hidden;display:grid;align-items:center;min-height:235px;padding:24px;margin:24px 0;border:1px solid var(--directory-line);border-radius:16px;background:#1b1a25}
+.edition-cover {position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:left 26%}
+.edition-panel::before {content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(to left,#1b1a25 3%,#1b1a25e8 44%,#1b1a2533)}
+.edition-panel h2 {margin:0;font-size:clamp(22px,4vw,38px)}
+.edition-panel p {color:#dad2e5;margin:8px 0 14px}
+.edition-actions,.directory-footer {display:flex;flex-wrap:wrap;gap:10px}
+.edition-actions .ghost-btn,.directory-footer a {display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.edition-actions img {object-fit:cover;border-radius:7px}
+.directory-footer {padding-block:14px}
+.directory-footer a {color:var(--directory-accent);padding-inline:12px}
+.shop-page .shop-icon {fill:#9b77d932;stroke-width:1.85}
+.shop-page .main-nav .shop-icon {color:#d0b9ff}
+.shop-page .product-card {background:#20212d!important;border-color:#464151!important}
+.shop-page .side-list button.active {background:#382b51!important;border-color:#a68ae8!important}
+body.shop-page .product-actions .primary {background:#c3adf7!important;border-color:#c3adf7!important;color:#1c1727!important}
+.shop-page .product-card .price,.shop-page .product-card .package-symbol {color:#d1bafc!important}
+.shop-page .product-card .package-art {background:linear-gradient(145deg,#352c47,#2a2939);border-color:#58466c}
+.shop-page .game-introduction {background:linear-gradient(130deg,#30253f,#1d202c)!important;border-color:#564465!important}
+.shop-page .order-view {background:#222331;border-color:#4f445d}
+@keyframes directory-enter {from{opacity:.65;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.directory-intro,.edition-panel {animation:directory-enter .32s ease-out both}
+@media(max-width:900px){.shop-page .store-directory .games-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:650px){
+  .directory-intro {grid-template-columns:1fr;gap:14px;padding:18px 0 16px}
+  .directory-status {padding:10px 12px}
+  .directory-toolbar {align-items:stretch;flex-direction:column;gap:9px}
+  .directory-search input {width:100%}
+  .shop-page .store-directory .games-grid {grid-template-columns:1fr!important;gap:8px}
+  .shop-page .store-directory .catalog-game-tile {min-height:89px;grid-template-columns:58px minmax(0,1fr);padding:8px!important}
+  .shop-page .store-directory .tile-art {width:58px;height:65px}
+}
+@media(prefers-reduced-motion:reduce){
+  .directory-intro,.edition-panel {animation:none}
+  .shop-page .store-directory .catalog-game-tile:hover {transform:none}
+}
+@font-face {font-family:"IBM Plex Sans Arabic";src:url("/assets/catalog-studio/plex-arabic-400.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face {font-family:"IBM Plex Sans Arabic";src:url("/assets/catalog-studio/plex-arabic-700.woff2") format("woff2");font-weight:700;font-display:swap}
+body.shop-page,body.admin-page {font-family:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif}
+.shop-page button,.shop-page input,.shop-page select,.shop-page textarea,.admin-page button,.admin-page input,.admin-page select {font-family:inherit}
+.shop-page .store-directory .catalog-game-tile[hidden] {display:none!important}
+body.shop-page .main-nav a .shop-icon {box-sizing:content-box;padding:4px;border-radius:6px;background:#58427740}
