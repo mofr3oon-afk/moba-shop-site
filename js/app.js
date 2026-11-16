@@ -424,10 +424,10 @@ async function trackOrder(phone){
   try{ const r=await fetch('/api/public?action=status',{method:'POST',headers:{'Content-Type':'application/json','x-order-token':token},body:JSON.stringify({history:'1',phone,orderId})}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'لا يوجد طلب');
     rememberOrder({orderId,trackingToken:token,phone,orderCode:d.orders?.[0]?.order_code});
     if(request!==trackingRequest||!box.isConnected)return;
-    mountTrackingActions(document.querySelector('[data-tracking-actions]'),orderId,{token,phone:phone||''});
+    mountTrackingActions(document.querySelector('[data-tracking-actions]'),orderId,{token,phone:phone||''},{showOpen:false});
     const orders=d.orders||[];
-    const groups={all:orders,fix:orders.filter(o=>['needs_fix','on_hold','pending'].includes(o.status)),done:orders.filter(o=>o.status==='delivered'),cancel:orders.filter(o=>['cancelled','rejected'].includes(o.status))};
-    box.innerHTML = `<div class="track-tabs"><button class="active" data-track-filter="all">الكل <small>${groups.all.length}</small></button><button data-track-filter="fix">محتاج تعديل/معلق <small>${groups.fix.length}</small></button><button data-track-filter="done">مكتمل <small>${groups.done.length}</small></button><button data-track-filter="cancel">ملغي <small>${groups.cancel.length}</small></button></div><div id="trackOrders">${orders.map(o=>trackCard(o,phone)).join('')}</div>`;
+    box.innerHTML=orders.length?orders.map(o=>trackCard(o,phone)).join(''):'<p class="message">مفيش طلب مطابق.</p>';
+    box.querySelector('[data-track-refresh]')?.addEventListener('click',()=>trackOrder(phone));
   }catch(e){ if(request!==trackingRequest||!box.isConnected)return; box.innerHTML=`<div class="message err">${esc(customerErrorMessage(e))}</div>`; }
 }
 function trackCard(o,phone){
@@ -772,22 +772,26 @@ function renderProductDirect(productId){
 }
 const _v217TrackCard = trackCard;
 trackCard = function(o,phone){
-  const msg = SITE_CONTENT.orderStatusMessages?.[o.status] || o.customer_status_text || o.status_text || o.status;
+  const msg = o.customer_status_text || SITE_CONTENT.orderStatusMessages?.[o.status] || o.status_text || o.status;
   const items = Array.isArray(o.items) ? o.items : [];
   const steps=['pending','claimed','processing','delivered'];
+  const stepLabels=['المراجعة','الاستلام','التنفيذ','التسليم'];
   const currentIndex=steps.indexOf(o.status);
-  return `<details class="track-card upgraded-track" data-track-status="${esc(o.status)}">
-    <summary><b>${esc(o.order_code || o.id)}</b><span>${esc(o.status_label || o.status_text || o.status)}</span><span>${money(o.total)}</span></summary>
-    <div class="track-status-message ${o.status==='rejected'||o.status==='needs_fix'?'warn':'ok'}">${esc(msg)}</div>
-    ${currentIndex>=0?`<div class="track-timeline">${steps.map((s,i)=>`<span class="${i<=currentIndex?'done':''}" ${i===currentIndex?'aria-current="step"':''}>${esc(SITE_CONTENT.orderStatusMessages?.[s] || s)}</span>`).join('')}</div>`:''}
-    <div class="track-blocks">
+  const reference=String(o.order_code||o.id);
+  const supportPhone=String(catalog.store?.supportPhone||'201061707294').replace(/\D/g,'');
+  const draft=encodeURIComponent('محتاج مساعدة بخصوص طلب MOBA SHOP رقم '+reference);
+  return `<article class="order-view" data-status="${esc(o.status)}">
+    <header class="order-view-header"><div><span class="order-current">${esc(o.status_label || o.status_text || o.status)}</span><h2>${esc(msg)}</h2><p>رقم الطلب <bdi>${esc(reference)}</bdi></p></div><button class="ghost-btn" type="button" data-track-refresh>تحديث الحالة</button></header>
+    <div class="order-contact"><a class="primary" href="https://wa.me/${supportPhone}?text=${draft}" target="_blank" rel="noopener noreferrer">واتساب بخصوص الطلب</a><a class="ghost-btn" href="https://t.me/MOFR3OON" target="_blank" rel="noopener noreferrer">تليجرام</a></div>
+    ${currentIndex>=0?`<div class="track-timeline" aria-label="مراحل الطلب">${stepLabels.map((label,i)=>`<span class="${i<=currentIndex?'done':''}" ${i===currentIndex?'aria-current="step"':''}>${esc(label)}</span>`).join('')}</div>`:''}
+    <details class="order-details"><summary>تفاصيل الطلب · ${money(o.total)}</summary><div class="track-blocks">
       <section><h3>بيانات الطلب</h3><p>رقم الطلب: ${esc(o.order_code || o.id)}</p><p>وقت الطلب: ${esc(o.created_at || '-')}</p><p>آخر تحديث: ${esc(o.updated_at || '-')}</p></section>
       <section><h3>المنتجات</h3>${items.map(i=>`<article><b>${esc(i.product)}</b><span>ID: ${esc(i.pubgId||'-')}</span><span>Name: ${esc(i.pubgName||'-')}</span><span>Qty: ${esc(i.qty||1)}</span></article>`).join('') || '<p>لا توجد منتجات.</p>'}</section>
       <section><h3>الدفع</h3><p>طريقة الدفع: ${esc(o.payment_method||'-')}</p><p>الإجمالي: ${money(o.total)}</p></section>
-      <section><h3>الحالة والدعم</h3><p>${esc(o.customer_status_text || o.status_text || o.status)}</p>${o.rejection_reason?`<p class="danger-text">${esc(o.rejection_reason)}</p>`:''}${supportLinks()}</section>
-    </div>
+      ${o.rejection_reason?`<section><h3>سبب الرفض</h3><p class="danger-text">${esc(o.rejection_reason)}</p></section>`:''}
+    </div></details>
     ${o.status==='needs_fix'?_v217TrackCard(o,phone).replace(/^<details[\s\S]*?<form class="fix-form"/,'<form class="fix-form').replace(/<\/details>$/,''):''}
-  </details>`;
+  </article>`;
 };
 const _v217SubmitCheckout = submitCheckout;
 submitCheckout = async function(form){

@@ -11,25 +11,24 @@ const priceText=n=>new Intl.NumberFormat('ar-EG',{maximumFractionDigits:2}).form
 
 export function studioHome(catalog,state,offerHtml){
   const featured=catalog.games.find(game=>game.slug==='pubg'&&game.status==='available');
-  const shortcuts=['freefire','roblox','tiktok','efootball'].map(slug=>catalog.games.find(game=>game.slug===slug&&game.status==='available')).filter(Boolean);
+  const shortcuts=['pubg-kr','freefire','roblox','tiktok'].map(slug=>catalog.games.find(game=>game.slug===slug&&game.status==='available')).filter(Boolean);
   const offer=catalog.offers.find(o=>(!o.placement||o.placement==='home'||o.placement==='both')&&(!o.endsAt||Date.parse(o.endsAt)>Date.now()));
   const featuredPrice=featured?gameStartingPrice(catalog,featured):null;
   return `
     <section class="market-hero">
+      <img class="market-hero-image" src="/assets/catalog-studio/field-hero.webp" alt="" width="1440" height="960" fetchpriority="high">
       <div class="market-hero-copy">
-        <h1>عالمك في اللعب<br><em>يبدأ هنا.</em></h1>
-        <p>شدات، جواهر وكوينات لألعابك المفضلة. اختار باقتك وشوف السعر بالجنيه.</p>
+        <h1>اشحن لعبتك.</h1>
+        <p>اختار اللعبة والباقة وشوف السعر بالجنيه.</p>
         <div class="market-actions">
           <a class="primary" href="#games">تصفح الباقات <span aria-hidden="true">↙</span></a>
           <button class="ghost-btn" data-go="/track">تابع طلبك</button>
         </div>
       </div>
       ${featured?`<button class="market-feature" data-game="${esc(featured.slug)}">
-        <img src="${esc(imageSource(featured.cover))}" alt="" width="400" height="400">
-        <span class="market-feature-caption"><strong>PUBG MOBILE</strong>
-          <span>${featuredPrice===null?'شوف الباقات':`من ${priceText(featuredPrice)} ج.م`}</span>
-          <i aria-hidden="true">←</i>
-        </span>
+        <img src="${esc(imageSource(featured.cover))}" alt="" width="40" height="40">
+        <span><strong>ببجي العالمية</strong><small>${featuredPrice===null?'شوف الباقات':`من ${priceText(featuredPrice)} ج.م`}</small></span>
+        <i aria-hidden="true">←</i>
       </button>`:''}
     </section>
     <div class="studio-store-status"><span class="status-pill store-${esc(catalog.store.status||'available')}">${esc(state.title)}</span><p>${esc(catalog.store.message||state.message)}${catalog.store.workHours?` <span>· ${esc(catalog.store.workHours)}</span>`:''}</p></div>

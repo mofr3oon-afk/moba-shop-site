@@ -20,6 +20,18 @@ test('failed or malformed settings do not display fallback prices',async()=>{
   globalThis.fetch=async()=>new Response('{"ok":false}',{status:503});await assert.rejects(loadCatalog);
   globalThis.fetch=async()=>{throw new Error('offline');};await assert.rejects(loadCatalog);
 });
+test('saved Korean packages and sections migrate without changing product IDs or prices',async()=>{
+  fixture({
+    dynamic_sections:[{game:'pubg',slug:'korea',name:'Korea'}],
+    dynamic_products:[{id:'pubg_korea_60',game:'pubg',section:'korea',price:64}]
+  });
+  const catalog=await loadCatalog();
+  const product=catalog.products.find(p=>p.id==='pubg_korea_60');
+  assert.equal(product.game,'pubg-kr');
+  assert.equal(product.price,64);
+  assert.equal(product.checkoutMethod,'manual');
+  assert.equal(catalog.sections.some(s=>s.game==='pubg'&&s.slug==='korea'),false);
+});
 test('starting prices exclude expired, disabled and absent-section packages',()=>{
   const catalog={sections:[{game:'g',slug:'s',status:'available'}],products:[{id:'one',game:'g',section:'s',price:50},{id:'two',game:'g',section:'s',price:1,status:'disabled'},{id:'three',game:'g',section:'missing',price:2}]};
   assert.equal(gameStartingPrice(catalog,{slug:'g'}),50);

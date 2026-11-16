@@ -7,10 +7,18 @@ const latestIdPrices = new Map(idPrices.map(([amount,price])=>['pubg_'+amount,pr
 
 // Replace the matching legacy price pairs while retaining the rest of each stored row.
 export function refreshLegacyIdPrice(row){
+  if(row?.game==='pubg' && (row.section||row.cat)==='korea'){
+    return {...row,game:'pubg-kr',section:'korea',cat:'korea',checkoutMethod:'manual'};
+  }
   const previous=previousIdPrices.get(row?.id);
   if(!previous || row.catalogPriceRevision===2)return row;
   if(Number(row.price)!==previous[0] || Number(row.salePrice??row.sale_price??0)!==previous[1])return row;
   return {...row,price:latestIdPrices.get(row.id),salePrice:0,sale_price:0,catalogPriceRevision:2};
+}
+
+export function relocateKoreanSection(row){
+  if(row?.game==='pubg' && (row.slug||row.key)==='korea')return {...row,game:'pubg-kr'};
+  return row;
 }
 
 function packages(game,section,unit,label,rows,{manual=false}={}){
@@ -22,6 +30,7 @@ function packages(game,section,unit,label,rows,{manual=false}={}){
 
 export const DEFAULT_CATALOG = {
   games: [
+    {slug:'pubg-kr',name:'PUBG Mobile الكورية',subtitle:'النسخة الكورية · شحن بالحساب',cover:'/assets/game-covers/pubg.webp',accent:'#8be0d5',status:'available',order:1.5,defaultSection:'korea'},
     {slug:'tiktok',name:'TikTok Coins',subtitle:'كوينات · عبر الشات',cover:'/assets/game-covers/tiktok.webp',status:'available',order:7,defaultSection:'coins'},
     {slug:'efootball',name:'eFootball Android',subtitle:'كوينز وباكدجات · عبر الشات',cover:'/assets/game-covers/efootball.webp',status:'available',order:8,defaultSection:'coins'},
     { slug:'roblox', name:'Roblox', subtitle:'روبوكس · الشحن في الشات', cover:'/assets/game-covers/roblox.webp', status:'available', order:6, defaultSection:'robux' },
@@ -33,7 +42,7 @@ export const DEFAULT_CATALOG = {
   ],
   sections: [
     {game:'pubg',slug:'qr-bonus',name:'QR الزيادة · عبر الشات',order:3},
-    {game:'pubg',slug:'korea',name:'PUBG الكورية · بالحساب',order:4},
+    {game:'pubg-kr',slug:'korea',name:'شدات النسخة الكورية',order:1},
     {game:'pubg',slug:'prime',name:'Prime وPrime Plus',order:6},
     {game:'roblox',slug:'robux-standard',name:'الأسعار العادية',order:2},
     {game:'tiktok',slug:'coins',name:'كوينات TikTok',order:1},
@@ -54,7 +63,7 @@ export const DEFAULT_CATALOG = {
     ...packages('tiktok','coins','Coins','كوين',[[100,85],[350,235],[500,320],[1000,620],[1500,930],[1600,990],[2000,1240],[2500,1550],[3000,1860],[3500,2170],[4000,2480],[5000,3100],[6000,3720],[7000,4300],[8000,4920],[10000,6100],[15000,9150],[20000,12200]],{manual:true}),
     ...packages('efootball','coins','Coins','كوينز',[[100,60],[300,165],[500,275],[1000,475],[2000,935],[3000,1320],[5000,2040],[10000,3750],[15000,5500]],{manual:true}),
     ...packages('roblox','robux-standard','Robux','روبوكس',[[40,45],[80,75],[400,320],[800,620],[1700,1200],[5250,3050],[11000,5500],[24000,11000]],{manual:true}),
-    ...packages('pubg','korea','UC','شدة',[[60,60],[195,165],[390,320],[680,480],[1850,1180],[3950,2250],[8300,4450]],{manual:true}),
+    ...packages('pubg','korea','UC','شدة',[[60,60],[195,165],[390,320],[680,480],[1850,1180],[3950,2250],[8300,4450]],{manual:true}).map(refreshLegacyIdPrice),
     ...[[370,700,325,300],[690,1200,550,600],[2000,2900,1300,1500],[4000,5500,2500,3000],[9000,12000,4950,6000]].map(([min,max,price,gift],index)=>({
       id:'pubg_qr_bonus_'+min,game:'pubg',section:'qr-bonus',name:'من '+min+' إلى '+max+' شدة',unit:'UC',amount:min,
       price,order:index+1,checkoutMethod:'manual',noQty:true,description:'يُحتسب في هدايا الشراء '+gift+' شدة.'
@@ -196,7 +205,7 @@ export async function loadCatalog(){
   const dynamicGames = Object.values(remote.game_settings || {}).map(normalizeGame).filter(g=>g.slug);
   const games = mergeById(DEFAULT_CATALOG.games, [...dynamicGames, ...(local.games || []).map(normalizeGame)], 'slug')
     .filter(g=>g.status !== 'hidden').sort((a,b)=>a.order-b.order);
-  const sections = mergeSections(DEFAULT_CATALOG.sections, [...(remote.dynamic_sections || []).map(normalizeSection), ...(local.sections || []).map(normalizeSection)].filter(s=>s.game && s.slug))
+  const sections = mergeSections(DEFAULT_CATALOG.sections, [...(remote.dynamic_sections || []).map(relocateKoreanSection).map(normalizeSection), ...(local.sections || []).map(normalizeSection)].filter(s=>s.game && s.slug))
     .filter(s=>!s.hidden&&s.status !== 'hidden' && games.some(g=>g.slug===s.game)).sort((a,b)=>a.order-b.order);
   const products = mergeById(DEFAULT_CATALOG.products, [...(remote.dynamic_products || []).map(refreshLegacyIdPrice), ...(local.products || [])].filter(p=>p?.id), 'id').map(normalizeProduct)
     .filter(p=>!p.hidden&&p.status !== 'hidden'&&Number.isFinite(p.price)&&p.price>0&&games.some(g=>g.slug===p.game)&&sections.some(s=>s.game===p.game&&s.slug===p.section)).sort((a,b)=>a.order-b.order);

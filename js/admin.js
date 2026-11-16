@@ -1,6 +1,6 @@
 import { ORDER_STATUS_TEXT, normalizeDigits } from './interface-utils.js';
 import { mountVisualCatalog } from './visual-catalog-editor.js';
-﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog, refreshLegacyIdPrice } from './catalog.js';
+﻿import { DEFAULT_CATALOG, readLocalCatalog, saveLocalCatalog, refreshLegacyIdPrice, relocateKoreanSection } from './catalog.js';
 import { money, toast } from './store.js';
 import { customerWhatsAppUrl } from './contact-links.js';
 import { cairoDayStart, cairoDayEnd, cairoDateKey } from './cairo-time.js';
@@ -80,7 +80,7 @@ loginBox.addEventListener('keydown',event=>{
 async function loadSettings(){
   try{ const d=await api('/api/settings?admin=1'); settings=d.settings||{}; settingsLoaded=true; }catch{ settingsLoaded=false; settings={}; }
   if(Array.isArray(settings.dynamic_products))local.products=settings.dynamic_products.map(refreshLegacyIdPrice);
-  if(Array.isArray(settings.dynamic_sections))local.sections=settings.dynamic_sections.map(s=>({...s,slug:s.slug||s.key,name:s.name||s.title}));
+  if(Array.isArray(settings.dynamic_sections))local.sections=settings.dynamic_sections.map(relocateKoreanSection).map(s=>({...s,slug:s.slug||s.key,name:s.name||s.title}));
   if(settings.game_settings)local.games=Object.values(settings.game_settings);
   local.brand = settings.brand_settings && Object.keys(settings.brand_settings).length ? settings.brand_settings : (local.brand || {});
   local.coupons = Array.isArray(settings.coupon_rules) ? settings.coupon_rules : (local.coupons || []);
